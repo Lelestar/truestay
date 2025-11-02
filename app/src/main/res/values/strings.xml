@@ -1,0 +1,52 @@
+<resources>
+    <string name="app_name">TrueStay</string>
+
+    <!-- Bottom Navigation -->
+    <string name="bottom_nav_search">Recherche</string>
+    <string name="bottom_nav_favorites">Favoris</string>
+    <string name="bottom_nav_tenant_rentals">Locations</string>
+    <string name="bottom_nav_profile">Profil</string>
+    <string name="bottom_nav_properties">Mes annonces</string>
+    <string name="bottom_nav_landlord_rentals">Mes locations</string>
+
+    <!-- Screen Titles -->
+    <string name="screen_title_property_details">Détails du logement</string>
+    <string name="screen_title_rental_details">Détails de la location</string>
+    <string name="screen_title_add_review">Ajouter un avis</string>
+    <string name="screen_title_inventory">État des lieux</string>
+    <string name="screen_title_room_details">Détails de la pièce</string>
+    <string name="screen_title_signature">Signature</string>
+    <string name="screen_title_add_property">Ajouter un logement</string>
+    <string name="screen_title_edit_property">Modifier le logement</string>
+    <string name="screen_title_create_rental">Créer une location</string>
+
+    <!-- Content Descriptions for Accessibility -->
+    <string name="cd_show_password">Afficher le mot de passe</string>
+    <string name="cd_hide_password">Masquer le mot de passe</string>
+    <string name="cd_back">Retour</string>
+
+    <!-- Auth -->
+    <string name="login_tagline">La transparence au service de la location</string>
+    <string name="login_title">Connexion</string>
+    <string name="login_email">Email</string>
+    <string name="login_password">Mot de passe</string>
+    <string name="login_button">Se connecter</string>
+    <string name="login_forgot_password">Mot de passe oublié ?</string>
+    <string name="login_no_account">Vous n\'avez pas encore de compte ?</string>
+    <string name="login_register_button">Créer un compte</string>
+    <string name="login_error_email_required">L\'email est requis</string>
+    <string name="login_error_email_invalid">Email invalide</string>
+    <string name="login_error_password_required">Le mot de passe est requis</string>
+    <string name="login_error_password_min_length">Minimum 8 caractères</string>
+
+    <!-- Auth - Firebase Errors -->
+    <string name="auth_error_invalid_email">L\'adresse email est invalide</string>
+    <string name="auth_error_wrong_password">Le mot de passe est incorrect</string>
+    <string name="auth_error_user_not_found">Aucun compte ne correspond à cet email</string>
+    <string name="auth_error_user_disabled">Ce compte a été désactivé</string>
+    <string name="auth_error_too_many_requests">Trop de tentatives. Réessayez plus tard</string>
+    <string name="auth_error_network">Erreur réseau. Vérifiez votre connexion</string>
+    <string name="auth_error_invalid_credential">Email ou mot de passe incorrect</string>
+    <string name="auth_error_generic">Une erreur est survenue. Réessayez</string>
+    <string name="auth_error_login">Erreur de connexion : %1$s</string>
+</resources>

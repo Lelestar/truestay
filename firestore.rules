@@ -1,0 +1,144 @@
+rules_version = '2';
+
+service cloud.firestore {
+  match /databases/{database}/documents {
+
+    // ==========================================
+    // Helper functions
+    // ==========================================
+
+    function isAuthenticated() {
+      return request.auth != null;
+    }
+
+    function isOwner(userId) {
+      return isAuthenticated() && request.auth.uid == userId;
+    }
+
+    function isTenant() {
+      return isAuthenticated() &&
+             get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role == 'tenant';
+    }
+
+    function isLandlord() {
+      return isAuthenticated() &&
+             get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role == 'landlord';
+    }
+
+    // ==========================================
+    // Users collection
+    // ==========================================
+
+    match /users/{userId} {
+      // Anyone authenticated can read user profiles
+      allow read: if isAuthenticated();
+
+      // Only the user can create/update their own profile
+      allow create: if isOwner(userId);
+      allow update: if isOwner(userId);
+
+      // No one can delete users
+      allow delete: if false;
+    }
+
+    // ==========================================
+    // Properties collection
+    // ==========================================
+
+    match /properties/{propertyId} {
+      // Anyone authenticated can read properties
+      allow read: if isAuthenticated();
+
+      // Only landlords can create properties
+      allow create: if isLandlord() &&
+                       request.resource.data.landlordId == request.auth.uid;
+
+      // Only the owner can update/delete their properties
+      allow update, delete: if isAuthenticated() &&
+                               resource.data.landlordId == request.auth.uid;
+    }
+
+    // ==========================================
+    // Rentals collection
+    // ==========================================
+
+    match /rentals/{rentalId} {
+      // Only tenant and landlord can read their rentals
+      allow read: if isAuthenticated() &&
+                     (resource.data.tenantId == request.auth.uid ||
+                      resource.data.landlordId == request.auth.uid);
+
+      // Only landlord can create rentals
+      allow create: if isLandlord() &&
+                       request.resource.data.landlordId == request.auth.uid;
+
+      // Only tenant can update rentals
+      allow update: if isAuthenticated() &&
+                       resource.data.tenantId == request.auth.uid;
+
+      // No one can delete rentals
+      allow delete: if false;
+    }
+
+    // ==========================================
+    // Reviews collection
+    // ==========================================
+
+    match /reviews/{reviewId} {
+      // Anyone authenticated can read reviews
+      allow read: if isAuthenticated();
+
+      // Only tenants can create/update reviews
+      allow create: if isTenant() &&
+                       request.resource.data.tenantId == request.auth.uid;
+
+      allow update: if isTenant() &&
+                       resource.data.tenantId == request.auth.uid;
+
+      // No one can delete reviews
+      allow delete: if false;
+    }
+
+    // ==========================================
+    // Inventories collection
+    // ==========================================
+
+    match /inventories/{inventoryId} {
+      // Get the associated rental
+      function getRental() {
+        return get(/databases/$(database)/documents/rentals/$(resource.data.rentalId));
+      }
+
+      // Check if user is part of the rental
+      function isPartOfRental() {
+        let rental = getRental().data;
+        return isAuthenticated() &&
+               (rental.tenantId == request.auth.uid ||
+                rental.landlordId == request.auth.uid);
+      }
+
+      allow read: if isPartOfRental();
+      allow create, update: if isPartOfRental();
+      allow delete: if false;
+    }
+
+    // ==========================================
+    // Favorites collection
+    // ==========================================
+
+    match /favorites/{favoriteId} {
+      // Only the user can read their favorites
+      allow read: if isAuthenticated() &&
+                     resource.data.userId == request.auth.uid;
+
+      // Only the user can create/delete their favorites
+      allow create: if isTenant() &&
+                       request.resource.data.userId == request.auth.uid;
+
+      allow delete: if isAuthenticated() &&
+                       resource.data.userId == request.auth.uid;
+
+      allow update: if false;
+    }
+  }
+}

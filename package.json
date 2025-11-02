@@ -1,0 +1,24 @@
+{
+  "name": "truestay",
+  "scripts": {
+    "emulators": "firebase emulators:start --import=./emulator-seed-data --export-on-exit",
+    "emulators:fresh": "firebase emulators:start",
+    "emulators:export": "firebase emulators:export ./emulator-seed-data",
+    "emulators:seed": "ts-node scripts/seed-emulator.ts"
+  },
+  "version": "1.0.0",
+  "description": "TrueStay Android App",
+  "main": "index.js",
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "devDependencies": {
+    "@types/node": "^24.9.2",
+    "firebase-tools": "^14.23.0",
+    "ts-node": "^10.9.2",
+    "typescript": "^5.9.3"
+  },
+  "dependencies": {
+    "firebase-admin": "^13.5.0"
+  }
+}

@@ -1,0 +1,29 @@
+{
+  "indexes": [
+    {
+      "collectionGroup": "favorites",
+      "queryScope": "COLLECTION",
+      "fields": [
+        {"fieldPath": "userId", "order": "ASCENDING"},
+        {"fieldPath": "propertyId", "order": "ASCENDING"}
+      ]
+    },
+    {
+      "collectionGroup": "properties",
+      "queryScope": "COLLECTION",
+      "fields": [
+        {"fieldPath": "ownerId", "order": "ASCENDING"},
+        {"fieldPath": "updatedAt", "order": "DESCENDING"}
+      ]
+    },
+    {
+      "collectionGroup": "reviews",
+      "queryScope": "COLLECTION",
+      "fields": [
+        {"fieldPath": "propertyId", "order": "ASCENDING"},
+        {"fieldPath": "createdAt", "order": "DESCENDING"}
+      ]
+    }
+  ],
+  "fieldOverrides": []
+}
