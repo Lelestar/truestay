@@ -1,0 +1,18 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project version="4">
+  <component name="CopilotDiffPersistence">
+    <option name="pendingDiffs">
+      <map>
+        <entry key="$PROJECT_DIR$/app/src/main/java/ca/uqac/inf865/truestay/ui/theme/Font.kt">
+          <value>
+            <PendingDiffInfo>
+              <option name="filePath" value="$PROJECT_DIR$/app/src/main/java/ca/uqac/inf865/truestay/ui/theme/Font.kt" />
+              <option name="originalContent" value="package ca.uqac.inf865.truestay.ui.theme&#10;&#10;import androidx.compose.ui.text.font.Font&#10;import androidx.compose.ui.text.font.FontFamily&#10;import androidx.compose.ui.text.font.FontWeight&#10;import ca.uqac.inf865.truestay.R&#10;&#10;/**&#10; * Defines the Montserrat font family.&#10; *&#10; * Make sure you have the following files in `app/src/main/res/font`:&#10; * - `montserrat_regular.ttf`&#10; * - `montserrat_semibold.ttf`&#10; * - `montserrat_bold.ttf`&#10; */&#10;val Montserrat = FontFamily(&#10;    Font(R.font.montserrat_regular, FontWeight.Normal),&#10;    Font(R.font.montserrat_semibold, FontWeight.SemiBold),&#10;    Font(R.font.montserrat_bold, FontWeight.Bold)&#10;)&#10;" />
+              <option name="updatedContent" value="package ca.uqac.inf865.truestay.ui.theme&#10;&#10;import androidx.compose.ui.text.font.Font&#10;import androidx.compose.ui.text.font.FontFamily&#10;import androidx.compose.ui.text.font.FontWeight&#10;import ca.uqac.inf865.truestay.R&#10;&#10;/**&#10; * Defines the Montserrat font family.&#10; *&#10; * Make sure you have the following files in `app/src/main/res/font`:&#10; * - `montserrat_regular.ttf`&#10; * - `montserrat_semibold.ttf`&#10; * - `montserrat_bold.ttf`&#10; */&#10;val Montserrat = FontFamily(&#10;    Font(R.font.montserrat_regular, FontWeight.Normal),&#10;    Font(R.font.montserrat_semibold, FontWeight.SemiBold),&#10;    Font(R.font.montserrat_bold, FontWeight.Bold)&#10;)&#10;" />
+            </PendingDiffInfo>
+          </value>
+        </entry>
+      </map>
+    </option>
+  </component>
+</project>

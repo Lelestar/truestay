@@ -1,0 +1,50 @@
+rules_version = '2';
+
+service firebase.storage {
+  match /b/{bucket}/o {
+
+    // Helper functions
+    function isAuthenticated() {
+      return request.auth != null;
+    }
+
+    function isOwner(userId) {
+      return isAuthenticated() && request.auth.uid == userId;
+    }
+
+    // Images de propriétés (accessibles par tous)
+    match /properties/{propertyId}/{allPaths=**} {
+      allow read: if true;  // Public
+      allow write: if isAuthenticated();
+      allow delete: if isAuthenticated();
+    }
+
+    // Images d'inventaires (privées)
+    match /inventories/{inventoryId}/{allPaths=**} {
+      allow read: if isAuthenticated();
+      allow write: if isAuthenticated();
+      allow delete: if isAuthenticated();
+    }
+
+    // Images d'avis (publiques)
+    match /reviews/{reviewId}/{allPaths=**} {
+      allow read: if true;  // Public
+      allow write: if isAuthenticated();
+      allow delete: if isAuthenticated();
+    }
+
+    // Signatures (privées)
+    match /signatures/{inventoryId}/{allPaths=**} {
+      allow read: if isAuthenticated();
+      allow write: if isAuthenticated();
+      allow delete: if false;
+    }
+
+    // Photos de profil
+    match /users/{userId}/profile.jpg {
+      allow read: if true;
+      allow write: if isOwner(userId);
+      allow delete: if isOwner(userId);
+    }
+  }
+}
