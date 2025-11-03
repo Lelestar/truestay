@@ -18,9 +18,6 @@ import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.remember
-import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.focus.FocusDirection
@@ -97,14 +94,14 @@ private fun LoginScreenContent(
                     focusManager.clearFocus()
                 })
             },
-        horizontalAlignment = Alignment.CenterHorizontally,
-        verticalArrangement = Arrangement.spacedBy(AppSpacing.large)
+        horizontalAlignment = Alignment.CenterHorizontally
     ) {
         // Logo
         Image(
             painter = painterResource(id = R.drawable.logo_truestay),
             contentDescription = stringResource(R.string.app_name),
         )
+        Spacer(modifier = Modifier.height(AppSpacing.small))
         Text(
             text = stringResource(R.string.login_tagline),
             modifier = Modifier.fillMaxWidth(),
