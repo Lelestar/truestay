@@ -73,6 +73,12 @@ fun NavGraphBuilder.authNavGraph(
             },
             onNavigateToLogin = {
                 navController.popBackStack(Screen.Login.route, inclusive = false)
+            },
+            onNavigateToTerms = {
+                // TODO: redirect to terms of service
+            },
+            onNavigateToPrivacy = {
+                // TODO: redirect to privacy policy
             }
         )
     }

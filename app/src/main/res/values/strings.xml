@@ -39,8 +39,39 @@
     <string name="login_error_password_required">Le mot de passe est requis</string>
     <string name="login_error_password_min_length">Minimum 8 caractères</string>
 
+    <!-- Register -->
+    <string name="register_title_tenant">Inscription Locataire</string>
+    <string name="register_title_landlord">Inscription Propriétaire</string>
+    <string name="register_subtitle_tenant">Complétez vos informations</string>
+    <string name="register_subtitle_landlord">Complétez vos informations</string>
+    <string name="register_first_name">Prénom</string>
+    <string name="register_last_name">Nom</string>
+    <string name="register_email">Email</string>
+    <string name="register_phone">Téléphone</string>
+    <string name="register_password">Mot de passe</string>
+    <string name="register_password_confirm">Confirmer le mot de passe</string>
+    <string name="register_terms_intro">En créant un compte, vous acceptez nos</string>
+    <string name="register_terms_link">Conditions d\'utilisation</string>
+    <string name="register_terms_and">et notre</string>
+    <string name="register_privacy_link">Politique de confidentialité</string>
+    <string name="register_button">Créer mon compte</string>
+    <string name="register_has_account">Vous avez déjà un compte ?</string>
+    <string name="register_login_button">Se connecter</string>
+    <string name="register_error_first_name_required">Le prénom est requis</string>
+    <string name="register_error_last_name_required">Le nom est requis</string>
+    <string name="register_error_email_required">L\'email est requis</string>
+    <string name="register_error_email_invalid">Email invalide</string>
+    <string name="register_error_phone_required">Le téléphone est requis</string>
+    <string name="register_error_phone_invalid">Numéro de téléphone invalide. Utilisez le format international.</string>
+    <string name="register_error_password_required">Le mot de passe est requis</string>
+    <string name="register_error_password_min_length">Minimum 8 caractères</string>
+    <string name="register_error_password_confirm_required">Veuillez confirmer le mot de passe</string>
+    <string name="register_error_passwords_not_match">Les mots de passe ne correspondent pas</string>
+
     <!-- Auth - Firebase Errors -->
     <string name="auth_error_invalid_email">L\'adresse email est invalide</string>
+    <string name="auth_error_email_already_in_use">Cet email est déjà utilisé</string>
+    <string name="auth_error_weak_password">Le mot de passe est trop faible</string>
     <string name="auth_error_wrong_password">Le mot de passe est incorrect</string>
     <string name="auth_error_user_not_found">Aucun compte ne correspond à cet email</string>
     <string name="auth_error_user_disabled">Ce compte a été désactivé</string>
@@ -49,4 +80,5 @@
     <string name="auth_error_invalid_credential">Email ou mot de passe incorrect</string>
     <string name="auth_error_generic">Une erreur est survenue. Réessayez</string>
     <string name="auth_error_login">Erreur de connexion : %1$s</string>
+    <string name="auth_error_register">Erreur d\'inscription : %1$s</string>
 </resources>
