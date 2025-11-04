@@ -24,6 +24,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import ca.uqac.inf865.truestay.R
@@ -46,14 +47,14 @@ fun RoleSelectionScreen(
         horizontalAlignment = Alignment.CenterHorizontally,
         verticalArrangement = Arrangement.spacedBy(AppSpacing.large)
     ) {
-        // Logo
+        // Icon
         Image(
             painter = painterResource(id = R.drawable.logo_truestay),
             contentDescription = "TrueStay Logo"
         )
 
         Text(
-            text = "Créez votre compte",
+            text = stringResource(R.string.create_account),
             modifier = Modifier.fillMaxWidth(),
             textAlign = TextAlign.Center,
             style = MaterialTheme.typography.bodyLarge,
@@ -65,7 +66,7 @@ fun RoleSelectionScreen(
         TrueStayCard(modifier = Modifier.fillMaxWidth()) {
             // Title
             Text(
-                text = "Vous êtes :",
+                text = stringResource(R.string.you_are),
                 style = MaterialTheme.typography.headlineMedium,
                 color = LocalAppColors.current.black
             )
@@ -73,33 +74,33 @@ fun RoleSelectionScreen(
             Spacer(modifier = Modifier.height(AppSpacing.medium))
 
             Text(
-                text = "Sélectionnez votre profil pour continuer",
+                text = stringResource(R.string.profile_selection),
                 style = MaterialTheme.typography.bodyMedium,
                 color = LocalAppColors.current.grayDark
             )
 
             Spacer(modifier = Modifier.height(AppSpacing.xlarge))
 
-                // Tuile Locataire
+                // Tenant Tile
                 RoleTile(
                     iconRes = TrueStayIcons.House,
                     iconBg = MaterialTheme.colorScheme.primary.copy(alpha = 0.12f),
                     iconTint = MaterialTheme.colorScheme.primary,
-                    title = "Locataire",
-                    description = "Je recherche un logement à louer et souhaite consulter les avis et réaliser des états des lieux",
-                    onClick = { onRoleSelected("locataire") }
+                    title = stringResource(R.string.tenant),
+                    description = stringResource(R.string.tenant_description),
+                    onClick = { onRoleSelected("tenant") }
                 )
 
                 Spacer(modifier = Modifier.height(AppSpacing.large))
 
-                // Tuile Propriétaire
+                // Renter Tile
                 RoleTile(
                     iconRes = TrueStayIcons.Building,
                     iconBg = MaterialTheme.colorScheme.secondary.copy(alpha = 0.12f),
                     iconTint = MaterialTheme.colorScheme.secondary,
-                    title = "Propriétaire",
-                    description = "Je mets en location un ou plusieurs logements et souhaite gérer mes biens",
-                    onClick = { onRoleSelected("proprietaire") }
+                    title = stringResource(R.string.renter) ,
+                    description = stringResource(R.string.renter_description),
+                    onClick = { onRoleSelected("landlord") }
                 )
 
             Spacer(modifier = Modifier.height(AppSpacing.xlarge))
@@ -114,7 +115,7 @@ fun RoleSelectionScreen(
 
             // Register text and button
             Text(
-                text = "Vous avez déjà un compte ?",
+                text = stringResource(R.string.already_have_account),
                 modifier = Modifier.fillMaxWidth(),
                 style = MaterialTheme.typography.bodyMedium,
                 color = LocalAppColors.current.grayDark,
@@ -122,7 +123,7 @@ fun RoleSelectionScreen(
             )
             Spacer(modifier = Modifier.height(AppSpacing.large))
             TrueStayButton(
-                text = "Se connecter",
+                text = stringResource(R.string.login_button),
                 onClick = onNavigateToLogin,
                 variant = ButtonVariant.SECONDARY
             )
