@@ -139,16 +139,8 @@ fun ForgotPasswordScreen(
             Spacer(modifier = Modifier.height(AppSpacing.xlarge))
 
             // Back to login text and button
-            Text(
-                text = stringResource(R.string.forgot_password_back_to_login),
-                modifier = Modifier.fillMaxWidth(),
-                style = MaterialTheme.typography.bodyMedium,
-                color = LocalAppColors.current.grayDark,
-                textAlign = TextAlign.Center
-            )
-            Spacer(modifier = Modifier.height(AppSpacing.large))
             TrueStayButton(
-                text = stringResource(R.string.login_button),
+                text = stringResource(R.string.forgot_password_back_to_login),
                 onClick = onNavigateToLogin,
                 variant = ButtonVariant.SECONDARY
             )
