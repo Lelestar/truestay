@@ -13,10 +13,8 @@ import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.remember
-import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.input.pointer.pointerInput
@@ -27,6 +25,7 @@ import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import ca.uqac.inf865.truestay.R
 import ca.uqac.inf865.truestay.presentation.common.components.ButtonVariant
 import ca.uqac.inf865.truestay.presentation.common.components.TrueStayButton
@@ -43,8 +42,16 @@ fun ForgotPasswordScreen(
     forgotPasswordViewModel: ForgotPasswordViewModel = hiltViewModel(),
     authViewModel: AuthViewModel = hiltViewModel()
 ) {
-    var email by remember { mutableStateOf("") }
+    val uiState by forgotPasswordViewModel.uiState.collectAsStateWithLifecycle()
     val focusManager = LocalFocusManager.current
+
+    // Handle navigation after email sent
+    LaunchedEffect(uiState.emailSent) {
+        if (uiState.emailSent) {
+            onEmailSent()
+            forgotPasswordViewModel.onEmailSentHandled()
+        }
+    }
 
     Column(
         modifier = Modifier
@@ -64,7 +71,7 @@ fun ForgotPasswordScreen(
         )
         Spacer(modifier = Modifier.height(AppSpacing.small))
         Text(
-            text = stringResource(R.string.forgot_password_tagline),
+            text = stringResource(R.string.login_tagline),
             modifier = Modifier.fillMaxWidth(),
             textAlign = TextAlign.Center,
             style = MaterialTheme.typography.bodyLarge,
@@ -96,15 +103,18 @@ fun ForgotPasswordScreen(
 
             // Email field
             TrueStayTextField(
-                value = email,
-                onValueChange = { email = it },
+                value = uiState.email,
+                onValueChange = forgotPasswordViewModel::onEmailChanged,
                 label = stringResource(R.string.forgot_password_email),
                 placeholder = stringResource(R.string.forgot_password_email_placeholder),
                 leadingIcon = TrueStayIcons.Mail,
+                enabled = !uiState.isLoading,
+                errorMessage = uiState.emailError,
                 imeAction = ImeAction.Done,
                 keyboardActions = KeyboardActions(
                     onDone = {
                         focusManager.clearFocus()
+                        forgotPasswordViewModel.sendPasswordResetEmail()
                     }
                 )
             )
@@ -125,8 +135,22 @@ fun ForgotPasswordScreen(
             // Send button
             TrueStayButton(
                 text = stringResource(R.string.forgot_password_send_button),
-                onClick = { /* TODO: Implement later */ }
+                onClick = forgotPasswordViewModel::sendPasswordResetEmail,
+                enabled = !uiState.isLoading,
+                isLoading = uiState.isLoading
             )
+
+            // Global error message
+            uiState.globalError?.let { errorMessage ->
+                Spacer(modifier = Modifier.height(AppSpacing.large))
+                Text(
+                    text = errorMessage,
+                    modifier = Modifier.fillMaxWidth(),
+                    textAlign = TextAlign.Center,
+                    color = LocalAppColors.current.error,
+                    style = MaterialTheme.typography.bodyMedium
+                )
+            }
 
             Spacer(modifier = Modifier.height(AppSpacing.xlarge))
 
@@ -142,6 +166,7 @@ fun ForgotPasswordScreen(
             TrueStayButton(
                 text = stringResource(R.string.forgot_password_back_to_login),
                 onClick = onNavigateToLogin,
+                enabled = !uiState.isLoading,
                 variant = ButtonVariant.SECONDARY
             )
         }
