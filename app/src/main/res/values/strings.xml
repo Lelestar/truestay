@@ -39,6 +39,15 @@
     <string name="login_error_password_required">Le mot de passe est requis</string>
     <string name="login_error_password_min_length">Minimum 8 caractères</string>
 
+    <!-- Forgot Password -->
+    <string name="forgot_password_tagline">Réinitialiser votre mot de passe</string>
+    <string name="forgot_password_title">Mot de passe oublié ?</string>
+    <string name="forgot_password_subtitle">Entrez votre adresse email et nous vous enverrons un lien pour réinitialiser votre mot de passe.</string>
+    <string name="forgot_password_email">Email</string>
+    <string name="forgot_password_email_placeholder">jean.dupont@example.com</string>
+    <string name="forgot_password_send_button">Envoyer le lien de réinitialisation</string>
+    <string name="forgot_password_back_to_login">Retour à la connexion</string>
+    <string name="forgot_password_note">Nous vous enverrons un email valide durant 24h à l\'adresse renseignée pour vous permettre de réinitialiser votre mot de passe.</string>
 
     <!-- Role Selection -->
     <string name="create_account">Créez votre compte</string>
