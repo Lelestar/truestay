@@ -39,6 +39,18 @@
     <string name="login_error_password_required">Le mot de passe est requis</string>
     <string name="login_error_password_min_length">Minimum 8 caractères</string>
 
+
+    <!-- Role Selection -->
+    <string name="create_account">Créez votre compte</string>
+    <string name="you_are">Vous êtes :</string>
+    <string name="profile_selection">Sélectionnez votre profil pour continuer</string>
+    <string name="tenant">Locataire</string>
+    <string name="tenant_description">Je recherche un logement à louer et souhaite consulter les avis et réaliser des états des lieux</string>
+    <string name="renter">Propriétaire</string>
+    <string name="renter_description">Je mets en location un ou plusieurs logements et souhaite gérer mes biens</string>
+    <string name="already_have_account">Vous avez déjà un compte ?</string>
+
+
     <!-- Register -->
     <string name="register_title_tenant">Inscription Locataire</string>
     <string name="register_title_landlord">Inscription Propriétaire</string>
