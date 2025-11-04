@@ -37,7 +37,7 @@ import ca.uqac.inf865.truestay.presentation.theme.LocalAppColors
 
 @Composable
 fun ForgotPasswordScreen(
-    onEmailSent: () -> Unit,
+    onEmailSent: (String) -> Unit,
     onNavigateToLogin: () -> Unit,
     forgotPasswordViewModel: ForgotPasswordViewModel = hiltViewModel(),
     authViewModel: AuthViewModel = hiltViewModel()
@@ -48,7 +48,7 @@ fun ForgotPasswordScreen(
     // Handle navigation after email sent
     LaunchedEffect(uiState.emailSent) {
         if (uiState.emailSent) {
-            onEmailSent()
+            onEmailSent(uiState.email)
             forgotPasswordViewModel.onEmailSentHandled()
         }
     }

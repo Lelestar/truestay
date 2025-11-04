@@ -8,7 +8,9 @@ sealed class Screen(val route: String) {
         fun createRoute(role: String) = "register/$role"
     }
     object ForgotPassword : Screen("forgot_password")
-    object ForgotPasswordEmailSent : Screen("forgot_password_email_sent")
+    object ForgotPasswordEmailSent : Screen("forgot_password_email_sent/{email}") {
+        fun createRoute(email: String) = "forgot_password_email_sent/$email"
+    }
 
     // Tenant - Main screens (with bottom bar)
     object Search : Screen("search")
