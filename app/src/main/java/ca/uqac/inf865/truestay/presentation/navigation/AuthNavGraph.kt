@@ -85,8 +85,8 @@ fun NavGraphBuilder.authNavGraph(
 
     composable(Screen.ForgotPassword.route) {
         ForgotPasswordScreen(
-            onEmailSent = {
-                navController.navigate(Screen.ForgotPasswordEmailSent.route)
+            onEmailSent = { email ->
+                navController.navigate(Screen.ForgotPasswordEmailSent.createRoute(email))
             },
             onNavigateToLogin = {
                 navController.navigateUp()
@@ -94,8 +94,14 @@ fun NavGraphBuilder.authNavGraph(
         )
     }
 
-    composable(Screen.ForgotPasswordEmailSent.route) {
+    composable(
+        route = Screen.ForgotPasswordEmailSent.route,
+        arguments = listOf(navArgument("email") { type = NavType.StringType })
+    ) { backStackEntry ->
+        val email = backStackEntry.arguments?.getString("email") ?: ""
+
         ForgotPasswordEmailSentScreen(
+            email = email,
             onNavigateToLogin = {
                 navController.navigate(Screen.Login.route) {
                     popUpTo(Screen.ForgotPassword.route) { inclusive = true }
