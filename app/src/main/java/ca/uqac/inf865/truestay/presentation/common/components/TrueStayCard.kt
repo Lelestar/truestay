@@ -34,12 +34,12 @@ fun TrueStayCard(
                 shape = MaterialTheme.shapes.large,
                 clip = false
             )
-            .clip(MaterialTheme.shapes.medium)
+            .clip(MaterialTheme.shapes.large)
             .background(LocalAppColors.current.white)
             .border(
                 width = 1.dp,
                 color = LocalAppColors.current.grayBorder,
-                shape = MaterialTheme.shapes.medium
+                shape = MaterialTheme.shapes.large
             )
             .padding(padding)
     ) {
