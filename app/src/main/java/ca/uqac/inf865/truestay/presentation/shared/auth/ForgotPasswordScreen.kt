@@ -23,6 +23,7 @@ import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.text.style.TextAlign
+import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
@@ -34,16 +35,15 @@ import ca.uqac.inf865.truestay.presentation.common.components.TrueStayTextField
 import ca.uqac.inf865.truestay.presentation.common.icons.TrueStayIcons
 import ca.uqac.inf865.truestay.presentation.theme.AppSpacing
 import ca.uqac.inf865.truestay.presentation.theme.LocalAppColors
+import ca.uqac.inf865.truestay.presentation.theme.TrueStayTheme
 
 @Composable
 fun ForgotPasswordScreen(
     onEmailSent: (String) -> Unit,
     onNavigateToLogin: () -> Unit,
-    forgotPasswordViewModel: ForgotPasswordViewModel = hiltViewModel(),
-    authViewModel: AuthViewModel = hiltViewModel()
+    forgotPasswordViewModel: ForgotPasswordViewModel = hiltViewModel()
 ) {
     val uiState by forgotPasswordViewModel.uiState.collectAsStateWithLifecycle()
-    val focusManager = LocalFocusManager.current
 
     // Handle navigation after email sent
     LaunchedEffect(uiState.emailSent) {
@@ -52,6 +52,26 @@ fun ForgotPasswordScreen(
             forgotPasswordViewModel.onEmailSentHandled()
         }
     }
+
+    ForgotPasswordScreenContent(
+        uiState = uiState,
+        onEmailChanged = forgotPasswordViewModel::onEmailChanged,
+        onSendClick = forgotPasswordViewModel::sendPasswordResetEmail,
+        onNavigateToLogin = onNavigateToLogin
+    )
+}
+
+/**
+ * Component without ViewModel to facilitate previews
+ */
+@Composable
+private fun ForgotPasswordScreenContent(
+    uiState: ForgotPasswordUiState,
+    onEmailChanged: (String) -> Unit,
+    onSendClick: () -> Unit,
+    onNavigateToLogin: () -> Unit
+) {
+    val focusManager = LocalFocusManager.current
 
     Column(
         modifier = Modifier
@@ -71,7 +91,7 @@ fun ForgotPasswordScreen(
         )
         Spacer(modifier = Modifier.height(AppSpacing.small))
         Text(
-            text = stringResource(R.string.login_tagline),
+            text = stringResource(R.string.forgot_password_tagline),
             modifier = Modifier.fillMaxWidth(),
             textAlign = TextAlign.Center,
             style = MaterialTheme.typography.bodyLarge,
@@ -88,7 +108,7 @@ fun ForgotPasswordScreen(
                 color = LocalAppColors.current.black
             )
 
-            Spacer(modifier = Modifier.height(AppSpacing.xlarge))
+            Spacer(modifier = Modifier.height(AppSpacing.small))
 
             // Subtitle
             Text(
@@ -104,7 +124,7 @@ fun ForgotPasswordScreen(
             // Email field
             TrueStayTextField(
                 value = uiState.email,
-                onValueChange = forgotPasswordViewModel::onEmailChanged,
+                onValueChange = onEmailChanged,
                 label = stringResource(R.string.forgot_password_email),
                 placeholder = stringResource(R.string.forgot_password_email_placeholder),
                 leadingIcon = TrueStayIcons.Mail,
@@ -114,12 +134,12 @@ fun ForgotPasswordScreen(
                 keyboardActions = KeyboardActions(
                     onDone = {
                         focusManager.clearFocus()
-                        forgotPasswordViewModel.sendPasswordResetEmail()
+                        onSendClick()
                     }
                 )
             )
 
-            Spacer(modifier = Modifier.height(AppSpacing.medium))
+            Spacer(modifier = Modifier.height(AppSpacing.small))
 
             // Note
             Text(
@@ -135,7 +155,7 @@ fun ForgotPasswordScreen(
             // Send button
             TrueStayButton(
                 text = stringResource(R.string.forgot_password_send_button),
-                onClick = forgotPasswordViewModel::sendPasswordResetEmail,
+                onClick = onSendClick,
                 enabled = !uiState.isLoading,
                 isLoading = uiState.isLoading
             )
@@ -162,7 +182,7 @@ fun ForgotPasswordScreen(
 
             Spacer(modifier = Modifier.height(AppSpacing.xlarge))
 
-            // Back to login text and button
+            // Back to login button
             TrueStayButton(
                 text = stringResource(R.string.forgot_password_back_to_login),
                 onClick = onNavigateToLogin,
@@ -172,3 +192,83 @@ fun ForgotPasswordScreen(
         }
     }
 }
+
+// ==========================================
+// Previews
+// ==========================================
+@Preview(name = "Forgot Password - Empty", showBackground = true)
+@Composable
+private fun ForgotPasswordEmptyPreview() {
+    TrueStayTheme {
+        ForgotPasswordScreenContent(
+            uiState = ForgotPasswordUiState(),
+            onEmailChanged = {},
+            onSendClick = {},
+            onNavigateToLogin = {}
+        )
+    }
+}
+
+@Preview(name = "Forgot Password - Filled", showBackground = true)
+@Composable
+private fun ForgotPasswordFilledPreview() {
+    TrueStayTheme {
+        ForgotPasswordScreenContent(
+            uiState = ForgotPasswordUiState(
+                email = "user@example.com"
+            ),
+            onEmailChanged = {},
+            onSendClick = {},
+            onNavigateToLogin = {}
+        )
+    }
+}
+
+@Preview(name = "Forgot Password - With Error", showBackground = true)
+@Composable
+private fun ForgotPasswordErrorPreview() {
+    TrueStayTheme {
+        ForgotPasswordScreenContent(
+            uiState = ForgotPasswordUiState(
+                email = "invalid-email",
+                emailError = "Email invalide"
+            ),
+            onEmailChanged = {},
+            onSendClick = {},
+            onNavigateToLogin = {}
+        )
+    }
+}
+
+@Preview(name = "Forgot Password - Global Error", showBackground = true)
+@Composable
+private fun ForgotPasswordGlobalErrorPreview() {
+    TrueStayTheme {
+        ForgotPasswordScreenContent(
+            uiState = ForgotPasswordUiState(
+                email = "user@example.com",
+                globalError = "Aucun utilisateur trouvé avec cet email"
+            ),
+            onEmailChanged = {},
+            onSendClick = {},
+            onNavigateToLogin = {}
+        )
+    }
+}
+
+@Preview(name = "Forgot Password - Loading", showBackground = true)
+@Composable
+private fun ForgotPasswordLoadingPreview() {
+    TrueStayTheme {
+        ForgotPasswordScreenContent(
+            uiState = ForgotPasswordUiState(
+                email = "user@example.com",
+                isLoading = true
+            ),
+            onEmailChanged = {},
+            onSendClick = {},
+            onNavigateToLogin = {}
+        )
+    }
+}
+

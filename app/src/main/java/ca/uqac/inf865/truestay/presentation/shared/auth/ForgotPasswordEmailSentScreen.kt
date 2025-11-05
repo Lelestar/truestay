@@ -2,10 +2,8 @@ package ca.uqac.inf865.truestay.presentation.shared.auth
 
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
-import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
@@ -13,8 +11,8 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.shape.CircleShape
-import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
@@ -22,14 +20,19 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.text.buildAnnotatedString
 import androidx.compose.ui.text.style.TextAlign
+import androidx.compose.ui.text.withStyle
+import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import ca.uqac.inf865.truestay.R
 import ca.uqac.inf865.truestay.presentation.common.components.TrueStayButton
 import ca.uqac.inf865.truestay.presentation.common.components.TrueStayCard
+import ca.uqac.inf865.truestay.presentation.common.components.TrueStayIcon
 import ca.uqac.inf865.truestay.presentation.common.icons.TrueStayIcons
 import ca.uqac.inf865.truestay.presentation.theme.AppSpacing
 import ca.uqac.inf865.truestay.presentation.theme.LocalAppColors
+import ca.uqac.inf865.truestay.presentation.theme.TrueStayTheme
 
 @Composable
 fun ForgotPasswordEmailSentScreen(
@@ -68,15 +71,15 @@ fun ForgotPasswordEmailSentScreen(
                     .align(Alignment.CenterHorizontally),
                 contentAlignment = Alignment.Center
             ) {
-                Icon(
-                    painter = painterResource(id = TrueStayIcons.Check),
-                    contentDescription = null,
+                TrueStayIcon(
+                    iconRes = TrueStayIcons.Check,
                     tint = LocalAppColors.current.success,
-                    modifier = Modifier.size(32.dp)
+                    contentDescriptionRes = null,
+                    size = 32.dp
                 )
             }
 
-            Spacer(modifier = Modifier.height(AppSpacing.large))
+            Spacer(modifier = Modifier.height(AppSpacing.xlarge))
 
             // Title
             Text(
@@ -87,7 +90,7 @@ fun ForgotPasswordEmailSentScreen(
                 color = LocalAppColors.current.black
             )
 
-            Spacer(modifier = Modifier.height(AppSpacing.medium))
+            Spacer(modifier = Modifier.height(AppSpacing.small))
 
             // Subtitle
             Text(
@@ -105,49 +108,53 @@ fun ForgotPasswordEmailSentScreen(
                 text = email,
                 modifier = Modifier.fillMaxWidth(),
                 textAlign = TextAlign.Center,
-                style = MaterialTheme.typography.bodyMedium,
+                style = MaterialTheme.typography.headlineSmall,
                 color = LocalAppColors.current.primary
             )
 
             Spacer(modifier = Modifier.height(AppSpacing.xlarge))
 
-            // Steps card
-            Box(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .clip(MaterialTheme.shapes.medium)
-                    .background(LocalAppColors.current.primaryLight.copy(alpha = 0.1f))
-                    .padding(AppSpacing.large)
+            // Steps
+            Surface(
+                modifier = Modifier.fillMaxWidth(),
+                shape = MaterialTheme.shapes.medium,
+                color = LocalAppColors.current.infoSurface,
+                border = androidx.compose.foundation.BorderStroke(
+                    width = 1.dp,
+                    color = LocalAppColors.current.info
+                )
             ) {
-                Column {
+                Column(
+                    modifier = Modifier.padding(AppSpacing.large)
+                ) {
                     Text(
                         text = stringResource(R.string.forgot_password_email_sent_steps_title),
-                        style = MaterialTheme.typography.titleMedium,
-                        color = LocalAppColors.current.black
+                        style = MaterialTheme.typography.headlineSmall,
+                        color = LocalAppColors.current.info
                     )
 
                     Spacer(modifier = Modifier.height(AppSpacing.medium))
 
-                    // Step 1
-                    StepRow(
-                        number = 1,
-                        text = stringResource(R.string.forgot_password_email_sent_step_1)
+                    Text(
+                        text = "1. ${stringResource(R.string.forgot_password_email_sent_step_1)}",
+                        style = MaterialTheme.typography.bodyMedium,
+                        color = LocalAppColors.current.onInfoSurface
                     )
 
                     Spacer(modifier = Modifier.height(AppSpacing.small))
 
-                    // Step 2
-                    StepRow(
-                        number = 2,
-                        text = stringResource(R.string.forgot_password_email_sent_step_2)
+                    Text(
+                        text = "2. ${stringResource(R.string.forgot_password_email_sent_step_2)}",
+                        style = MaterialTheme.typography.bodyMedium,
+                        color = LocalAppColors.current.onInfoSurface
                     )
 
                     Spacer(modifier = Modifier.height(AppSpacing.small))
 
-                    // Step 3
-                    StepRow(
-                        number = 3,
-                        text = stringResource(R.string.forgot_password_email_sent_step_3)
+                    Text(
+                        text = "3. ${stringResource(R.string.forgot_password_email_sent_step_3)}",
+                        style = MaterialTheme.typography.bodyMedium,
+                        color = LocalAppColors.current.onInfoSurface
                     )
                 }
             }
@@ -155,13 +162,7 @@ fun ForgotPasswordEmailSentScreen(
             Spacer(modifier = Modifier.height(AppSpacing.xlarge))
 
             // Note
-            Text(
-                text = stringResource(R.string.forgot_password_email_sent_note),
-                modifier = Modifier.fillMaxWidth(),
-                style = MaterialTheme.typography.bodySmall,
-                color = LocalAppColors.current.grayDark,
-                textAlign = TextAlign.Start
-            )
+            NoteText()
 
             Spacer(modifier = Modifier.height(AppSpacing.xlarge))
 
@@ -174,27 +175,50 @@ fun ForgotPasswordEmailSentScreen(
     }
 }
 
+
 @Composable
-private fun StepRow(
-    number: Int,
-    text: String
-) {
-    Row(
-        modifier = Modifier.fillMaxWidth(),
-        horizontalArrangement = Arrangement.Start,
-        verticalAlignment = Alignment.Top
-    ) {
-        Text(
-            text = "$number.",
-            style = MaterialTheme.typography.bodyMedium,
-            color = LocalAppColors.current.primary
+private fun NoteText() {
+    val colors = LocalAppColors.current
+    val labelStyle = MaterialTheme.typography.titleSmall.toSpanStyle().copy(color = colors.grayDark)
+    val textStyle = MaterialTheme.typography.bodySmall.toSpanStyle().copy(color = colors.grayDark)
+
+    val note = buildAnnotatedString {
+        withStyle(labelStyle) {
+            append(stringResource(R.string.forgot_password_email_sent_note_label))
+        }
+        append(" ")
+        withStyle(textStyle) {
+            append(stringResource(R.string.forgot_password_email_sent_note))
+        }
+    }
+
+    Text(
+        text = note,
+        modifier = Modifier.fillMaxWidth()
+    )
+}
+
+// ==========================================
+// Previews
+// ==========================================
+@Preview(name = "Email Sent", showBackground = true)
+@Composable
+private fun ForgotPasswordEmailSentPreview() {
+    TrueStayTheme {
+        ForgotPasswordEmailSentScreen(
+            email = "user@example.com",
+            onNavigateToLogin = {}
         )
-        Spacer(modifier = Modifier.padding(horizontal = AppSpacing.small))
-        Text(
-            text = text,
-            style = MaterialTheme.typography.bodyMedium,
-            color = LocalAppColors.current.grayDark,
-            modifier = Modifier.weight(1f)
+    }
+}
+
+@Preview(name = "Email Sent - Long Email", showBackground = true)
+@Composable
+private fun ForgotPasswordEmailSentLongEmailPreview() {
+    TrueStayTheme {
+        ForgotPasswordEmailSentScreen(
+            email = "very.long.email.address@example-company.com",
+            onNavigateToLogin = {}
         )
     }
 }
