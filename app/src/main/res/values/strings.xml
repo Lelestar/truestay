@@ -47,15 +47,16 @@
     <string name="forgot_password_email_placeholder">jean.dupont@example.com</string>
     <string name="forgot_password_send_button">Envoyer le lien de réinitialisation</string>
     <string name="forgot_password_back_to_login">Retour à la connexion</string>
-    <string name="forgot_password_note">Nous vous enverrons un email valide durant 24h à l\'adresse renseignée pour vous permettre de réinitialiser votre mot de passe.</string>
+    <string name="forgot_password_note">Assurez-vous qu\'il s\'agit de l\'email utilisé lors de votre inscription.</string>
 
     <!-- Forgot Password Email Sent -->
     <string name="forgot_password_email_sent_title">Email envoyé !</string>
-    <string name="forgot_password_email_sent_subtitle">Un email a été envoyé à l\'adresse :</string>
+    <string name="forgot_password_email_sent_subtitle">Un email de réinitialisation a été envoyé à :</string>
     <string name="forgot_password_email_sent_steps_title">Prochaines étapes :</string>
     <string name="forgot_password_email_sent_step_1">Consultez votre boîte de réception</string>
     <string name="forgot_password_email_sent_step_2">Cliquez sur le lien dans l\'email</string>
     <string name="forgot_password_email_sent_step_3">Créez votre nouveau mot de passe</string>
+    <string name="forgot_password_email_sent_note_label">Note :</string>
     <string name="forgot_password_email_sent_note">Le lien expire dans 24 heures. Si vous ne trouvez pas l\'email, vérifiez vos spams.</string>
     <string name="forgot_password_email_sent_button">Retour à la connexion</string>
 
