@@ -4,7 +4,6 @@ import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.Image
-import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
@@ -26,14 +25,17 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.style.TextAlign
+import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import ca.uqac.inf865.truestay.R
 import ca.uqac.inf865.truestay.presentation.common.components.ButtonVariant
 import ca.uqac.inf865.truestay.presentation.common.components.TrueStayButton
 import ca.uqac.inf865.truestay.presentation.common.components.TrueStayCard
+import ca.uqac.inf865.truestay.presentation.common.components.TrueStayIcon
 import ca.uqac.inf865.truestay.presentation.common.icons.TrueStayIcons
 import ca.uqac.inf865.truestay.presentation.theme.AppSpacing
 import ca.uqac.inf865.truestay.presentation.theme.LocalAppColors
+import ca.uqac.inf865.truestay.presentation.theme.TrueStayTheme
 
 @Composable
 fun RoleSelectionScreen(
@@ -44,17 +46,16 @@ fun RoleSelectionScreen(
         modifier = Modifier
             .fillMaxSize()
             .padding(AppSpacing.large),
-        horizontalAlignment = Alignment.CenterHorizontally,
-        verticalArrangement = Arrangement.spacedBy(AppSpacing.large)
+        horizontalAlignment = Alignment.CenterHorizontally
     ) {
-        // Icon
+        // Logo
         Image(
             painter = painterResource(id = R.drawable.logo_truestay),
-            contentDescription = "TrueStay Logo"
+            contentDescription = stringResource(R.string.app_name)
         )
-
+        Spacer(modifier = Modifier.height(AppSpacing.small))
         Text(
-            text = stringResource(R.string.create_account),
+            text = stringResource(R.string.role_create_account),
             modifier = Modifier.fillMaxWidth(),
             textAlign = TextAlign.Center,
             style = MaterialTheme.typography.bodyLarge,
@@ -66,15 +67,15 @@ fun RoleSelectionScreen(
         TrueStayCard(modifier = Modifier.fillMaxWidth()) {
             // Title
             Text(
-                text = stringResource(R.string.you_are),
+                text = stringResource(R.string.role_you_are),
                 style = MaterialTheme.typography.headlineMedium,
                 color = LocalAppColors.current.black
             )
 
-            Spacer(modifier = Modifier.height(AppSpacing.medium))
+            Spacer(modifier = Modifier.height(AppSpacing.small))
 
             Text(
-                text = stringResource(R.string.profile_selection),
+                text = stringResource(R.string.role_profile_selection),
                 style = MaterialTheme.typography.bodyMedium,
                 color = LocalAppColors.current.grayDark
             )
@@ -84,22 +85,22 @@ fun RoleSelectionScreen(
                 // Tenant Tile
                 RoleTile(
                     iconRes = TrueStayIcons.House,
-                    iconBg = MaterialTheme.colorScheme.primary.copy(alpha = 0.12f),
+                    iconBg = LocalAppColors.current.primarySurface,
                     iconTint = MaterialTheme.colorScheme.primary,
-                    title = stringResource(R.string.tenant),
-                    description = stringResource(R.string.tenant_description),
+                    title = stringResource(R.string.role_tenant),
+                    description = stringResource(R.string.role_tenant_description),
                     onClick = { onRoleSelected("tenant") }
                 )
 
                 Spacer(modifier = Modifier.height(AppSpacing.large))
 
-                // Renter Tile
+                // Landlord Tile
                 RoleTile(
                     iconRes = TrueStayIcons.Building,
-                    iconBg = MaterialTheme.colorScheme.secondary.copy(alpha = 0.12f),
+                    iconBg = LocalAppColors.current.primaryVariantSurface,
                     iconTint = MaterialTheme.colorScheme.secondary,
-                    title = stringResource(R.string.renter) ,
-                    description = stringResource(R.string.renter_description),
+                    title = stringResource(R.string.role_landlord) ,
+                    description = stringResource(R.string.role_landlord_description),
                     onClick = { onRoleSelected("landlord") }
                 )
 
@@ -115,7 +116,7 @@ fun RoleSelectionScreen(
 
             // Register text and button
             Text(
-                text = stringResource(R.string.already_have_account),
+                text = stringResource(R.string.role_already_have_account),
                 modifier = Modifier.fillMaxWidth(),
                 style = MaterialTheme.typography.bodyMedium,
                 color = LocalAppColors.current.grayDark,
@@ -145,41 +146,54 @@ private fun RoleTile(
     Row(
         modifier = Modifier
             .fillMaxWidth()
-            .clip(RoundedCornerShape(10.dp))
-            .border(width = 1.dp, color = borderColor, shape = RoundedCornerShape(10.dp))
+            .clip(MaterialTheme.shapes.medium)
+            .border(width = 2.dp, color = borderColor, shape = MaterialTheme.shapes.medium)
             .clickable { onClick() }
-            .padding(14.dp),
-        verticalAlignment = Alignment.CenterVertically
+            .padding(AppSpacing.large),
+        verticalAlignment = Alignment.Top
     ) {
         Box(
             modifier = Modifier
-                .size(44.dp)
-                .clip(RoundedCornerShape(12.dp))
+                .size(48.dp)
+                .clip(RoundedCornerShape(50.dp))
                 .background(iconBg),
             contentAlignment = Alignment.Center
         ) {
-            androidx.compose.material3.Icon(
-                painter = painterResource(id = iconRes),
-                contentDescription = null,
-                modifier = Modifier.size(22.dp),
-                tint = iconTint
+            TrueStayIcon(
+                iconRes = iconRes,
+                tint = iconTint,
+                contentDescriptionRes = null,
             )
         }
 
-        Spacer(modifier = Modifier.size(12.dp))
+        Spacer(modifier = Modifier.size(AppSpacing.large))
 
         Column(modifier = Modifier.fillMaxWidth()) {
             Text(
                 text = title,
-                style = MaterialTheme.typography.titleSmall,
-                color = MaterialTheme.colorScheme.onSurface
+                style = MaterialTheme.typography.headlineSmall,
+                color = LocalAppColors.current.black
             )
-            Spacer(modifier = Modifier.height(4.dp))
+            Spacer(modifier = Modifier.height(AppSpacing.small))
             Text(
                 text = description,
-                style = MaterialTheme.typography.bodySmall,
-                color = MaterialTheme.colorScheme.onSurfaceVariant
+                style = MaterialTheme.typography.bodyMedium,
+                color = LocalAppColors.current.grayDark
             )
         }
+    }
+}
+
+// ==========================================
+// Previews
+// ==========================================
+@Preview(name = "Role Selection", showBackground = true)
+@Composable
+private fun RoleSelectionScreenPreview() {
+    TrueStayTheme {
+        RoleSelectionScreen(
+            onRoleSelected = {},
+            onNavigateToLogin = {}
+        )
     }
 }
