@@ -34,8 +34,8 @@ data class AddressDto(
     val postalCode: String = "",
     val province: String = "",
     val country: String = "",
-    val latitude: Double? = null,
-    val longitude: Double? = null
+    val latitude: Double = 0.0,
+    val longitude: Double = 0.0
 )
 
 data class PropertyRatingsDto(
