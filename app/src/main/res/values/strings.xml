@@ -39,6 +39,27 @@
     <string name="login_error_password_required">Le mot de passe est requis</string>
     <string name="login_error_password_min_length">Minimum 8 caractères</string>
 
+    <!-- Forgot Password -->
+    <string name="forgot_password_tagline">Réinitialiser votre mot de passe</string>
+    <string name="forgot_password_title">Mot de passe oublié ?</string>
+    <string name="forgot_password_subtitle">Entrez votre adresse email et nous vous enverrons un lien pour réinitialiser votre mot de passe.</string>
+    <string name="forgot_password_email">Email</string>
+    <string name="forgot_password_email_placeholder">jean.dupont@example.com</string>
+    <string name="forgot_password_send_button">Envoyer le lien de réinitialisation</string>
+    <string name="forgot_password_back_to_login">Retour à la connexion</string>
+    <string name="forgot_password_note">Assurez-vous qu\'il s\'agit de l\'email utilisé lors de votre inscription.</string>
+
+    <!-- Forgot Password Email Sent -->
+    <string name="forgot_password_email_sent_title">Email envoyé !</string>
+    <string name="forgot_password_email_sent_subtitle">Un email de réinitialisation a été envoyé à :</string>
+    <string name="forgot_password_email_sent_steps_title">Prochaines étapes :</string>
+    <string name="forgot_password_email_sent_step_1">Consultez votre boîte de réception</string>
+    <string name="forgot_password_email_sent_step_2">Cliquez sur le lien dans l\'email</string>
+    <string name="forgot_password_email_sent_step_3">Créez votre nouveau mot de passe</string>
+    <string name="forgot_password_email_sent_note_label">Note :</string>
+    <string name="forgot_password_email_sent_note">Le lien expire dans 24 heures. Si vous ne trouvez pas l\'email, vérifiez vos spams.</string>
+    <string name="forgot_password_email_sent_button">Retour à la connexion</string>
+
     <!-- Role Selection -->
     <string name="role_create_account">Créez votre compte</string>
     <string name="role_you_are">Vous êtes :</string>
