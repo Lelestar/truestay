@@ -1284,11 +1284,19 @@ Note: pour accéder facilement à l'utilisateur courant, une extension `remember
 
 Les émulateurs se lancent avec des données de seed (dans `emulator-seed-data/`) :
 
-**Compte de test** :
+**Comptes de test** :
 ```
-Locataire :
-- Email: test@example.com
-- Password: 12345678
+Locataires (mot de passe commun: `Truestay123`) :                                           
+- `tania.tremblay@example.com`                                                                            
+- `marc.gagnon@example.com`                                                                                                                                               
+- `sophie.lavoie@example.com`                                                               
+- `julien.ouellet@example.com`
+- `aisha.benali@example.com`                                                                                                                                              
+
+Propriétaires (mot de passe commun: `Truestay123`) :                                                                                                                      
+- `luc.dubois@owners.ca`                                                                                  
+- `catherine.moreau@owners.ca`                                                                                                                                            
+- `etienne.lefebvre@owners.ca`
 ```
 D'autres comptes et données pourront être ajoutés au besoin.
 
