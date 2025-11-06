@@ -91,4 +91,7 @@ dependencies {
     // Coil for image loading
     implementation(libs.coil.compose)
     implementation(libs.coil.network.okhttp)
+
+    // DataStore for preferences
+    implementation(libs.androidx.datastore.preferences)
 }

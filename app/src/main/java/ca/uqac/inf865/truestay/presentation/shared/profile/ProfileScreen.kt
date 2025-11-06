@@ -22,9 +22,6 @@ fun ProfileScreen(
     viewModel: ProfileViewModel = hiltViewModel(),
     authViewModel: AuthViewModel = hiltViewModel()
 ) {
-    // Example to get the current authenticated user
-    val currentUser = rememberCurrentUser()
-
     Column(
         modifier = Modifier
             .fillMaxSize()
