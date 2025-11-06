@@ -19,6 +19,9 @@
     <string name="screen_title_add_property">Ajouter un logement</string>
     <string name="screen_title_edit_property">Modifier le logement</string>
     <string name="screen_title_create_rental">Créer une location</string>
+    <string name="screen_title_edit_profile">Modifier le profil</string>
+    <string name="screen_title_change_email">Modifier l\'email</string>
+    <string name="screen_title_change_password">Modifier le mot de passe</string>
 
     <!-- Content Descriptions for Accessibility -->
     <string name="cd_show_password">Afficher le mot de passe</string>
