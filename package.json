@@ -5,6 +5,7 @@
     "emulators:fresh": "firebase emulators:start",
     "emulators:export": "firebase emulators:export ./emulator-seed-data",
     "emulators:seed": "ts-node scripts/seed-emulator.ts",
+    "seed:production": "ts-node scripts/seed-production.ts",
     "seed:apply-photos": "ts-node scripts/seed/apply-photo-map.ts"
   },
   "version": "1.0.0",

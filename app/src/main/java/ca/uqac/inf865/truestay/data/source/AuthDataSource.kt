@@ -13,21 +13,13 @@ class AuthDataSource @Inject constructor(
     fun getCurrentUser(): FirebaseUser? = auth.currentUser
 
     suspend fun signIn(email: String, password: String): FirebaseUser? {
-        return try {
-            val result = auth.signInWithEmailAndPassword(email, password).await()
-            result.user
-        } catch (e: Exception) {
-            null
-        }
+        val result = auth.signInWithEmailAndPassword(email, password).await()
+        return result.user
     }
 
     suspend fun signUp(email: String, password: String): FirebaseUser? {
-        return try {
-            val result = auth.createUserWithEmailAndPassword(email, password).await()
-            result.user
-        } catch (e: Exception) {
-            null
-        }
+        val result = auth.createUserWithEmailAndPassword(email, password).await()
+        return result.user
     }
 
     fun signOut() {

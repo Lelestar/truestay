@@ -17,6 +17,7 @@ object TrueStayIcons {
     // ============================================
     val Search = R.drawable.ic_search
     val Heart = R.drawable.ic_heart
+    val HeartFilled = R.drawable.ic_heart_filled
     val House = R.drawable.ic_house
     val User = R.drawable.ic_user
     val FolderOpen = R.drawable.ic_folder_open
@@ -39,6 +40,7 @@ object TrueStayIcons {
     val Scale = R.drawable.ic_scale
     val MapPin = R.drawable.ic_map_pin
     val Globe = R.drawable.ic_globe
+    val Image = R.drawable.ic_image
 
     // ============================================
     // ACTIONS & EDITING
@@ -86,6 +88,7 @@ object TrueStayIcons {
     val CircleAlert = R.drawable.ic_circle_alert
     val Danger = R.drawable.ic_danger
     val Star = R.drawable.ic_star
+    val StarFilled = R.drawable.ic_star_filled
     val TrendingUp = R.drawable.ic_trending_up
     val TrendingDown = R.drawable.ic_trending_down
 
