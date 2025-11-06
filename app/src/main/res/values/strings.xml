@@ -25,7 +25,7 @@
     <string name="cd_hide_password">Masquer le mot de passe</string>
     <string name="cd_back">Retour</string>
 
-    <!-- Auth -->
+    <!-- Login -->
     <string name="login_tagline">La transparence au service de la location</string>
     <string name="login_title">Connexion</string>
     <string name="login_email">Email</string>
@@ -39,6 +39,37 @@
     <string name="login_error_password_required">Le mot de passe est requis</string>
     <string name="login_error_password_min_length">Minimum 8 caractères</string>
 
+    <!-- Forgot Password -->
+    <string name="forgot_password_tagline">Réinitialiser votre mot de passe</string>
+    <string name="forgot_password_title">Mot de passe oublié ?</string>
+    <string name="forgot_password_subtitle">Entrez votre adresse email et nous vous enverrons un lien pour réinitialiser votre mot de passe.</string>
+    <string name="forgot_password_email">Email</string>
+    <string name="forgot_password_email_placeholder">jean.dupont@example.com</string>
+    <string name="forgot_password_send_button">Envoyer le lien de réinitialisation</string>
+    <string name="forgot_password_back_to_login">Retour à la connexion</string>
+    <string name="forgot_password_note">Assurez-vous qu\'il s\'agit de l\'email utilisé lors de votre inscription.</string>
+
+    <!-- Forgot Password Email Sent -->
+    <string name="forgot_password_email_sent_title">Email envoyé !</string>
+    <string name="forgot_password_email_sent_subtitle">Un email de réinitialisation a été envoyé à :</string>
+    <string name="forgot_password_email_sent_steps_title">Prochaines étapes :</string>
+    <string name="forgot_password_email_sent_step_1">Consultez votre boîte de réception</string>
+    <string name="forgot_password_email_sent_step_2">Cliquez sur le lien dans l\'email</string>
+    <string name="forgot_password_email_sent_step_3">Créez votre nouveau mot de passe</string>
+    <string name="forgot_password_email_sent_note_label">Note :</string>
+    <string name="forgot_password_email_sent_note">Le lien expire dans 24 heures. Si vous ne trouvez pas l\'email, vérifiez vos spams.</string>
+    <string name="forgot_password_email_sent_button">Retour à la connexion</string>
+
+    <!-- Role Selection -->
+    <string name="role_create_account">Créez votre compte</string>
+    <string name="role_you_are">Vous êtes :</string>
+    <string name="role_profile_selection">Sélectionnez votre profil pour continuer</string>
+    <string name="role_tenant">Locataire</string>
+    <string name="role_tenant_description">Je recherche un logement à louer et souhaite consulter les avis et réaliser des états des lieux</string>
+    <string name="role_landlord">Propriétaire</string>
+    <string name="role_landlord_description">Je mets en location un ou plusieurs logements et souhaite gérer mes biens</string>
+    <string name="role_already_have_account">Vous avez déjà un compte ?</string>
+
     <!-- Register -->
     <string name="register_title_tenant">Inscription Locataire</string>
     <string name="register_title_landlord">Inscription Propriétaire</string>
@@ -48,6 +79,7 @@
     <string name="register_last_name">Nom</string>
     <string name="register_email">Email</string>
     <string name="register_phone">Téléphone</string>
+    <string name="register_phone_placeholder">+33612345678</string>
     <string name="register_password">Mot de passe</string>
     <string name="register_password_confirm">Confirmer le mot de passe</string>
     <string name="register_terms_intro">En créant un compte, vous acceptez nos</string>
@@ -81,4 +113,14 @@
     <string name="auth_error_generic">Une erreur est survenue. Réessayez</string>
     <string name="auth_error_login">Erreur de connexion : %1$s</string>
     <string name="auth_error_register">Erreur d\'inscription : %1$s</string>
+
+    <!-- Search -->
+    <string name="search_placeholder">Rechercher par ville, quartier ou adresse</string>
+    <string name="search_no_results">Aucun résultat trouvé"</string>
+    <string name="search_results_found">%1$d résultats trouvés"</string>
+
+    <!-- Property -->
+    <string name="property_image_placeholder">Image du logement</string>
+    <string name="property_monthly_rent">%1$d $/mois</string>
+    <string name="property_rating">Note moyenne du logement</string>
 </resources>

@@ -9,6 +9,9 @@ plugins {
     // Plugins for Hilt
     id("com.google.devtools.ksp")
     id("com.google.dagger.hilt.android")
+
+    // Secrets Gradle Plugin
+    id("com.google.android.libraries.mapsplatform.secrets-gradle-plugin")
 }
 
 android {
@@ -27,7 +30,7 @@ android {
 
     buildTypes {
         debug {
-            buildConfigField("Boolean", "USE_EMULATORS", "true")
+            buildConfigField("Boolean", "USE_EMULATORS", "false")
             buildConfigField("String", "EMULATOR_HOST", "\"10.0.2.2\"")
             // Use "localhost" for physical devices connected to the machine running the emulators
         }
@@ -91,4 +94,13 @@ dependencies {
     // Coil for image loading
     implementation(libs.coil.compose)
     implementation(libs.coil.network.okhttp)
+
+    // Maps
+    implementation(libs.maps.compose)
+    //implementation(libs.play.services.maps)
+}
+
+secrets {
+    propertiesFileName = "secrets.properties"
+    defaultPropertiesFileName = "local.defaults.properties"
 }
