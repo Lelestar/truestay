@@ -16,6 +16,8 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.drawBehind
+import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
@@ -36,7 +38,17 @@ fun TrueStayBottomBar(
     currentDestination: NavDestination?,
     onItemClick: (BottomNavItem) -> Unit
 ) {
+    val borderColor = LocalAppColors.current.grayBorder
+
     NavigationBar(
+        modifier = Modifier.drawBehind {
+            drawLine(
+                color = borderColor,
+                start = Offset(0f, 0f),
+                end = Offset(size.width, 0f),
+                strokeWidth = 1.dp.toPx()
+            )
+        },
         containerColor = LocalAppColors.current.white
     ) {
         Row(

@@ -27,6 +27,7 @@
     <string name="cd_show_password">Afficher le mot de passe</string>
     <string name="cd_hide_password">Masquer le mot de passe</string>
     <string name="cd_back">Retour</string>
+    <string name="cd_clear_text">Effacer le texte</string>
 
     <!-- Login -->
     <string name="login_tagline">La transparence au service de la location</string>
@@ -82,6 +83,7 @@
     <string name="register_last_name">Nom</string>
     <string name="register_email">Email</string>
     <string name="register_phone">Téléphone</string>
+    <string name="register_phone_placeholder">+33612345678</string>
     <string name="register_password">Mot de passe</string>
     <string name="register_password_confirm">Confirmer le mot de passe</string>
     <string name="register_terms_intro">En créant un compte, vous acceptez nos</string>
@@ -115,4 +117,24 @@
     <string name="auth_error_generic">Une erreur est survenue. Réessayez</string>
     <string name="auth_error_login">Erreur de connexion : %1$s</string>
     <string name="auth_error_register">Erreur d\'inscription : %1$s</string>
+
+    <!-- Search -->
+    <string name="search_placeholder">Rechercher par ville, quartier ou adresse</string>
+    <string name="search_no_results">Aucun résultat trouvé</string>
+    <string name="search_results_found">%1$d résultats trouvés</string>
+    <string name="search_back_to_map">Carte</string>
+    <string name="search_filters">Filtres</string>
+    <string name="search_filter_price_range">Prix ($/mois)</string>
+    <string name="search_filter_surface_range">Surface</string>
+    <string name="search_filter_number_of_bedrooms">Nombre de chambres</string>
+    <string name="search_filter_min_avg_rating">Note moyenne minimale</string>
+    <string name="search_filter_available_now">Disponible maintenant</string>
+    <string name="search_filter_display">Afficher %1$d résultats</string>
+    <string name="search_filter_reset">Tout effacer</string>
+    <string name="search_error_generic">Une erreur est survenue : %1$s</string>
+
+    <!-- Property -->
+    <string name="property_image_placeholder">Image du logement</string>
+    <string name="property_monthly_rent">%1$d $/mois</string>
+    <string name="property_rating">Note moyenne du logement</string>
 </resources>
