@@ -37,45 +37,69 @@ import ca.uqac.inf865.truestay.presentation.theme.AppSpacing
 import ca.uqac.inf865.truestay.presentation.theme.LocalAppColors
 import ca.uqac.inf865.truestay.presentation.theme.TrueStayTheme
 
+enum class TextFieldSize {
+    Default,
+    Large
+}
+
 @Composable
 fun TrueStayTextField(
     value: String,
     onValueChange: (String) -> Unit,
-    label: String,
     modifier: Modifier = Modifier,
+    label: String? = null,
     placeholder: String? = null,
     isPassword: Boolean = false,
     leadingIcon: Int? = null,
     errorMessage: String? = null,
     enabled: Boolean = true,
+    showClearButton: Boolean = false,
+    onClear: (() -> Unit)? = null,
     keyboardType: KeyboardType = if (isPassword) KeyboardType.Password else KeyboardType.Text,
     imeAction: ImeAction = ImeAction.Done,
     onImeAction: (() -> Unit)? = null,
-    keyboardActions: KeyboardActions = KeyboardActions.Default
+    keyboardActions: KeyboardActions = KeyboardActions.Default,
+    size: TextFieldSize = TextFieldSize.Default
 ) {
     var passwordVisible by remember { mutableStateOf(false) }
     val interactionSource = remember { MutableInteractionSource() }
+
+    // Size-dependent values
+    val height = when (size) {
+        TextFieldSize.Default -> 32.dp
+        TextFieldSize.Large -> 40.dp
+    }
+    val iconSize = when (size) {
+        TextFieldSize.Default -> 16.dp
+        TextFieldSize.Large -> 24.dp
+    }
+    val textStyle = when (size) {
+        TextFieldSize.Default -> MaterialTheme.typography.bodyMedium
+        TextFieldSize.Large -> MaterialTheme.typography.bodyLarge
+    }
 
     Column(
         modifier = modifier,
         verticalArrangement = Arrangement.spacedBy(AppSpacing.small)
     ) {
-        // Label
-        Text(
-            text = label,
-            style = MaterialTheme.typography.titleMedium,
-            color = when {
-                errorMessage != null -> LocalAppColors.current.error
-                !enabled -> LocalAppColors.current.grayDark else -> LocalAppColors.current.black
-            }
-        )
+        // Label (optional)
+        if (label != null) {
+            Text(
+                text = label,
+                style = MaterialTheme.typography.titleMedium,
+                color = when {
+                    errorMessage != null -> LocalAppColors.current.error
+                    !enabled -> LocalAppColors.current.grayDark else -> LocalAppColors.current.black
+                }
+            )
+        }
 
         // TextField container
         BasicTextField(
             value = value,
             onValueChange = onValueChange,
             modifier = Modifier.fillMaxWidth(),
-            textStyle = MaterialTheme.typography.bodyMedium.copy(
+            textStyle = textStyle.copy(
                 color = if (enabled) LocalAppColors.current.black else LocalAppColors.current.grayDark
             ),
             keyboardOptions = KeyboardOptions(
@@ -107,7 +131,7 @@ fun TrueStayTextField(
                 Row(
                     modifier = Modifier
                         .fillMaxWidth()
-                        .height(32.dp)
+                        .height(height)
                         .clip(MaterialTheme.shapes.medium)
                         .background(
                             if (enabled) LocalAppColors.current.grayLight
@@ -124,7 +148,7 @@ fun TrueStayTextField(
                                 iconRes = TrueStayIcons.Lock,
                                 contentDescriptionRes = null,
                                 tint = LocalAppColors.current.grayDark,
-                                size = 16.dp
+                                size = iconSize
                             )
                         }
                         leadingIcon != null -> {
@@ -132,7 +156,7 @@ fun TrueStayTextField(
                                 iconRes = leadingIcon,
                                 contentDescriptionRes = null,
                                 tint = LocalAppColors.current.grayDark,
-                                size = 16.dp
+                                size = iconSize
                             )
                         }
                     }
@@ -146,7 +170,7 @@ fun TrueStayTextField(
                         if (value.isEmpty() && placeholder != null) {
                             Text(
                                 text = placeholder,
-                                style = MaterialTheme.typography.bodyMedium,
+                                style = textStyle,
                                 color = if (enabled) LocalAppColors.current.grayDark else LocalAppColors.current.grayLight )
                         }
 
@@ -154,11 +178,11 @@ fun TrueStayTextField(
                         innerTextField()
                     }
 
-                    // Trailing icon (password toggle)
+                    // Trailing icons
                     if (isPassword) {
                         IconButton(
                             onClick = { passwordVisible = !passwordVisible },
-                            modifier = Modifier.size(16.dp)
+                            modifier = Modifier.size(iconSize)
                         ) {
                             TrueStayIcon(
                                 iconRes = if (passwordVisible) {
@@ -172,7 +196,19 @@ fun TrueStayTextField(
                                 } else {
                                     R.string.cd_show_password
                                 },
-                                size = 16.dp
+                                size = iconSize
+                            )
+                        }
+                    } else if (showClearButton && value.isNotEmpty() && enabled) {
+                        IconButton(
+                            onClick = { onClear?.invoke() ?: onValueChange("") },
+                            modifier = Modifier.size(iconSize)
+                        ) {
+                            TrueStayIcon(
+                                iconRes = TrueStayIcons.X,
+                                contentDescriptionRes = R.string.cd_clear_text,
+                                tint = LocalAppColors.current.grayDark,
+                                size = iconSize
                             )
                         }
                     }
@@ -302,3 +338,24 @@ fun TrueStayTextFieldPhonePreview() {
         )
     }
 }
+
+@Preview(showBackground = true)
+@Composable
+fun TrueStayTextFieldLargePreview() {
+    TrueStayTheme {
+        var text by remember { mutableStateOf("") }
+        TrueStayTextField(
+            value = text,
+            onValueChange = { text = it },
+            label = "Search",
+            placeholder = "Search for a location",
+            leadingIcon = TrueStayIcons.Search,
+            showClearButton = true,
+            size = TextFieldSize.Large,
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(AppSpacing.medium)
+        )
+    }
+}
+

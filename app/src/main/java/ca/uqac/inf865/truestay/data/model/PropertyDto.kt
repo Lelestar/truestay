@@ -20,13 +20,14 @@ data class PropertyDto(
     val rooms: List<RoomDto> = emptyList(),
     val photos: List<String> = emptyList(),
     val landlordId: String = "",
-    val isInBuilding: Boolean = true,
-    val isAvailable: Boolean = true,
+    @field:JvmField val isInBuilding: Boolean = true,
+    @field:JvmField val isAvailable: Boolean = true,
     val status: String = "draft",
     val ratings: PropertyRatingsDto = PropertyRatingsDto(),
     val createdAt: Long = 0L,
     val updatedAt: Long = 0L
 )
+// @JvmField is used to ensure proper serialization/deserialization of Boolean fields with Firestore
 
 data class AddressDto(
     val street: String = "",

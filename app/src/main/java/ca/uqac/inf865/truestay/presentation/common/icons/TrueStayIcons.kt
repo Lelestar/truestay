@@ -100,6 +100,7 @@ object TrueStayIcons {
     val Funnel = R.drawable.ic_funnel
     val EllipsisVertical = R.drawable.ic_elipisis_vertical
     val SunMoon = R.drawable.ic_sun_moon
+    val Map = R.drawable.ic_map
 }
 
 /**

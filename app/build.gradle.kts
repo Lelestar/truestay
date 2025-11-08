@@ -30,7 +30,7 @@ android {
 
     buildTypes {
         debug {
-            buildConfigField("Boolean", "USE_EMULATORS", "false")
+            buildConfigField("Boolean", "USE_EMULATORS", "true")
             buildConfigField("String", "EMULATOR_HOST", "\"10.0.2.2\"")
             // Use "localhost" for physical devices connected to the machine running the emulators
         }
@@ -95,9 +95,9 @@ dependencies {
     implementation(libs.coil.compose)
     implementation(libs.coil.network.okhttp)
 
-    // Maps
+    // Maps & Places
     implementation(libs.maps.compose)
-    //implementation(libs.play.services.maps)
+    implementation(libs.places)
 }
 
 secrets {
