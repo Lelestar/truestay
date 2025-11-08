@@ -146,10 +146,6 @@ class PropertyRepositoryImpl @Inject constructor(
             val lat = property.address.latitude
             val lng = property.address.longitude
 
-            if (lat == null || lng == null) {
-                return false
-            }
-
             val inBounds = lat <= filters.geoBounds.northEast.latitude &&
                     lat >= filters.geoBounds.southWest.latitude &&
                     lng <= filters.geoBounds.northEast.longitude &&

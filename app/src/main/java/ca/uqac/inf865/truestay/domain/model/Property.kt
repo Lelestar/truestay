@@ -11,7 +11,7 @@ data class Property(
     val photos: List<String> = emptyList(),
     val landlordId: String = "",
     val isInBuilding: Boolean = true,
-    val isAvailable: Boolean = true,
+    val isAvailable: Boolean = true, // Denormalized for quick access, updated on rental update with cloud functions
     val status: PropertyStatus = PropertyStatus.DRAFT,
     val ratings: PropertyRatings = PropertyRatings(),
     val createdAt: Long = 0L,
