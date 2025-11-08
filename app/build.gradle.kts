@@ -9,6 +9,9 @@ plugins {
     // Plugins for Hilt
     id("com.google.devtools.ksp")
     id("com.google.dagger.hilt.android")
+
+    // Secrets Gradle Plugin
+    id("com.google.android.libraries.mapsplatform.secrets-gradle-plugin")
 }
 
 android {
@@ -94,4 +97,13 @@ dependencies {
 
     // DataStore for preferences
     implementation(libs.androidx.datastore.preferences)
+
+    // Maps & Places
+    implementation(libs.maps.compose)
+    implementation(libs.places)
+}
+
+secrets {
+    propertiesFileName = "secrets.properties"
+    defaultPropertiesFileName = "local.defaults.properties"
 }

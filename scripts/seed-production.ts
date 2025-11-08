@@ -6,13 +6,21 @@ import { seedFavorites } from './seed/favorites';
 import { seedReviews } from './seed/reviews';
 import { SeedContext } from './seed/types';
 
-// Point towards the local emulators
-process.env.FIRESTORE_EMULATOR_HOST = 'localhost:8080';
-process.env.FIREBASE_AUTH_EMULATOR_HOST = 'localhost:9099';
+// Import Firebase credentials
+const serviceAccount = require('../serviceAccountKey.json');
 
-admin.initializeApp({ projectId: 'truestay-8inf865' });
+admin.initializeApp({
+  credential: admin.credential.cert(serviceAccount),
+  projectId: 'truestay-8inf865'
+});
 
 async function main() {
+  console.log('⚠️  WARNING: You are about to seed PRODUCTION Firebase!');
+  console.log('This will create real data in your Firebase project.');
+
+  // Wait for 5 seconds to allow user to cancel if needed
+  await new Promise(resolve => setTimeout(resolve, 5000));
+
   const db = admin.firestore();
   const auth = admin.auth();
 
@@ -33,7 +41,7 @@ async function main() {
   console.log('--- Seeding reviews for ended rentals');
   await seedReviews(ctx, users, properties, rentals);
 
-  console.log('✅ Seed complete');
+  console.log('✅ Production seed complete');
 }
 
 main()

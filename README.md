@@ -209,13 +209,42 @@ Si vous voulez utiliser Firebase en production :
 6. Le placer dans `app/google-services.json`
 7. **⚠️ IMPORTANT** : Ne jamais commit ce fichier !
 
-### 3. Ouvrir le Projet dans Android Studio
+### 3. Configurer Google Maps & Places (API Key)
+
+L'application utilise Google Maps (Compose) et l'API Places pour l'autocomplétion/adresses.
+
+- Le projet est configuré avec le "Secrets Gradle Plugin" qui lit la clé depuis `secrets.properties` et fournit une valeur de secours depuis `local.defaults.properties`.
+
+#### Option A : Utiliser la clé du projet (membres de l'équipe)
+
+1. Récupérer le fichier `secrets.properties` depuis Clickup (Ressources)
+2. Le placer à la racine du projet (non versionné)
+3. Le plugin est déjà activé dans `app/build.gradle.kts` (rien d'autre à faire côté Gradle).
+4. `local.defaults.properties` fournit un fallback (`MAPS_API_KEY=DEFAULT_API_KEY`) qui ne permet pas un fonctionnement réel des cartes/Places. Utilisez bien `secrets.properties`.
+5. ⚠️ Ne committez jamais votre clé réelle. Gardez `secrets.properties` local et protégé.
+
+#### Option B : Utiliser votre propre clé Google Cloud
+
+1. Créer un projet sur Google Cloud Console et activer :
+   - Maps SDK for Android
+   - Places API
+2. Créer une clé API et (recommandé) la restreindre :
+   - Restriction par application Android (package `ca.uqac.inf865.truestay` + empreinte SHA‑1 du keystore debug/release selon usage)
+   - Restriction par APIs (autoriser uniquement Maps SDK for Android et Places API)
+3. Ajouter la clé dans `secrets.properties` à la racine :
+
+   ```properties
+   MAPS_API_KEY=VOTRE_CLE_API_ICI
+   ```
+4. Le plugin Secrets est déjà configuré dans `app/build.gradle.kts` et lira automatiquement la clé.
+
+### 4. Ouvrir le Projet dans Android Studio
 
 1. Ouvrir Android Studio
 2. **File → Open** → Sélectionner le dossier `TrueStay`
 3. Attendre la synchronisation Gradle (première fois peut prendre quelques minutes)
 
-### 4. Configurer le Mode de Build
+### 5. Configurer le Mode de Build
 
 Dans `app/build.gradle.kts`, deux modes sont disponibles :
 
@@ -234,7 +263,7 @@ buildTypes {
 - **`10.0.2.2`** : Pour émulateur Android (pointe vers localhost de votre machine)
 - **`localhost`** : Pour appareil physique connecté à votre réseau local
 
-### 5. Lancer l'Application
+### 6. Lancer l'Application
 
 1. **Démarrer les émulateurs Firebase** (dans un terminal séparé) :
    ```bash
@@ -1284,11 +1313,19 @@ Note: pour accéder facilement à l'utilisateur courant, une extension `remember
 
 Les émulateurs se lancent avec des données de seed (dans `emulator-seed-data/`) :
 
-**Compte de test** :
+**Comptes de test** :
 ```
-Locataire :
-- Email: test@example.com
-- Password: 12345678
+Locataires (mot de passe commun: `Truestay123`) :                                           
+- `tania.tremblay@example.com`                                                                            
+- `marc.gagnon@example.com`                                                                                                                                               
+- `sophie.lavoie@example.com`                                                               
+- `julien.ouellet@example.com`
+- `aisha.benali@example.com`                                                                                                                                              
+
+Propriétaires (mot de passe commun: `Truestay123`) :                                                                                                                      
+- `luc.dubois@owners.ca`                                                                                  
+- `catherine.moreau@owners.ca`                                                                                                                                            
+- `etienne.lefebvre@owners.ca`
 ```
 D'autres comptes et données pourront être ajoutés au besoin.
 

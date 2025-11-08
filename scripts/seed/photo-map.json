@@ -1,0 +1,53 @@
+[
+  {
+    "name": "4 1/2 Sherbrooke Est",
+    "photos": [
+      "http://localhost:9199/truestay-8inf865.firebasestorage.app/properties/wcHADytnjEUlKgEj10eU/living-1.jpg"
+    ]
+  },
+  {
+    "name": "Condo Vieux-Longueuil",
+    "photos": [
+      "http://localhost:9199/truestay-8inf865.firebasestorage.app/properties/rGgKdVDDCJUihjzHg9uj/kitchen-1.jpg",
+      "http://localhost:9199/truestay-8inf865.firebasestorage.app/properties/rGgKdVDDCJUihjzHg9uj/bedroom-1.jpg"
+    ]
+  },
+  {
+    "name": "Studio Lévis",
+    "photos": [
+      "http://localhost:9199/truestay-8inf865.firebasestorage.app/properties/e1T577k2VMCHWI3NDvBF/main-1.jpg"
+    ]
+  },
+  {
+    "name": "Condo lumineux au Plateau",
+    "photos": [
+      "http://localhost:9199/truestay-8inf865.firebasestorage.app/properties/ZQ5pxfI8B0ey3p4f5LbI/photo-1.jpg",
+      "http://localhost:9199/truestay-8inf865.firebasestorage.app/properties/ZQ5pxfI8B0ey3p4f5LbI/photo-2.jpg"
+    ]
+  },
+  {
+    "name": "Maison familiale à Laval",
+    "photos": [
+      "http://localhost:9199/truestay-8inf865.firebasestorage.app/properties/NmefyAF8z4D8j6APx4Zv/exterior-1.jpg",
+      "http://localhost:9199/truestay-8inf865.firebasestorage.app/properties/NmefyAF8z4D8j6APx4Zv/living-1.jpg"
+    ]
+  },
+  {
+    "name": "Triplex Gatineau - RDC",
+    "photos": [
+      "http://localhost:9199/truestay-8inf865.firebasestorage.app/properties/MM6ZXh6HyvJxzb2c5FQE/rdc-1.jpg"
+    ]
+  },
+  {
+    "name": "Appartement rénové Saint-Roch",
+    "photos": [
+      "http://localhost:9199/truestay-8inf865.firebasestorage.app/properties/D4mZpcDTim0Uc7Xz5MwS/photo-1.jpg"
+    ]
+  },
+  {
+    "name": "Maison jumelée Trois-Rivières",
+    "photos": [
+      "http://localhost:9199/truestay-8inf865.firebasestorage.app/properties/C9y4tyGE7R0dmVOQNVwP/exterior-1.jpg"
+    ]
+  }
+]
