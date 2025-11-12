@@ -22,6 +22,7 @@ import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.toArgb
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalDensity
+import androidx.compose.ui.res.pluralStringResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import androidx.core.content.res.ResourcesCompat
@@ -59,6 +60,9 @@ import androidx.compose.ui.window.Popup
 import androidx.compose.ui.window.PopupProperties
 import androidx.compose.ui.unit.IntOffset
 import androidx.compose.ui.unit.IntSize
+import ca.uqac.inf865.truestay.domain.model.AutocompleteSuggestion
+import ca.uqac.inf865.truestay.domain.model.BedroomCount
+import ca.uqac.inf865.truestay.domain.model.PropertyFilters
 import ca.uqac.inf865.truestay.presentation.common.components.ButtonVariant
 import ca.uqac.inf865.truestay.presentation.common.components.TextFieldSize
 import ca.uqac.inf865.truestay.presentation.common.components.TextSelectableButton
@@ -67,6 +71,19 @@ import ca.uqac.inf865.truestay.presentation.common.components.TrueStayRatingInpu
 import ca.uqac.inf865.truestay.utils.computeSliderConfig
 import ca.uqac.inf865.truestay.presentation.common.components.TrueStaySlider
 import ca.uqac.inf865.truestay.presentation.common.components.TrueStaySwitch
+
+/**
+ * Count the number of active filters
+ */
+private fun countActiveFilters(filters: PropertyFilters): Int {
+    var count = 0
+    if (filters.minPrice != null || filters.maxPrice != null) count++
+    if (filters.minSurface != null || filters.maxSurface != null) count++
+    if (filters.bedroomCounts.isNotEmpty()) count++
+    if (filters.minRating != null) count++
+    if (filters.availableOnly) count++
+    return count
+}
 
 /**
  * Creates a custom marker icon with rating displayed
@@ -179,22 +196,22 @@ fun SearchScreen(
 private fun SearchScreenContent(
     allProperties: List<Property>,
     properties: List<Property>,
-    filters: ca.uqac.inf865.truestay.domain.model.PropertyFilters,
+    filters: PropertyFilters,
     isLoading: Boolean,
     errorMessage: String?,
     searchQuery: String,
     searchLocation: LatLng?,
     searchZoomLevel: Float?,
     searchBounds: LatLngBounds?,
-    suggestions: List<ca.uqac.inf865.truestay.domain.model.AutocompleteSuggestion>,
+    suggestions: List<AutocompleteSuggestion>,
     onSearchQueryChange: (String) -> Unit,
     onSearchSubmit: (String) -> Unit,
-    onSuggestionClick: (ca.uqac.inf865.truestay.domain.model.AutocompleteSuggestion) -> Unit,
+    onSuggestionClick: (AutocompleteSuggestion) -> Unit,
     onClearSearchLocation: () -> Unit,
     onClearSuggestions: () -> Unit,
     onPriceRangeChange: (min: Int?, max: Int?) -> Unit,
     onSurfaceRangeChange: (min: Int?, max: Int?) -> Unit,
-    onToggleBedroomCount: (ca.uqac.inf865.truestay.domain.model.BedroomCount) -> Unit,
+    onToggleBedroomCount: (BedroomCount) -> Unit,
     onMinRatingChange: (Int) -> Unit,
     onAvailableOnlyChange: (Boolean) -> Unit,
     onResetFilters: () -> Unit,
@@ -235,11 +252,18 @@ private fun SearchScreenContent(
         animationSpec = spring()
     )
 
-    val customMarkers = remember(properties, successColor, dangerColor, whiteColor) {
-        properties.associateWith { property ->
-            val rating = property.ratings.propertyAverageRating
-            val markerColor = if (property.isAvailable) successColor else dangerColor
-            createCustomMarkerBitmap(context, rating, markerColor, whiteColor)
+    // Track if map is ready to prevent CameraUpdateFactory crashes
+    var isMapReady by remember { mutableStateOf(false) }
+
+    val customMarkers = remember(properties, successColor, dangerColor, whiteColor, isMapReady) {
+        if (!isMapReady) {
+            emptyMap()
+        } else {
+            properties.associateWith { property ->
+                val rating = property.ratings.propertyAverageRating
+                val markerColor = if (property.isAvailable) successColor else dangerColor
+                createCustomMarkerBitmap(context, rating, markerColor, whiteColor)
+            }
         }
     }
 
@@ -266,7 +290,8 @@ private fun SearchScreenContent(
     var anchorPos by remember { mutableStateOf(IntOffset(0, 0)) }
     var anchorSize by remember { mutableStateOf(IntSize.Zero) }
 
-    LaunchedEffect(allProperties) {
+    LaunchedEffect(allProperties, isMapReady) {
+        if (!isMapReady) return@LaunchedEffect
         val validProperties = allProperties.filter {
             it.address.latitude != 0.0 && it.address.longitude != 0.0
         }
@@ -295,7 +320,9 @@ private fun SearchScreenContent(
     }
 
     // Fit to bounds when available; otherwise center with zoom
-    LaunchedEffect(searchBounds, searchLocation, searchZoomLevel) {
+    LaunchedEffect(searchBounds, searchLocation, searchZoomLevel, isMapReady) {
+        if (!isMapReady) return@LaunchedEffect
+
         when {
             searchBounds != null -> {
                 val padding = with(density) { 80.dp.roundToPx() }
@@ -393,12 +420,30 @@ private fun SearchScreenContent(
                     size = TextFieldSize.Large
                 )
 
-                IconSelectableButton(
-                    selected = showFiltersBottomSheet,
-                    onClick = { showFiltersBottomSheet = true },
-                    iconRes = TrueStayIcons.Funnel,
-                    contentDescriptionRes = R.string.search_filters
-                )
+                BadgedBox(
+                    badge = {
+                        val activeFiltersCount = countActiveFilters(filters)
+                        if (activeFiltersCount > 0) {
+                            Badge(
+                                containerColor = LocalAppColors.current.primary,
+                                contentColor = LocalAppColors.current.white
+                            ) {
+                                Text(
+                                    text = activeFiltersCount.toString(),
+                                    style = MaterialTheme.typography.bodySmall,
+                                    color = LocalAppColors.current.white
+                                )
+                            }
+                        }
+                    }
+                ) {
+                    IconSelectableButton(
+                        selected = showFiltersBottomSheet,
+                        onClick = { showFiltersBottomSheet = true },
+                        iconRes = TrueStayIcons.Funnel,
+                        contentDescriptionRes = R.string.search_filters
+                    )
+                }
             }
         }
 
@@ -448,7 +493,7 @@ private fun SearchScreenContent(
                             val resultsText = if (properties.isEmpty()) {
                                 stringResource(R.string.search_no_results)
                             } else {
-                                stringResource(R.string.search_results_found, properties.size)
+                                pluralStringResource(R.plurals.search_results_found, properties.size, properties.size)
                             }
                             Text(
                                 text = resultsText,
@@ -490,6 +535,9 @@ private fun SearchScreenContent(
                         tiltGesturesEnabled = false,
                         zoomControlsEnabled = false
                     ),
+                    onMapLoaded = {
+                        isMapReady = true
+                    },
                     onMapClick = {
                         selectedProperty = null
                         onClearSuggestions()
@@ -511,10 +559,16 @@ private fun SearchScreenContent(
                                         onClearSuggestions()
                                         focusManager.clearFocus()
                                         keyboardController?.hide()
-                                        coroutineScope.launch {
-                                            cameraPositionState.animate(
-                                                CameraUpdateFactory.newLatLng(position)
-                                            )
+                                        if (isMapReady) {
+                                            coroutineScope.launch {
+                                                try {
+                                                    cameraPositionState.animate(
+                                                        CameraUpdateFactory.newLatLng(position)
+                                                    )
+                                                } catch (_: Exception) {
+                                                    // Ignore camera animation errors
+                                                }
+                                            }
                                         }
                                         true
                                     }
@@ -722,29 +776,29 @@ private fun SearchScreenContent(
                         Row(horizontalArrangement = Arrangement.spacedBy(AppSpacing.small)) {
                             val selected = filters.bedroomCounts
                             TextSelectableButton(
-                                selected = selected.contains(ca.uqac.inf865.truestay.domain.model.BedroomCount.ONE),
-                                onClick = { onToggleBedroomCount(ca.uqac.inf865.truestay.domain.model.BedroomCount.ONE) },
+                                selected = selected.contains(BedroomCount.ONE),
+                                onClick = { onToggleBedroomCount(BedroomCount.ONE) },
                                 text = "1",
                                 modifier = Modifier.width(42.dp),
                                 centerContent = true,
                             )
                             TextSelectableButton(
-                                selected = selected.contains(ca.uqac.inf865.truestay.domain.model.BedroomCount.TWO),
-                                onClick = { onToggleBedroomCount(ca.uqac.inf865.truestay.domain.model.BedroomCount.TWO) },
+                                selected = selected.contains(BedroomCount.TWO),
+                                onClick = { onToggleBedroomCount(BedroomCount.TWO) },
                                 text = "2",
                                 modifier = Modifier.width(42.dp),
                                 centerContent = true,
                             )
                             TextSelectableButton(
-                                selected = selected.contains(ca.uqac.inf865.truestay.domain.model.BedroomCount.THREE),
-                                onClick = { onToggleBedroomCount(ca.uqac.inf865.truestay.domain.model.BedroomCount.THREE) },
+                                selected = selected.contains(BedroomCount.THREE),
+                                onClick = { onToggleBedroomCount(BedroomCount.THREE) },
                                 text = "3",
                                 modifier = Modifier.width(42.dp),
                                 centerContent = true,
                             )
                             TextSelectableButton(
-                                selected = selected.contains(ca.uqac.inf865.truestay.domain.model.BedroomCount.FOUR_PLUS),
-                                onClick = { onToggleBedroomCount(ca.uqac.inf865.truestay.domain.model.BedroomCount.FOUR_PLUS) },
+                                selected = selected.contains(BedroomCount.FOUR_PLUS),
+                                onClick = { onToggleBedroomCount(BedroomCount.FOUR_PLUS) },
                                 text = "4+",
                                 modifier = Modifier.width(42.dp),
                                 centerContent = true,
@@ -784,7 +838,7 @@ private fun SearchScreenContent(
                             modifier = Modifier.weight(1f)
                         )
                         TrueStayButton(
-                            text = stringResource(R.string.search_filter_display, properties.size),
+                            text = pluralStringResource(R.plurals.search_filter_display, properties.size, properties.size),
                             onClick = { showFiltersBottomSheet = false },
                             isLoading = isLoading,
                             modifier = Modifier.weight(1f)
@@ -834,6 +888,9 @@ private fun SuggestionRow(
     }
 }
 
+// ==========================================
+// Previews
+// ==========================================
 @Preview(showBackground = true)
 @Composable
 private fun SuggestionRowPreview() {
@@ -865,7 +922,7 @@ private fun SearchScreenEmptyPreview() {
         SearchScreenContent(
             allProperties = emptyList(),
             properties = emptyList(),
-            filters = ca.uqac.inf865.truestay.domain.model.PropertyFilters(),
+            filters = PropertyFilters(),
             isLoading = false,
             searchQuery = "",
             searchLocation = null,

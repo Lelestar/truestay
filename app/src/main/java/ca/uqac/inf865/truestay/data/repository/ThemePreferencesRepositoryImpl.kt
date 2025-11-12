@@ -7,13 +7,18 @@ import androidx.datastore.preferences.core.booleanPreferencesKey
 import androidx.datastore.preferences.core.edit
 import androidx.datastore.preferences.preferencesDataStore
 import ca.uqac.inf865.truestay.domain.repository.ThemePreferencesRepository
+import dagger.hilt.android.qualifiers.ApplicationContext
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.map
-
+import javax.inject.Inject
+import javax.inject.Singleton
 
 private val Context.dataStore: DataStore<Preferences> by preferencesDataStore(name = "theme_preferences")
 
-class ThemePreferencesRepositoryImpl(private val context: Context): ThemePreferencesRepository {
+@Singleton
+class ThemePreferencesRepositoryImpl @Inject constructor(
+    @param:ApplicationContext private val context: Context
+) : ThemePreferencesRepository {
     companion object {
         private val IS_DARK_THEME = booleanPreferencesKey("is_dark_theme")
     }
