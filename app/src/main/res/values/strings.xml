@@ -11,6 +11,7 @@
 
     <!-- Screen Titles -->
     <string name="screen_title_favorites">Mes favoris</string>
+    <string name="screen_title_profil">Mon profil</string>
     <string name="screen_title_property_details">Détails du logement</string>
     <string name="screen_title_rental_details">Détails de la location</string>
     <string name="screen_title_add_review">Ajouter un avis</string>

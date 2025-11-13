@@ -23,5 +23,24 @@ class ProfileViewModel @Inject constructor(
         }
     }
 
+    fun updateUser(userId: String, firstName: String, lastName: String, email: String, phoneNumber: String) {
+        viewModelScope.launch {
+            val updatedUser = mapOf(
+                "firstName" to firstName,
+                "lastName" to lastName,
+                "email" to email,
+                "phoneNumber" to phoneNumber
+            )
+
+            val result = userRepository.updateUserFields(userId, updatedUser)
+
+            if (result.isSuccess) {
+                // Tu peux ajouter un message succès si besoin
+            } else {
+                // Gérer erreur si besoin
+            }
+        }
+    }
+
     // TODO: Implement profile logic
 }
