@@ -172,7 +172,7 @@ Avant de commencer, assurez-vous d'avoir installé :
 ```bash
 git clone https://github.com/Lelestar/truestay.git
 cd truestay
-```
+```[google-services.json](app/google-services.json)
 
 ### 2. Configurer Firebase
 

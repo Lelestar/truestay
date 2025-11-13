@@ -62,6 +62,18 @@ class FirestoreDataSource @Inject constructor(
             .await()
     }
 
+    suspend fun updateDocumentFields(
+        collection: String,
+        documentId: String,
+        fields: Map<String, Any?>
+    ) {
+        firestore.collection(collection)
+            .document(documentId)
+            .update(fields)
+            .await()
+    }
+
+
     suspend fun <T> queryDocuments(
         collection: String,
         field: String,

@@ -52,4 +52,16 @@ class UserRepositoryImpl @Inject constructor(
             Result.failure(e)
         }
     }
+
+    override suspend fun updateUserFields(userId: String, fields: Map<String, Any?>): Result<Unit> {
+        return try {
+            firestoreDataSource.updateDocumentFields("users", userId, fields)
+            Result.success(Unit)
+        } catch (e: Exception) {
+            Result.failure(e)
+        }
+    }
+
+
+
 }
