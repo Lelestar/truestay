@@ -197,4 +197,15 @@
     <string name="favorites_error_loading">Impossible de charger vos favoris pour le moment.</string>
     <string name="favorites_error_remove">Impossible de mettre à jour vos favoris pour l\'instant.</string>
     <string name="favorite_added_at">Ajouté le %1$s</string>
+
+    <!-- Rentals (Tenant) -->
+    <string name="rentals_title">Mes locations</string>
+    <string name="rentals_subtitle">Gérez vos logements en EDL ou laissez simplement</string>
+    <string name="rentals_current_rental">Location actuelle</string>
+    <string name="rentals_history">Historique</string>
+    <string name="rentals_no_rentals">Aucune location pour le moment</string>
+    <string name="rentals_no_history">Aucune location passée</string>
+    <string name="rentals_error_loading">Impossible de charger vos locations pour le moment.</string>
+    <string name="rentals_edl_button">État des lieux d\'entrée</string>
+    <string name="rentals_review_button">Ajouter un commentaire</string>
 </resources>
