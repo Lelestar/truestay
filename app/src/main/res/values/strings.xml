@@ -157,6 +157,29 @@
     <string name="property_available">Disponible</string>
     <string name="property_unavailable">Non disponible</string>
 
+    <!-- Property Details -->
+    <string name="property_details_lease_timeline">Déroulement du bail</string>
+    <string name="property_details_entry_inventory">EDL d\'entrée</string>
+    <string name="property_details_active_lease">Bail en cours</string>
+    <string name="property_details_exit_inventory">EDL de sortie</string>
+    <string name="property_details_inventory_section">État des lieux</string>
+    <string name="property_details_reviews_section">Mes avis</string>
+    <string name="property_details_add_review_button">Ajouter un avis</string>
+    <string name="property_details_date_range">%1$s - %2$s</string>
+    <string name="property_details_date_at_time">%1$s à %2$s</string>
+    <string name="property_details_not_available">Non disponible</string>
+    <string name="property_details_status_ready">Prêt</string>
+    <string name="property_details_status_in_progress">En cours</string>
+    <string name="property_details_status_pending">À venir</string>
+    <string name="property_details_property_rating">Logement</string>
+    <string name="property_details_building_rating">Immeuble</string>
+    <string name="property_details_neighborhood_rating">Quartier</string>
+    <string name="property_details_no_review">Aucun avis pour l\'instant</string>
+    <string name="property_details_bedrooms_count">%1$d chambres</string>
+    <string name="property_details_beds_count">%1$d lits</string>
+    <string name="property_details_bathrooms_count">%1$d salles de bain</string>
+
+
     <!-- Favorites -->
     <string name="favorites_sort_by">Trier par :</string>
     <plurals name="favorites_count">
