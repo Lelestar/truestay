@@ -161,6 +161,9 @@ private fun getScreenTitleRes(route: String): Int? {
             }
         }
         route.startsWith("create_rental/") -> R.string.screen_title_create_rental
+        route == "edit_profile" -> R.string.screen_title_edit_profile
+        route == "change_email" -> R.string.screen_title_change_email
+        route == "change_password" -> R.string.screen_title_change_password
         else -> null
     }
 }

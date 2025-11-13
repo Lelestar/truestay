@@ -63,4 +63,7 @@ sealed class Screen(val route: String) {
     object Signature : Screen("signature/{inventoryId}") {
         fun createRoute(inventoryId: String) = "signature/$inventoryId"
     }
+    object EditProfile : Screen("edit_profile")
+    object ChangeEmail : Screen("change_email")
+    object ChangePassword : Screen("change_password")
 }

@@ -10,6 +10,7 @@
     <string name="bottom_nav_landlord_rentals">Mes locations</string>
 
     <!-- Screen Titles -->
+    <string name="screen_title_favorites">Mes favoris</string>
     <string name="screen_title_property_details">Détails du logement</string>
     <string name="screen_title_rental_details">Détails de la location</string>
     <string name="screen_title_add_review">Ajouter un avis</string>
@@ -19,11 +20,18 @@
     <string name="screen_title_add_property">Ajouter un logement</string>
     <string name="screen_title_edit_property">Modifier le logement</string>
     <string name="screen_title_create_rental">Créer une location</string>
+    <string name="screen_title_edit_profile">Modifier le profil</string>
+    <string name="screen_title_change_email">Modifier l\'email</string>
+    <string name="screen_title_change_password">Modifier le mot de passe</string>
 
     <!-- Content Descriptions for Accessibility -->
     <string name="cd_show_password">Afficher le mot de passe</string>
     <string name="cd_hide_password">Masquer le mot de passe</string>
     <string name="cd_back">Retour</string>
+    <string name="cd_clear_text">Effacer le texte</string>
+
+    <!-- Common -->
+    <string name="common_retry">R&#233;essayer</string>
 
     <!-- Login -->
     <string name="login_tagline">La transparence au service de la location</string>
@@ -79,6 +87,7 @@
     <string name="register_last_name">Nom</string>
     <string name="register_email">Email</string>
     <string name="register_phone">Téléphone</string>
+    <string name="register_phone_placeholder">+33612345678</string>
     <string name="register_password">Mot de passe</string>
     <string name="register_password_confirm">Confirmer le mot de passe</string>
     <string name="register_terms_intro">En créant un compte, vous acceptez nos</string>
@@ -112,4 +121,57 @@
     <string name="auth_error_generic">Une erreur est survenue. Réessayez</string>
     <string name="auth_error_login">Erreur de connexion : %1$s</string>
     <string name="auth_error_register">Erreur d\'inscription : %1$s</string>
+
+    <!-- Search -->
+    <string name="search_placeholder">Rechercher par ville, quartier ou adresse</string>
+    <string name="search_no_results">Aucun résultat trouvé</string>
+    <plurals name="search_results_found">
+        <item quantity="one">%1$d résultat trouvé</item>
+        <item quantity="other">%1$d résultats trouvés</item>
+    </plurals>
+    <string name="search_back_to_map">Carte</string>
+    <string name="search_filters">Filtres</string>
+    <string name="search_filter_price_range">Prix ($/mois)</string>
+    <string name="search_filter_surface_range">Surface</string>
+    <string name="search_filter_number_of_bedrooms">Nombre de chambres</string>
+    <string name="search_filter_min_avg_rating">Note moyenne minimale</string>
+    <string name="search_filter_available_now">Disponible maintenant</string>
+    <plurals name="search_filter_display">
+        <item quantity="one">Afficher %1$d résultat</item>
+        <item quantity="other">Afficher %1$d résultats</item>
+    </plurals>
+    <string name="search_filter_reset">Tout effacer</string>
+    <string name="search_error_generic">Une erreur est survenue : %1$s</string>
+
+    <!-- Property -->
+    <string name="property_image_placeholder">Image du logement</string>
+    <string name="property_monthly_rent">%1$d$/mois</string>
+    <string name="property_rating">Note moyenne du logement</string>
+    <string name="property_favorite_button_content_description">Basculer le favori</string>
+    <string name="property_feature_bedrooms">%1$d ch.</string>
+    <string name="property_feature_bathrooms">%1$d s.d.b.</string>
+    <string name="property_feature_surface">%1$d m²</string>
+    <string name="property_rating_review_count">(%1$d)</string>
+    <string name="property_rating_building_label">Immeuble</string>
+    <string name="property_rating_neighborhood_label">Quartier</string>
+    <string name="property_available">Disponible</string>
+    <string name="property_unavailable">Non disponible</string>
+
+    <!-- Favorites -->
+    <string name="favorites_sort_by">Trier par :</string>
+    <plurals name="favorites_count">
+        <item quantity="one">%1$d résultat</item>
+        <item quantity="other">%1$d résultats</item>
+    </plurals>
+    <string name="favorites_no_favorites">Aucun favori pour le moment</string>
+    <string name="favorites_sort_recent">Date d\'ajout</string>
+    <string name="favorites_sort_price">Loyer mensuel</string>
+    <string name="favorites_sort_rating">Note moyenne</string>
+    <string name="favorites_sort_toggle_content_description">Inverser l\'ordre du tri</string>
+    <string name="favorites_sort_ascending">Croissant</string>
+    <string name="favorites_sort_descending">Décroissant</string>
+    <string name="favorites_error_not_authenticated">Connectez-vous pour consulter vos favoris.</string>
+    <string name="favorites_error_loading">Impossible de charger vos favoris pour le moment.</string>
+    <string name="favorites_error_remove">Impossible de mettre à jour vos favoris pour l\'instant.</string>
+    <string name="favorite_added_at">Ajouté le %1$s</string>
 </resources>

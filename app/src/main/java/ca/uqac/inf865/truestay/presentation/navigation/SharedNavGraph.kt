@@ -8,6 +8,9 @@ import androidx.navigation.navArgument
 import ca.uqac.inf865.truestay.presentation.shared.inventory.InventoryScreen
 import ca.uqac.inf865.truestay.presentation.shared.inventory.RoomDetailsScreen
 import ca.uqac.inf865.truestay.presentation.shared.inventory.SignatureScreen
+import ca.uqac.inf865.truestay.presentation.shared.profile.ChangeEmailScreen
+import ca.uqac.inf865.truestay.presentation.shared.profile.ChangePasswordScreen
+import ca.uqac.inf865.truestay.presentation.shared.profile.EditProfileScreen
 import ca.uqac.inf865.truestay.presentation.shared.profile.ProfileScreen
 import ca.uqac.inf865.truestay.presentation.shared.property.PropertyDetailsScreen
 import ca.uqac.inf865.truestay.presentation.shared.rental.RentalDetailsScreen
@@ -118,5 +121,17 @@ fun NavGraphBuilder.sharedNavGraph(
             onBackClick = { navController.navigateUp() },
             onSignatureSubmitted = { navController.navigateUp() }
         )
+    }
+
+    composable(Screen.EditProfile.route) {
+        EditProfileScreen()
+    }
+
+    composable(Screen.ChangeEmail.route) {
+        ChangeEmailScreen()
+    }
+
+    composable(Screen.ChangePassword.route) {
+        ChangePasswordScreen()
     }
 }

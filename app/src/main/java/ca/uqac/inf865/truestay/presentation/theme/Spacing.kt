@@ -12,4 +12,5 @@ object AppSpacing {
     val large = 16.dp
     val xlarge = 24.dp
     val xxlarge = 32.dp
+    val xxxlarge = 64.dp
 }

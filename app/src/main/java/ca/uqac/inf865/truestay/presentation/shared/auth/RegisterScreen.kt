@@ -238,7 +238,7 @@ private fun RegisterScreenContent(
                 value = uiState.phone,
                 onValueChange = onPhoneChanged,
                 label = stringResource(R.string.register_phone),
-                placeholder = "+33612345678",
+                placeholder = stringResource(R.string.register_phone_placeholder),
                 leadingIcon = TrueStayIcons.Phone,
                 enabled = !uiState.isLoading,
                 errorMessage = uiState.phoneError,
