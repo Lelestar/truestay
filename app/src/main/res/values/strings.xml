@@ -156,6 +156,11 @@
     <string name="property_rating_neighborhood_label">Quartier</string>
     <string name="property_available">Disponible</string>
     <string name="property_unavailable">Non disponible</string>
+    <string name="property_rental_start_label">Début</string>
+    <string name="property_rental_end_label">Fin</string>
+    <string name="property_rental_days_left_label">Temps restant</string>
+    <string name="property_rental_days_left">%1$d jours</string>
+    <string name="property_rental_in_progress">En cours</string>
 
     <!-- Favorites -->
     <string name="favorites_sort_by">Trier par :</string>
@@ -174,4 +179,19 @@
     <string name="favorites_error_loading">Impossible de charger vos favoris pour le moment.</string>
     <string name="favorites_error_remove">Impossible de mettre à jour vos favoris pour l\'instant.</string>
     <string name="favorite_added_at">Ajouté le %1$s</string>
+
+    <!-- Rentals -->
+    <string name="rentals_title">Mes locations</string>
+    <string name="rentals_subtitle">Gérez vos logements et EDL en toute simplicité</string>
+    <string name="rentals_current_rental">Location actuelle</string>
+    <string name="rentals_history">Historique</string>
+    <string name="rentals_no_current">Aucune location en cours</string>
+    <string name="rentals_empty">Aucune location pour le moment</string>
+    <string name="rentals_no_history">Aucune location passée</string>
+    <string name="rentals_error_not_authenticated">Connectez-vous pour consulter vos locations.</string>
+    <string name="rentals_error_loading">Impossible de charger vos locations pour le moment.</string>
+    <string name="rentals_action_inventory">État des lieux</string>
+    <string name="rentals_action_review">Laisser un avis</string>
 </resources>
+
+
