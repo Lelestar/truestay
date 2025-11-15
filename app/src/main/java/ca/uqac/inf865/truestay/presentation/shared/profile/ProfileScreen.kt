@@ -250,7 +250,7 @@ fun AccountCard(
         Spacer(modifier = Modifier.height(AppSpacing.large))
 
         TrueStayButton(
-            text = "Enregistrer les modifications",
+            text = "Modifier les informations",
             onClick = {
                 onSaveClick(
                     name.substringBefore(" "),
