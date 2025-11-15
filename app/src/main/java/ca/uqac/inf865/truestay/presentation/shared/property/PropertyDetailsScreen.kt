@@ -2,7 +2,6 @@ package ca.uqac.inf865.truestay.presentation.shared.property
 
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
-import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -18,7 +17,6 @@ import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.ExperimentalMaterial3Api
-import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
@@ -50,6 +48,7 @@ import ca.uqac.inf865.truestay.presentation.common.components.TrueStayBadge
 import ca.uqac.inf865.truestay.presentation.common.components.TrueStayButton
 import ca.uqac.inf865.truestay.presentation.common.components.TrueStayCard
 import ca.uqac.inf865.truestay.presentation.common.components.TrueStayIcon
+import ca.uqac.inf865.truestay.presentation.common.components.SelectableButton
 import ca.uqac.inf865.truestay.presentation.common.icons.TrueStayIcons
 import ca.uqac.inf865.truestay.presentation.navigation.TrueStayTopAppBar
 import ca.uqac.inf865.truestay.presentation.theme.AppSpacing
@@ -80,7 +79,7 @@ fun PropertyDetailsScreen(
                 hasActions = true,
                 windowInsets = WindowInsets(0.dp),
                 actions = {
-                    // Bouton favoris
+                    // Favorite button
                     TrueStayIcon(
                         iconRes = if (uiState.isFavorite) TrueStayIcons.HeartFilled else TrueStayIcons.Heart,
                         contentDescriptionRes = null,
@@ -152,23 +151,23 @@ private fun PropertyDetailsContent(
             .padding(bottom = AppSpacing.large),
         verticalArrangement = Arrangement.spacedBy(AppSpacing.large)
     ) {
-        // Image principale avec badge disponibilité
+        // Main image with availability badge
         PropertyImageSection(property = property)
 
         Column(
             modifier = Modifier.padding(horizontal = AppSpacing.large),
             verticalArrangement = Arrangement.spacedBy(AppSpacing.large)
         ) {
-            // Titre et adresse
+            // Title and address
             PropertyHeaderSection(property = property)
 
-            // Caractéristiques
+            // Features
             PropertyFeaturesSection(property = property)
 
-            // Bouton Contacter
+            // Contact button
             TrueStayButton(
                 text = stringResource(R.string.property_details_contact_button),
-                onClick = { /* TODO: Implémenter contact */ },
+                onClick = { /* TODO: Implement contact */ },
                 variant = ButtonVariant.PRIMARY,
                 modifier = Modifier.fillMaxWidth()
             )
@@ -178,28 +177,16 @@ private fun PropertyDetailsContent(
                 DescriptionSection(description = property.description)
             }
 
-            // Avis et notes
+            // Reviews and ratings
             if (reviews.isNotEmpty()) {
                 ReviewsListSection(
-                    property = property,
                     reviews = reviews,
                     selectedFilter = selectedReviewFilter,
                     onFilterChange = onReviewFilterChange
                 )
             }
 
-            // Déroulement du bail (si location existe)
-            if (rental != null) {
-                LeaseTimelineSection(rental = rental)
-            }
-
-            // État des lieux (si location existe)
-            if (rental != null) {
-                InventorySection(rental = rental)
-            }
-
-
-            // Bouton Ajouter un avis (seulement si location active)
+            // Add review button (only if active rental)
             if (rental != null) {
                 TrueStayButton(
                     text = stringResource(R.string.property_details_add_review_button),
@@ -237,7 +224,7 @@ private fun PropertyImageSection(property: Property) {
             )
         }
 
-        // Badge disponibilité
+        // Availability badge
         TrueStayBadge(
             text = if (property.isAvailable) {
                 stringResource(R.string.property_available)
@@ -250,7 +237,7 @@ private fun PropertyImageSection(property: Property) {
                 .padding(AppSpacing.medium)
         )
 
-        // Badge prix
+        // Price badge
         TrueStayBadge(
             text = stringResource(R.string.property_monthly_rent, property.monthlyRent),
             variant = BadgeVariant.INFO,
@@ -296,9 +283,6 @@ private fun PropertyHeaderSection(property: Property) {
 private fun PropertyFeaturesSection(property: Property) {
     val bedroomCount = property.rooms.count { it.type == RoomType.BEDROOM }
     val bathroomCount = property.rooms.count { it.type == RoomType.BATHROOM }
-    val bedCount = property.rooms.filter { it.type == RoomType.BEDROOM }.sumOf {
-        it.elements.count { element -> element.type.name.contains("BED", ignoreCase = true) }
-    }.let { if (it == 0) bedroomCount * 2 else it } // Estimation si pas de données
 
     Row(
         modifier = Modifier.fillMaxWidth(),
@@ -309,12 +293,12 @@ private fun PropertyFeaturesSection(property: Property) {
             text = stringResource(R.string.property_details_bedrooms_count, bedroomCount)
         )
         FeatureItem(
-            icon = TrueStayIcons.Bed,
-            text = stringResource(R.string.property_details_beds_count, bedCount)
-        )
-        FeatureItem(
             icon = TrueStayIcons.Bath,
             text = stringResource(R.string.property_details_bathrooms_count, bathroomCount)
+        )
+        FeatureItem(
+            icon = TrueStayIcons.Square,
+            text = "${property.surface} m²"
         )
     }
 }
@@ -343,170 +327,6 @@ private fun FeatureItem(
 }
 
 @Composable
-private fun LeaseTimelineSection(rental: Rental) {
-    TrueStayCard {
-        Column(
-            verticalArrangement = Arrangement.spacedBy(AppSpacing.medium)
-        ) {
-            Text(
-                text = stringResource(R.string.property_details_lease_timeline),
-                style = MaterialTheme.typography.titleLarge,
-                fontWeight = FontWeight.Bold,
-                color = LocalAppColors.current.black
-            )
-
-            // EDL d'entrée
-            TimelineItem(
-                icon = TrueStayIcons.ClipboardCheck,
-                title = stringResource(R.string.property_details_entry_inventory),
-                date = formatDate(rental.startDate),
-                status = stringResource(R.string.property_details_status_ready),
-                statusVariant = BadgeVariant.SUCCESS
-            )
-
-            HorizontalDivider(color = LocalAppColors.current.grayBorder)
-
-            // Bail en cours
-            TimelineItem(
-                icon = TrueStayIcons.Calendar,
-                title = stringResource(R.string.property_details_active_lease),
-                date = stringResource(
-                    R.string.property_details_date_range,
-                    formatDate(rental.startDate),
-                    formatDate(rental.endDate)
-                ),
-                status = null,
-                statusVariant = null
-            )
-
-            HorizontalDivider(color = LocalAppColors.current.grayBorder)
-
-            // EDL de sortie
-            TimelineItem(
-                icon = TrueStayIcons.ClipboardCheck,
-                title = stringResource(R.string.property_details_exit_inventory),
-                date = formatDate(rental.endDate),
-                status = stringResource(R.string.property_details_status_in_progress),
-                statusVariant = BadgeVariant.WARNING
-            )
-        }
-    }
-}
-
-@Composable
-private fun TimelineItem(
-    icon: Int,
-    title: String,
-    date: String,
-    status: String?,
-    statusVariant: BadgeVariant?
-) {
-    Row(
-        modifier = Modifier.fillMaxWidth(),
-        horizontalArrangement = Arrangement.spacedBy(AppSpacing.medium),
-        verticalAlignment = Alignment.Top
-    ) {
-        TrueStayIcon(
-            iconRes = icon,
-            contentDescriptionRes = null,
-            tint = LocalAppColors.current.success,
-            size = 24.dp
-        )
-
-        Column(
-            modifier = Modifier.weight(1f),
-            verticalArrangement = Arrangement.spacedBy(AppSpacing.xsmall)
-        ) {
-            Text(
-                text = title,
-                style = MaterialTheme.typography.titleMedium,
-                fontWeight = FontWeight.SemiBold,
-                color = LocalAppColors.current.black
-            )
-            Text(
-                text = date,
-                style = MaterialTheme.typography.bodySmall,
-                color = LocalAppColors.current.grayDark
-            )
-        }
-
-        if (status != null && statusVariant != null) {
-            TrueStayBadge(
-                text = status,
-                variant = statusVariant
-            )
-        }
-    }
-}
-
-@Composable
-private fun InventorySection(@Suppress("UNUSED_PARAMETER") rental: Rental) {
-    TrueStayCard {
-        Column(
-            verticalArrangement = Arrangement.spacedBy(AppSpacing.medium)
-        ) {
-            Text(
-                text = stringResource(R.string.property_details_inventory_section),
-                style = MaterialTheme.typography.titleLarge,
-                fontWeight = FontWeight.Bold,
-                color = LocalAppColors.current.black
-            )
-
-            // EDL d'entrée
-            InventoryItem(
-                title = stringResource(R.string.property_details_entry_inventory),
-                status = stringResource(R.string.property_details_status_ready),
-                statusVariant = BadgeVariant.SUCCESS
-            )
-
-            HorizontalDivider(color = LocalAppColors.current.grayBorder)
-
-            // EDL de sortie
-            InventoryItem(
-                title = stringResource(R.string.property_details_exit_inventory),
-                status = stringResource(R.string.property_details_status_in_progress),
-                statusVariant = BadgeVariant.WARNING
-            )
-        }
-    }
-}
-
-@Composable
-private fun InventoryItem(
-    title: String,
-    status: String,
-    statusVariant: BadgeVariant
-) {
-    Row(
-        modifier = Modifier.fillMaxWidth(),
-        horizontalArrangement = Arrangement.SpaceBetween,
-        verticalAlignment = Alignment.CenterVertically
-    ) {
-        Row(
-            horizontalArrangement = Arrangement.spacedBy(AppSpacing.medium),
-            verticalAlignment = Alignment.CenterVertically
-        ) {
-            TrueStayIcon(
-                iconRes = TrueStayIcons.FileText,
-                contentDescriptionRes = null,
-                tint = LocalAppColors.current.primary,
-                size = 20.dp
-            )
-            Text(
-                text = title,
-                style = MaterialTheme.typography.bodyMedium,
-                color = LocalAppColors.current.black
-            )
-        }
-
-        TrueStayBadge(
-            text = status,
-            variant = statusVariant
-        )
-    }
-}
-
-@Composable
 private fun DescriptionSection(description: String) {
     Column(
         verticalArrangement = Arrangement.spacedBy(AppSpacing.medium)
@@ -527,12 +347,11 @@ private fun DescriptionSection(description: String) {
 
 @Composable
 private fun ReviewsListSection(
-    property: Property,
     reviews: List<ReviewWithUser>,
     selectedFilter: ReviewFilterType,
     onFilterChange: (ReviewFilterType) -> Unit
 ) {
-    // Calculer les vraies moyennes à partir des avis
+    // Calculate actual averages from reviews
     val propertyAverageRating = reviews
         .mapNotNull { it.review.propertyReview?.overallRating }
         .takeIf { it.isNotEmpty() }
@@ -560,7 +379,7 @@ private fun ReviewsListSection(
             color = LocalAppColors.current.black
         )
 
-        // Boutons de filtre avec notes
+        // Filter buttons with ratings
         Row(
             modifier = Modifier.fillMaxWidth(),
             horizontalArrangement = Arrangement.spacedBy(AppSpacing.small)
@@ -588,7 +407,7 @@ private fun ReviewsListSection(
             )
         }
 
-        // Liste des avis utilisateurs filtrés
+        // Filtered user reviews list
         reviews.forEach { reviewWithUser ->
             when (selectedFilter) {
                 ReviewFilterType.PROPERTY -> {
@@ -640,21 +459,11 @@ private fun FilterButton(
     onClick: () -> Unit,
     modifier: Modifier = Modifier
 ) {
-    Box(
-        modifier = modifier
-            .height(56.dp)
-            .background(
-                color = LocalAppColors.current.black,
-                shape = MaterialTheme.shapes.small
-            )
-            .border(
-                width = if (isSelected) 2.dp else 0.dp,
-                color = if (isSelected) LocalAppColors.current.primary else LocalAppColors.current.black,
-                shape = MaterialTheme.shapes.small
-            )
-            .clickable(onClick = onClick)
-            .padding(AppSpacing.small),
-        contentAlignment = Alignment.Center
+    SelectableButton(
+        selected = isSelected,
+        onClick = onClick,
+        modifier = modifier.height(56.dp),
+        centerContent = true
     ) {
         Column(
             horizontalAlignment = Alignment.CenterHorizontally,
@@ -663,8 +472,7 @@ private fun FilterButton(
             Text(
                 text = text,
                 style = MaterialTheme.typography.bodySmall,
-                fontWeight = FontWeight.Normal,
-                color = LocalAppColors.current.white
+                fontWeight = FontWeight.Normal
             )
 
             if (rating > 0) {
@@ -681,8 +489,7 @@ private fun FilterButton(
                     Text(
                         text = String.format(Locale.getDefault(), "%.1f", rating),
                         style = MaterialTheme.typography.bodyMedium,
-                        fontWeight = FontWeight.Bold,
-                        color = LocalAppColors.current.white
+                        fontWeight = FontWeight.Bold
                     )
                 }
             }
@@ -702,13 +509,13 @@ private fun UserReviewCard(
         Column(
             verticalArrangement = Arrangement.spacedBy(AppSpacing.medium)
         ) {
-            // Header avec info utilisateur
+            // Header with user info
             Row(
                 modifier = Modifier.fillMaxWidth(),
                 horizontalArrangement = Arrangement.spacedBy(AppSpacing.medium),
                 verticalAlignment = Alignment.CenterVertically
             ) {
-                // Photo de profil
+                // Profile picture
                 if (user?.profilePictureUrl?.isNotEmpty() == true) {
                     AsyncImage(
                         model = user.profilePictureUrl,
@@ -755,7 +562,7 @@ private fun UserReviewCard(
                 }
             }
 
-            // Étoiles
+            // Stars
             Row(
                 horizontalArrangement = Arrangement.spacedBy(AppSpacing.xsmall)
             ) {
@@ -772,7 +579,7 @@ private fun UserReviewCard(
                 }
             }
 
-            // Commentaire
+            // Comment
             if (comment.isNotEmpty()) {
                 Text(
                     text = comment,
