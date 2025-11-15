@@ -27,6 +27,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.layout.ContentScale
+import androidx.compose.foundation.layout.WindowInsets
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
@@ -34,8 +35,13 @@ import androidx.compose.ui.unit.dp
 import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
 import ca.uqac.inf865.truestay.R
 import ca.uqac.inf865.truestay.domain.model.Property
+import ca.uqac.inf865.truestay.domain.model.Address
 import ca.uqac.inf865.truestay.domain.model.Rental
 import ca.uqac.inf865.truestay.domain.model.Review
+import ca.uqac.inf865.truestay.domain.model.PropertyReview
+import ca.uqac.inf865.truestay.domain.model.BuildingReview
+import ca.uqac.inf865.truestay.domain.model.NeighborhoodReview
+import ca.uqac.inf865.truestay.domain.model.Room
 import ca.uqac.inf865.truestay.domain.model.RoomType
 import ca.uqac.inf865.truestay.domain.model.User
 import ca.uqac.inf865.truestay.presentation.common.components.BadgeVariant
@@ -48,6 +54,8 @@ import ca.uqac.inf865.truestay.presentation.common.icons.TrueStayIcons
 import ca.uqac.inf865.truestay.presentation.navigation.TrueStayTopAppBar
 import ca.uqac.inf865.truestay.presentation.theme.AppSpacing
 import ca.uqac.inf865.truestay.presentation.theme.LocalAppColors
+import androidx.compose.ui.tooling.preview.Preview
+import ca.uqac.inf865.truestay.presentation.theme.TrueStayTheme
 import coil3.compose.AsyncImage
 import java.text.SimpleDateFormat
 import java.util.Date
@@ -64,11 +72,13 @@ fun PropertyDetailsScreen(
     val uiState = viewModel.uiState
 
     Scaffold(
+        contentWindowInsets = WindowInsets(0.dp),
         topBar = {
             TrueStayTopAppBar(
                 titleRes = R.string.screen_title_property_details,
                 onNavigateBack = onBackClick,
                 hasActions = true,
+                windowInsets = WindowInsets(0.dp),
                 actions = {
                     // Bouton favoris
                     TrueStayIcon(
@@ -794,3 +804,119 @@ private fun formatDate(timestamp: Long): String {
     return formatter.format(date)
 }
 
+// ==========================================
+// Previews
+// ==========================================
+@Preview(showBackground = true, name = "PropertyDetails - With Rental & Reviews")
+@Composable
+private fun PropertyDetailsContentPreview() {
+    TrueStayTheme {
+        val property = Property(
+            id = "prop-1",
+            name = "Appartement moderne 2 pièces",
+            address = Address(
+                street = "15 Rue de la Paix",
+                city = "Paris",
+                postalCode = "75001"
+            ),
+            description = "Bel appartement rénové, proche des commodités et transports.",
+            monthlyRent = 1800,
+            rooms = listOf(
+                Room(name = "Chambre", type = RoomType.BEDROOM),
+                Room(name = "Salle de bain", type = RoomType.BATHROOM)
+            ),
+            photos = listOf("https://picsum.photos/seed/11/600/400"),
+            isAvailable = true
+        )
+        val rental = Rental(
+            id = "rent-1",
+            propertyId = property.id,
+            tenantId = "tenant-1",
+            landlordId = "landlord-1",
+            startDate = System.currentTimeMillis() - 10L * 24L * 60L * 60L * 1000L,
+            endDate = System.currentTimeMillis() + 20L * 24L * 60L * 60L * 1000L
+        )
+        val reviews = listOf(
+            ReviewWithUser(
+                review = Review(
+                    propertyId = property.id,
+                    tenantId = "tenant-1",
+                    propertyReview = PropertyReview(
+                        generalCondition = 4,
+                        comfort = 5,
+                        compliance = 4,
+                        valueForMoney = 4,
+                        overallRating = 4.25f,
+                        comment = "Très bon logement, calme et bien situé."
+                    )
+                ),
+                user = User(id = "tenant-1", email = "john@example.com")
+            ),
+            ReviewWithUser(
+                review = Review(
+                    propertyId = property.id,
+                    tenantId = "tenant-2",
+                    buildingReview = BuildingReview(
+                        maintenance = 4,
+                        neighborhood = 4,
+                        security = 5,
+                        services = 4,
+                        overallRating = 4.25f,
+                        comment = "Immeuble bien entretenu"
+                    ),
+                    neighborhoodReview = NeighborhoodReview(
+                        transport = 5,
+                        amenities = 4,
+                        calm = 4,
+                        safety = 4,
+                        atmosphere = 4,
+                        overallRating = 4.2f,
+                        comment = "Quartier agréable"
+                    )
+                ),
+                user = User(id = "tenant-2", email = "jane@example.com")
+            )
+        )
+
+        PropertyDetailsContent(
+            property = property,
+            rental = rental,
+            reviews = reviews,
+            selectedReviewFilter = ReviewFilterType.PROPERTY,
+            onReviewFilterChange = {},
+            onAddReviewClick = {}
+        )
+    }
+}
+
+@Preview(showBackground = true, name = "PropertyDetails - No Rental, No Reviews")
+@Composable
+private fun PropertyDetailsContentEmptyPreview() {
+    TrueStayTheme {
+        val property = Property(
+            id = "prop-2",
+            name = "Studio lumineux centre-ville",
+            address = Address(
+                street = "42 Avenue des Champs",
+                city = "Lyon",
+                postalCode = "69001"
+            ),
+            description = "Studio fonctionnel, idéal étudiant.",
+            monthlyRent = 900,
+            rooms = listOf(
+                Room(name = "Studio", type = RoomType.LIVING_ROOM)
+            ),
+            photos = emptyList(),
+            isAvailable = false
+        )
+
+        PropertyDetailsContent(
+            property = property,
+            rental = null,
+            reviews = emptyList(),
+            selectedReviewFilter = ReviewFilterType.PROPERTY,
+            onReviewFilterChange = {},
+            onAddReviewClick = {}
+        )
+    }
+}
