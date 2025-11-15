@@ -30,6 +30,7 @@ import androidx.compose.ui.text.input.KeyboardType
 
 import androidx.compose.material3.Icon
 import androidx.compose.runtime.saveable.rememberSaveable
+import androidx.compose.ui.res.stringResource
 import ca.uqac.inf865.truestay.presentation.common.components.TrueStaySwitch
 
 
@@ -113,7 +114,7 @@ fun ProfileHeader(
                 Spacer(modifier = Modifier.height(6.dp))
 
                 Text(
-                    text = "Membre depuis $memberSince",
+                    text = stringResource(R.string.profile_member_since) + " $memberSince",
                     style = MaterialTheme.typography.bodyMedium,
                     color = colors.white.copy(alpha = 0.9f)
                 )
@@ -190,7 +191,7 @@ fun AccountCard(
     initialName: String,
     initialEmail: String,
     initialPhone: String,
-    onSaveClick: (String, String, String, String) -> Unit
+    onEditProfile: () -> Unit
 
 ) {
     val colors = LocalAppColors.current
@@ -215,7 +216,7 @@ fun AccountCard(
     ) {
 
         Text(
-            text = "Compte",
+            text = stringResource(R.string.account_title),
             style = MaterialTheme.typography.titleMedium,
             color = colors.grayDark
         )
@@ -224,7 +225,7 @@ fun AccountCard(
 
         AccountInputRow(
             icon = TrueStayIcons.User,
-            label = "Nom",
+            label = stringResource(R.string.account_name),
             value = name,
             onValueChange = { name = it }
         )
@@ -233,7 +234,7 @@ fun AccountCard(
 
         AccountInputRow(
             icon = TrueStayIcons.Mail,
-            label = "E-mail",
+            label = stringResource(R.string.account_email),
             value = email,
             onValueChange = { email = it }
         )
@@ -242,7 +243,7 @@ fun AccountCard(
 
         AccountInputRow(
             icon = TrueStayIcons.Phone,
-            label = "Téléphone",
+            label = stringResource(R.string.account_phone),
             value = phoneNumber,
             onValueChange = { phoneNumber = it }
         )
@@ -250,15 +251,8 @@ fun AccountCard(
         Spacer(modifier = Modifier.height(AppSpacing.large))
 
         TrueStayButton(
-            text = "Modifier les informations",
-            onClick = {
-                onSaveClick(
-                    name.substringBefore(" "),
-                    name.substringAfter(" ", ""),
-                    email,
-                    phoneNumber
-                )
-            },
+            text = stringResource(R.string.account_edit_info),
+            onClick = onEditProfile,
             variant = ButtonVariant.PRIMARY,
             modifier = Modifier.fillMaxWidth()
         )
@@ -271,6 +265,7 @@ fun AccountCard(
 @Composable
 fun ProfileScreen(
     onLogout: () -> Unit,
+    onEditProfile: () -> Unit,
     viewModel: ProfileViewModel = hiltViewModel(),
     authViewModel: AuthViewModel = hiltViewModel()
 ) {
@@ -300,20 +295,7 @@ fun ProfileScreen(
                 initialName = "${currentUser?.firstName ?: ""} ${currentUser?.lastName ?: ""}".trim(),
                 initialEmail = currentUser?.email ?: "",
                 initialPhone = currentUser?.phoneNumber ?: "",
-                onSaveClick = { firstName, lastName, email, phone ->
-                    val id = currentUser?.id
-                    if(id != null) {
-                        viewModel.updateUser(
-                            userId = id,
-                            firstName = firstName,
-                            lastName = lastName,
-                            email = email,
-                            phoneNumber = phone
-                        )
-                    }
-
-
-                }
+                onEditProfile = onEditProfile
             )
 
             Spacer(modifier = Modifier.height(AppSpacing.large))
@@ -335,7 +317,7 @@ fun ProfileScreen(
             Spacer(modifier = Modifier.height(AppSpacing.large))
 
             TrueStayButton(
-                text = "Se déconnecter",
+                text = stringResource(R.string.logout),
                 leadingIcon = R.drawable.ic_log_out,
                 onClick = {
                     authViewModel.logout()
@@ -362,7 +344,7 @@ fun VerificationCard() {
     ) {
 
         Text(
-            text = "Vérifications",
+            text = stringResource(R.string.verification_title),
             style = MaterialTheme.typography.titleMedium,
             color = colors.grayDark
         )
@@ -386,7 +368,7 @@ fun VerificationCard() {
             Spacer(modifier = Modifier.width(AppSpacing.medium))
 
             Text(
-                text = "Email",
+                text = stringResource(R.string.account_email),
                 style = MaterialTheme.typography.bodyMedium,
                 color = colors.grayDark,
                 modifier = Modifier.weight(1f)
@@ -398,7 +380,7 @@ fun VerificationCard() {
                     .padding(horizontal = 12.dp, vertical = 4.dp)
             ) {
                 Text(
-                    "Non vérifié",
+                    stringResource(R.string.verification_unverified),
                     color = colors.black,
                     style = MaterialTheme.typography.labelSmall
                 )
@@ -424,7 +406,7 @@ fun VerificationCard() {
             Spacer(modifier = Modifier.width(AppSpacing.medium))
 
             Text(
-                text = "Téléphone",
+                text = stringResource(R.string.account_phone),
                 style = MaterialTheme.typography.bodyMedium,
                 color = colors.grayDark,
                 modifier = Modifier.weight(1f)
@@ -436,7 +418,7 @@ fun VerificationCard() {
                     .padding(horizontal = 12.dp, vertical = 4.dp)
             ) {
                 Text(
-                    "Non vérifié",
+                    stringResource(R.string.verification_unverified),
                     color = colors.black,
                     style = MaterialTheme.typography.labelSmall
                 )
@@ -464,7 +446,7 @@ fun PreferencesCard() {
     ) {
 
         Text(
-            text = "Préférences",
+            text = stringResource(R.string.preferences_title),
             style = MaterialTheme.typography.titleMedium,
             color = colors.grayDark
         )
@@ -485,7 +467,7 @@ fun PreferencesCard() {
             Spacer(modifier = Modifier.width(AppSpacing.medium))
 
             Text(
-                text = "Thème sombre",
+                text = stringResource(R.string.preferences_dark_theme),
                 style = MaterialTheme.typography.bodyMedium,
                 color = colors.grayDark,
                 modifier = Modifier.weight(1f)
@@ -516,7 +498,7 @@ fun PreferencesCard() {
 
             Column(modifier = Modifier.weight(1f)) {
                 Text(
-                    text = "Langue",
+                    text = stringResource(R.string.preferences_language),
                     style = MaterialTheme.typography.bodyMedium,
                     color = colors.grayDark
                 )
@@ -536,7 +518,7 @@ fun PreferencesCard() {
                         horizontalArrangement = Arrangement.SpaceBetween
                     ) {
                         Text(
-                            text = "Français",
+                            text = stringResource(R.string.preferences_language_fr),
                             style = MaterialTheme.typography.bodyMedium,
                             color = colors.grayDark
                         )
@@ -569,12 +551,12 @@ fun PreferencesCard() {
 
             Column(modifier = Modifier.weight(1f)) {
                 Text(
-                    text = "Notification push",
+                    text = stringResource(R.string.preferences_push),
                     style = MaterialTheme.typography.bodyMedium,
                     color = colors.grayDark
                 )
                 Text(
-                    text = "Nouveaux avis, favoris, rappels EDL",
+                    text = stringResource(R.string.preferences_push_desc),
                     style = MaterialTheme.typography.labelSmall,
                     color = colors.grayDark.copy(alpha = 0.6f)
                 )
@@ -604,7 +586,7 @@ fun PreferencesCard() {
             Spacer(modifier = Modifier.width(AppSpacing.medium))
 
             Text(
-                text = "Notifications email",
+                text = stringResource(R.string.preferences_email_notifications),
                 style = MaterialTheme.typography.bodyMedium,
                 color = colors.grayDark,
                 modifier = Modifier.weight(1f)
@@ -632,7 +614,7 @@ fun SecuriteCard() {
     ) {
 
         Text(
-            text = "Sécurité",
+            text = stringResource(R.string.security_title),
             style = MaterialTheme.typography.titleMedium,
             color = colors.grayDark
         )
@@ -656,7 +638,7 @@ fun SecuriteCard() {
             Spacer(modifier = Modifier.width(AppSpacing.medium))
 
             Text(
-                text = "Modifier le mot de passe",
+                text = stringResource(R.string.security_change_password),
                 style = MaterialTheme.typography.bodyMedium,
                 color = colors.grayDark,
                 modifier = Modifier.weight(1f)
@@ -682,12 +664,12 @@ fun SecuriteCard() {
 
             Column(modifier = Modifier.weight(1f)) {
                 Text(
-                    text = "Double authentification",
+                    text = stringResource(R.string.security_2fa),
                     style = MaterialTheme.typography.bodyMedium,
                     color = colors.grayDark
                 )
                 Text(
-                    text = "Sécurise davantage votre compte",
+                    text = stringResource(R.string.securite_davantage),
                     style = MaterialTheme.typography.labelSmall,
                     color = colors.grayDark.copy(alpha = 0.6f)
                 )
@@ -715,7 +697,7 @@ fun AideCard() {
     ) {
 
         Text(
-            text = "Aide",
+            text = stringResource(R.string.help_title),
             style = MaterialTheme.typography.titleMedium,
             color = colors.grayDark
         )
@@ -724,7 +706,7 @@ fun AideCard() {
 
         // Centre d'aide
         AideItem(
-            label = "Centre d'aide & FAQ",
+            label = stringResource(R.string.help_faq),
             icon = TrueStayIcons.ChevronRight
         )
 
@@ -734,7 +716,7 @@ fun AideCard() {
 
         // Nous contacter
         AideItem(
-            label = "Nous contacter",
+            label = stringResource(R.string.help_contact),
             icon = TrueStayIcons.ChevronRight
         )
 
@@ -744,7 +726,7 @@ fun AideCard() {
 
         // Conditions d'utilisation
         AideItem(
-            label = "Conditions d’utilisation",
+            label = stringResource(R.string.help_terms),
             icon = TrueStayIcons.ChevronRight
         )
     }

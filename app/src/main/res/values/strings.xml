@@ -21,7 +21,7 @@
     <string name="screen_title_add_property">Ajouter un logement</string>
     <string name="screen_title_edit_property">Modifier le logement</string>
     <string name="screen_title_create_rental">Créer une location</string>
-    <string name="screen_title_edit_profile">Modifier le profil</string>
+    <string name="screen_title_edit_profile">Modifier mes informations</string>
     <string name="screen_title_change_email">Modifier l\'email</string>
     <string name="screen_title_change_password">Modifier le mot de passe</string>
 
@@ -175,4 +175,64 @@
     <string name="favorites_error_loading">Impossible de charger vos favoris pour le moment.</string>
     <string name="favorites_error_remove">Impossible de mettre à jour vos favoris pour l\'instant.</string>
     <string name="favorite_added_at">Ajouté le %1$s</string>
+
+    <!-- Profil -->
+    <!-- Header -->
+    <string name="profile_member_since">Membre depuis</string>
+    <string name="role_owner">Propriétaire</string>
+
+    <!-- Account -->
+    <string name="account_title">Compte</string>
+    <string name="account_name">Nom</string>
+    <string name="account_email">E-mail</string>
+    <string name="account_phone">Téléphone</string>
+    <string name="account_edit_info">Modifier les informations</string>
+
+    <!-- Profile screen -->
+    <string name="logout">Se déconnecter</string>
+
+    <!-- Verification -->
+    <string name="verification_title">Vérifications</string>
+    <string name="verification_email">Email</string>
+    <string name="verification_phone">Téléphone</string>
+    <string name="verification_unverified">Non vérifié</string>
+
+    <!-- Preferences -->
+    <string name="preferences_title">Préférences</string>
+    <string name="preferences_dark_theme">Thème sombre</string>
+    <string name="preferences_language">Langue</string>
+    <string name="preferences_language_fr">Français</string>
+    <string name="preferences_push">Notification push</string>
+    <string name="preferences_push_desc">Nouveaux avis, favoris, rappels EDL</string>
+    <string name="preferences_email_notifications">Notifications email</string>
+
+    <!-- Security -->
+    <string name="security_title">Sécurité</string>
+    <string name="security_change_password">Modifier le mot de passe</string>
+    <string name="security_2fa">Double authentification</string>
+    <string name="security_2fa_desc">Sécurise davantage votre compte</string>
+
+    <!-- Help -->
+    <string name="help_title">Aide</string>
+    <string name="help_faq">Centre d'aide &amp; FAQ</string>
+    <string name="help_contact">Nous contacter</string>
+    <string name="help_terms">Conditions d’utilisation</string>
+    <string name="securite_davantage">Sécurise davantage votre compte</string>
+
+    <!-- Edit Profile Screen -->
+    <string name="edit_last_name">Nom</string>
+    <string name="edit_first_name">Prénom</string>
+    <string name="edit_phone">Téléphone</string>
+    <string name="edit_email">Email</string>
+
+    <!-- Placeholders -->
+    <string name="placeholder_last_name">Dupont</string>
+    <string name="placeholder_first_name">Marie</string>
+    <string name="placeholder_phone">+33612346878</string>
+    <string name="placeholder_email">marie.dupont@example.com</string>
+
+    <!-- Actions -->
+    <string name="edit_change_email">Modifier l’email</string>
+    <string name="save_changes">Enregistrer les modifications</string>
+
 </resources>
