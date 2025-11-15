@@ -178,6 +178,12 @@
     <string name="property_details_bedrooms_count">%1$d chambres</string>
     <string name="property_details_beds_count">%1$d lits</string>
     <string name="property_details_bathrooms_count">%1$d salles de bain</string>
+    <string name="property_details_contact_button">Contacter</string>
+    <string name="property_details_description_title">Description</string>
+    <string name="property_details_reviews_title">Avis et notes</string>
+    <string name="property_details_filter_property">Logement</string>
+    <string name="property_details_filter_building">Immeuble</string>
+    <string name="property_details_filter_neighborhood">Quartier</string>
 
 
     <!-- Favorites -->

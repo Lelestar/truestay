@@ -79,4 +79,27 @@ class FirestoreDataSource @Inject constructor(
             emptyList()
         }
     }
+
+    // Variant that includes document IDs - returns pairs of (documentId, object)
+    suspend fun <T> queryDocumentsWithIds(
+        collection: String,
+        field: String,
+        value: Any,
+        clazz: Class<T>
+    ): List<Pair<String, T>> {
+        return try {
+            firestore.collection(collection)
+                .whereEqualTo(field, value)
+                .get()
+                .await()
+                .documents
+                .mapNotNull { document ->
+                    document.toObject(clazz)?.let { obj ->
+                        document.id to obj
+                    }
+                }
+        } catch (e: Exception) {
+            emptyList()
+        }
+    }
 }
