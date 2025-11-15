@@ -3,7 +3,9 @@ package ca.uqac.inf865.truestay.presentation.shared.profile
 import ca.uqac.inf865.truestay.presentation.shared.auth.AuthViewModel
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.*
@@ -23,7 +25,13 @@ import ca.uqac.inf865.truestay.presentation.shared.auth.rememberCurrentUser
 import ca.uqac.inf865.truestay.presentation.theme.AppSpacing
 import ca.uqac.inf865.truestay.presentation.theme.LocalAppColors
 import androidx.compose.foundation.text.KeyboardOptions
+import androidx.compose.foundation.verticalScroll
 import androidx.compose.ui.text.input.KeyboardType
+
+import androidx.compose.material3.Icon
+import androidx.compose.runtime.saveable.rememberSaveable
+import ca.uqac.inf865.truestay.presentation.common.components.TrueStaySwitch
+
 
 // --------------------------------------------------
 // 1. HEADER BLEU
@@ -283,10 +291,8 @@ fun ProfileScreen(
             modifier = Modifier
                 .fillMaxWidth()
                 .padding(horizontal = AppSpacing.large)
+                .verticalScroll(rememberScrollState())
         ) {
-
-
-
 
 
             AccountCard(
@@ -295,19 +301,36 @@ fun ProfileScreen(
                 initialEmail = currentUser?.email ?: "",
                 initialPhone = currentUser?.phoneNumber ?: "",
                 onSaveClick = { firstName, lastName, email, phone ->
-                    val id = currentUser?.id ?: return@onSaveClick
+                    val id = currentUser?.id
+                    if(id != null) {
+                        viewModel.updateUser(
+                            userId = id,
+                            firstName = firstName,
+                            lastName = lastName,
+                            email = email,
+                            phoneNumber = phone
+                        )
+                    }
 
-                    viewModel.updateUser(
-                        userId = id,
-                        firstName = firstName,
-                        lastName = lastName,
-                        email = email,
-                        phoneNumber = phone
-                    )
+
                 }
             )
 
+            Spacer(modifier = Modifier.height(AppSpacing.large))
 
+            VerificationCard()
+
+            Spacer(modifier = Modifier.height(AppSpacing.large))
+
+            PreferencesCard()
+
+            Spacer(modifier = Modifier.height(AppSpacing.large))
+
+            SecuriteCard()
+
+            Spacer(modifier = Modifier.height(AppSpacing.large))
+
+            AideCard()
 
             Spacer(modifier = Modifier.height(AppSpacing.large))
 
@@ -324,3 +347,432 @@ fun ProfileScreen(
         }
     }
 }
+
+
+@Composable
+fun VerificationCard() {
+    val colors = LocalAppColors.current
+
+    Column(
+        modifier = Modifier
+            .fillMaxWidth()
+            .border(1.dp, colors.grayBorder, RoundedCornerShape(16.dp))
+            .background(colors.white, RoundedCornerShape(16.dp))
+            .padding(AppSpacing.large)
+    ) {
+
+        Text(
+            text = "Vérifications",
+            style = MaterialTheme.typography.titleMedium,
+            color = colors.grayDark
+        )
+
+        Spacer(modifier = Modifier.height(AppSpacing.medium))
+
+        // EMAIL
+        Row(
+            verticalAlignment = Alignment.CenterVertically,
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(vertical = AppSpacing.small)
+        ) {
+
+            TrueStayIcon(
+                iconRes = TrueStayIcons.Mail,
+                contentDescriptionRes = null,
+                tint = colors.grayDark
+            )
+
+            Spacer(modifier = Modifier.width(AppSpacing.medium))
+
+            Text(
+                text = "Email",
+                style = MaterialTheme.typography.bodyMedium,
+                color = colors.grayDark,
+                modifier = Modifier.weight(1f)
+            )
+
+            Box(
+                modifier = Modifier
+                    .background(colors.yellow, RoundedCornerShape(12.dp))
+                    .padding(horizontal = 12.dp, vertical = 4.dp)
+            ) {
+                Text(
+                    "Non vérifié",
+                    color = colors.black,
+                    style = MaterialTheme.typography.labelSmall
+                )
+            }
+        }
+
+        Divider(color = colors.grayBorder, thickness = 1.dp)
+
+        // TELEPHONE
+        Row(
+            verticalAlignment = Alignment.CenterVertically,
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(vertical = AppSpacing.small)
+        ) {
+
+            TrueStayIcon(
+                iconRes = TrueStayIcons.Phone,
+                contentDescriptionRes = null,
+                tint = colors.grayDark
+            )
+
+            Spacer(modifier = Modifier.width(AppSpacing.medium))
+
+            Text(
+                text = "Téléphone",
+                style = MaterialTheme.typography.bodyMedium,
+                color = colors.grayDark,
+                modifier = Modifier.weight(1f)
+            )
+
+            Box(
+                modifier = Modifier
+                    .background(colors.yellow, RoundedCornerShape(12.dp))
+                    .padding(horizontal = 12.dp, vertical = 4.dp)
+            ) {
+                Text(
+                    "Non vérifié",
+                    color = colors.black,
+                    style = MaterialTheme.typography.labelSmall
+                )
+            }
+        }
+    }
+}
+
+
+
+@Composable
+fun PreferencesCard() {
+    val colors = LocalAppColors.current
+
+    var darkTheme by rememberSaveable { mutableStateOf(false) }
+    var pushNotif by rememberSaveable { mutableStateOf(false) }
+    var emailNotif by rememberSaveable { mutableStateOf(false) }
+
+    Column(
+        modifier = Modifier
+            .fillMaxWidth()
+            .border(1.dp, colors.grayBorder, RoundedCornerShape(16.dp))
+            .background(colors.white, RoundedCornerShape(16.dp))
+            .padding(AppSpacing.large)
+    ) {
+
+        Text(
+            text = "Préférences",
+            style = MaterialTheme.typography.titleMedium,
+            color = colors.grayDark
+        )
+
+        Spacer(modifier = Modifier.height(AppSpacing.medium))
+
+        // 1) Thème sombre
+        Row(
+            verticalAlignment = Alignment.CenterVertically,
+            modifier = Modifier.fillMaxWidth()
+        ) {
+            TrueStayIcon(
+                iconRes = TrueStayIcons.SunMoon,
+                contentDescriptionRes = null,
+                tint = colors.grayDark
+            )
+
+            Spacer(modifier = Modifier.width(AppSpacing.medium))
+
+            Text(
+                text = "Thème sombre",
+                style = MaterialTheme.typography.bodyMedium,
+                color = colors.grayDark,
+                modifier = Modifier.weight(1f)
+            )
+
+            TrueStaySwitch(
+                checked = darkTheme,
+                onCheckedChange = { darkTheme = it }
+            )
+        }
+
+        Spacer(modifier = Modifier.height(AppSpacing.large))
+        Divider(color = colors.grayBorder, thickness = 1.dp)
+        Spacer(modifier = Modifier.height(AppSpacing.large))
+
+        // 2) Langue + select
+        Row(
+            verticalAlignment = Alignment.Top,
+            modifier = Modifier.fillMaxWidth()
+        ) {
+            TrueStayIcon(
+                iconRes = TrueStayIcons.Globe,
+                contentDescriptionRes = null,
+                tint = colors.grayDark
+            )
+
+            Spacer(modifier = Modifier.width(AppSpacing.medium))
+
+            Column(modifier = Modifier.weight(1f)) {
+                Text(
+                    text = "Langue",
+                    style = MaterialTheme.typography.bodyMedium,
+                    color = colors.grayDark
+                )
+
+                Spacer(modifier = Modifier.height(8.dp))
+
+                Box(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .border(1.dp, colors.grayBorder, RoundedCornerShape(12.dp))
+                        .background(colors.grayLight.copy(alpha = 0.2f))
+                        .padding(horizontal = 12.dp, vertical = 10.dp)
+                ) {
+                    Row(
+                        modifier = Modifier.fillMaxWidth(),
+                        verticalAlignment = Alignment.CenterVertically,
+                        horizontalArrangement = Arrangement.SpaceBetween
+                    ) {
+                        Text(
+                            text = "Français",
+                            style = MaterialTheme.typography.bodyMedium,
+                            color = colors.grayDark
+                        )
+                        TrueStayIcon(
+                            iconRes = TrueStayIcons.ChevronDown,
+                            contentDescriptionRes = null,
+                            tint = colors.grayDark
+                        )
+                    }
+                }
+            }
+        }
+
+        Spacer(modifier = Modifier.height(AppSpacing.large))
+        Divider(color = colors.grayBorder, thickness = 1.dp)
+        Spacer(modifier = Modifier.height(AppSpacing.large))
+
+        // 3) Notification push
+        Row(
+            verticalAlignment = Alignment.CenterVertically,
+            modifier = Modifier.fillMaxWidth()
+        ) {
+            TrueStayIcon(
+                iconRes = TrueStayIcons.Bell,
+                contentDescriptionRes = null,
+                tint = colors.grayDark
+            )
+
+            Spacer(modifier = Modifier.width(AppSpacing.medium))
+
+            Column(modifier = Modifier.weight(1f)) {
+                Text(
+                    text = "Notification push",
+                    style = MaterialTheme.typography.bodyMedium,
+                    color = colors.grayDark
+                )
+                Text(
+                    text = "Nouveaux avis, favoris, rappels EDL",
+                    style = MaterialTheme.typography.labelSmall,
+                    color = colors.grayDark.copy(alpha = 0.6f)
+                )
+            }
+
+            TrueStaySwitch(
+                checked = pushNotif,
+                onCheckedChange = { pushNotif = it }
+            )
+        }
+
+        Spacer(modifier = Modifier.height(AppSpacing.large))
+        Divider(color = colors.grayBorder, thickness = 1.dp)
+        Spacer(modifier = Modifier.height(AppSpacing.large))
+
+        // 4) Notifications email
+        Row(
+            verticalAlignment = Alignment.CenterVertically,
+            modifier = Modifier.fillMaxWidth()
+        ) {
+            TrueStayIcon(
+                iconRes = TrueStayIcons.Mail,
+                contentDescriptionRes = null,
+                tint = colors.grayDark
+            )
+
+            Spacer(modifier = Modifier.width(AppSpacing.medium))
+
+            Text(
+                text = "Notifications email",
+                style = MaterialTheme.typography.bodyMedium,
+                color = colors.grayDark,
+                modifier = Modifier.weight(1f)
+            )
+
+            TrueStaySwitch(
+                checked = emailNotif,
+                onCheckedChange = { emailNotif = it }
+            )
+        }
+    }
+}
+
+@Composable
+fun SecuriteCard() {
+    val colors = LocalAppColors.current
+    var twoFA by rememberSaveable { mutableStateOf(false) }
+
+    Column(
+        modifier = Modifier
+            .fillMaxWidth()
+            .border(1.dp, colors.grayBorder, RoundedCornerShape(16.dp))
+            .background(colors.white, RoundedCornerShape(16.dp))
+            .padding(AppSpacing.large)
+    ) {
+
+        Text(
+            text = "Sécurité",
+            style = MaterialTheme.typography.titleMedium,
+            color = colors.grayDark
+        )
+
+        Spacer(modifier = Modifier.height(AppSpacing.large))
+
+        // Modifier mot de passe
+        Row(
+            verticalAlignment = Alignment.CenterVertically,
+            modifier = Modifier
+                .fillMaxWidth()
+                .clickable { }
+        ) {
+
+            TrueStayIcon(
+                iconRes = TrueStayIcons.Key,
+                contentDescriptionRes = null,
+                tint = colors.grayDark
+            )
+
+            Spacer(modifier = Modifier.width(AppSpacing.medium))
+
+            Text(
+                text = "Modifier le mot de passe",
+                style = MaterialTheme.typography.bodyMedium,
+                color = colors.grayDark,
+                modifier = Modifier.weight(1f)
+            )
+        }
+
+        Spacer(modifier = Modifier.height(AppSpacing.large))
+        Divider(color = colors.grayBorder, thickness = 1.dp)
+        Spacer(modifier = Modifier.height(AppSpacing.large))
+
+        // Double authentification
+        Row(
+            verticalAlignment = Alignment.CenterVertically,
+            modifier = Modifier.fillMaxWidth()
+        ) {
+            TrueStayIcon(
+                iconRes = TrueStayIcons.ShieldCheck,
+                contentDescriptionRes = null,
+                tint = colors.grayDark
+            )
+
+            Spacer(modifier = Modifier.width(AppSpacing.medium))
+
+            Column(modifier = Modifier.weight(1f)) {
+                Text(
+                    text = "Double authentification",
+                    style = MaterialTheme.typography.bodyMedium,
+                    color = colors.grayDark
+                )
+                Text(
+                    text = "Sécurise davantage votre compte",
+                    style = MaterialTheme.typography.labelSmall,
+                    color = colors.grayDark.copy(alpha = 0.6f)
+                )
+            }
+
+            TrueStaySwitch(
+                checked = twoFA,
+                onCheckedChange = { twoFA = it }
+            )
+        }
+    }
+}
+
+
+@Composable
+fun AideCard() {
+    val colors = LocalAppColors.current
+
+    Column(
+        modifier = Modifier
+            .fillMaxWidth()
+            .border(1.dp, colors.grayBorder, RoundedCornerShape(16.dp))
+            .background(colors.white, RoundedCornerShape(16.dp))
+            .padding(AppSpacing.large)
+    ) {
+
+        Text(
+            text = "Aide",
+            style = MaterialTheme.typography.titleMedium,
+            color = colors.grayDark
+        )
+
+        Spacer(modifier = Modifier.height(AppSpacing.large))
+
+        // Centre d'aide
+        AideItem(
+            label = "Centre d'aide & FAQ",
+            icon = TrueStayIcons.ChevronRight
+        )
+
+        Spacer(modifier = Modifier.height(AppSpacing.large))
+        Divider(color = colors.grayBorder, thickness = 1.dp)
+        Spacer(modifier = Modifier.height(AppSpacing.large))
+
+        // Nous contacter
+        AideItem(
+            label = "Nous contacter",
+            icon = TrueStayIcons.ChevronRight
+        )
+
+        Spacer(modifier = Modifier.height(AppSpacing.large))
+        Divider(color = colors.grayBorder, thickness = 1.dp)
+        Spacer(modifier = Modifier.height(AppSpacing.large))
+
+        // Conditions d'utilisation
+        AideItem(
+            label = "Conditions d’utilisation",
+            icon = TrueStayIcons.ChevronRight
+        )
+    }
+}
+
+@Composable
+fun AideItem(label: String, icon: Int) {
+    val colors = LocalAppColors.current
+
+    Row(
+        verticalAlignment = Alignment.CenterVertically,
+        modifier = Modifier
+            .fillMaxWidth()
+            .clickable { }
+    ) {
+
+        Text(
+            text = label,
+            style = MaterialTheme.typography.bodyMedium,
+            color = colors.grayDark,
+            modifier = Modifier.weight(1f)
+        )
+
+        TrueStayIcon(
+            iconRes = icon,
+            contentDescriptionRes = null,
+            tint = colors.grayDark
+        )
+    }
+}
+
