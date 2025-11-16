@@ -38,10 +38,7 @@ fun NavGraphBuilder.sharedNavGraph(
         val propertyId = backStackEntry.arguments?.getString("propertyId") ?: ""
         PropertyDetailsScreen(
             propertyId = propertyId,
-            onBackClick = { navController.navigateUp() },
-            onAddReviewClick = {
-                // TODO: Naviguer vers l'écran d'ajout d'avis quand le rentalId sera disponible
-            }
+            onBackClick = { navController.navigateUp() }
         )
     }
 

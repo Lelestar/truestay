@@ -21,6 +21,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.tooling.preview.Preview
+import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import ca.uqac.inf865.truestay.R
 import ca.uqac.inf865.truestay.presentation.theme.AppShapes
@@ -39,6 +40,7 @@ fun SelectableButton(
     modifier: Modifier = Modifier,
     enabled: Boolean = true,
     centerContent: Boolean = false,
+    verticalPadding: Dp = AppSpacing.small,
     content: @Composable RowScope.() -> Unit
 ) {
     val colors = LocalAppColors.current
@@ -61,7 +63,7 @@ fun SelectableButton(
     ) {
         Row(
             modifier = (if (centerContent) Modifier.fillMaxWidth() else Modifier)
-                .padding(horizontal = AppSpacing.medium, vertical = AppSpacing.small),
+                .padding(horizontal = AppSpacing.medium, vertical = verticalPadding),
             verticalAlignment = Alignment.CenterVertically,
             horizontalArrangement = Arrangement.spacedBy(AppSpacing.xsmall, Alignment.CenterHorizontally),
             content = content
