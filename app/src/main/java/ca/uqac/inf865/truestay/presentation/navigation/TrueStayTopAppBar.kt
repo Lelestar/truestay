@@ -2,6 +2,7 @@ package ca.uqac.inf865.truestay.presentation.navigation
 
 import androidx.annotation.StringRes
 import androidx.compose.foundation.layout.RowScope
+import androidx.compose.foundation.layout.WindowInsets
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material3.ExperimentalMaterial3Api
@@ -15,6 +16,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
+import androidx.compose.ui.unit.dp
 import ca.uqac.inf865.truestay.R
 import ca.uqac.inf865.truestay.presentation.common.components.TrueStayIcon
 import ca.uqac.inf865.truestay.presentation.common.icons.TrueStayIcons
@@ -28,7 +30,8 @@ fun TrueStayTopAppBar(
     @StringRes titleRes: Int,
     onNavigateBack: () -> Unit,
     hasActions: Boolean = false,
-    actions: @Composable RowScope.() -> Unit = {}
+    actions: @Composable RowScope.() -> Unit = {},
+    windowInsets: WindowInsets = TopAppBarDefaults.windowInsets
 ) {
     TopAppBar(
         title = {
@@ -58,7 +61,8 @@ fun TrueStayTopAppBar(
         },
         colors = TopAppBarDefaults.topAppBarColors(
             containerColor = LocalAppColors.current.white
-        )
+        ),
+        windowInsets = windowInsets
     )
 }
 
@@ -68,7 +72,29 @@ private fun TrueStayTopAppBarPreview() {
     TrueStayTheme {
         TrueStayTopAppBar(
             titleRes = R.string.screen_title_property_details,
-            onNavigateBack = {}
+            onNavigateBack = {},
+            windowInsets = WindowInsets(0.dp)
+        )
+    }
+}
+
+@Preview(showBackground = true)
+@Composable
+private fun TrueStayTopAppBarActionPreview() {
+    TrueStayTheme {
+        TrueStayTopAppBar(
+            titleRes = R.string.screen_title_property_details,
+            onNavigateBack = {},
+            windowInsets = WindowInsets(0.dp),
+            hasActions = true,
+            actions = {
+                TrueStayIcon(
+                    iconRes = TrueStayIcons.Heart,
+                    contentDescriptionRes = null,
+                    size = 24.dp,
+                    modifier = Modifier.padding(end = AppSpacing.large)
+                )
+            }
         )
     }
 }
