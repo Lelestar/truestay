@@ -1,5 +1,6 @@
 package ca.uqac.inf865.truestay.presentation.shared.property
 
+import android.util.Log
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
@@ -20,22 +21,42 @@ import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.launch
 import javax.inject.Inject
 
+/**
+ * Available filters for the reviews section (logement / immeuble / quartier).
+ */
 enum class ReviewFilterType {
     PROPERTY,
     BUILDING,
     NEIGHBORHOOD
 }
 
+/**
+ * Combines a review with its author for display.
+ */
 data class ReviewWithUser(
     val review: Review,
     val user: User?
 )
 
+/**
+ * UI state for the PropertyDetails screen.
+ */
+data class PropertyDetailsUiState(
+    val property: Property? = null,
+    val rental: Rental? = null,
+    val reviews: List<ReviewWithUser> = emptyList(),
+    val landlord: User? = null,
+    val isFavorite: Boolean = false,
+    val selectedReviewFilter: ReviewFilterType = ReviewFilterType.PROPERTY,
+    val isLoading: Boolean = false,
+    val error: String? = null
+)
+
+
 @HiltViewModel
 class PropertyDetailsViewModel @Inject constructor(
     private val propertyRepository: PropertyRepository,
     private val favoriteRepository: FavoriteRepository,
-    private val rentalRepository: RentalRepository,
     private val reviewRepository: ReviewRepository,
     private val userRepository: UserRepository,
     private val authRepository: AuthRepository,
@@ -48,23 +69,30 @@ class PropertyDetailsViewModel @Inject constructor(
         private set
 
     init {
+        refresh()
+    }
+
+    fun refresh() {
         loadPropertyDetails()
         checkIfFavorite()
     }
 
     private fun loadPropertyDetails() {
         viewModelScope.launch {
-            uiState = uiState.copy(isLoading = true)
+            uiState = uiState.copy(isLoading = true, error = null)
 
             // Load property
             propertyRepository.getPropertyById(propertyId)
                 .onSuccess { property ->
                     uiState = uiState.copy(
                         property = property,
-                        isLoading = false
+                        isLoading = false,
+                        error = null
                     )
-                    loadRentalIfExists(property.id)
                     loadReviewIfExists(property.id)
+                    if (property.landlordId.isNotBlank()) {
+                        loadLandlord(property.landlordId)
+                    }
                 }
                 .onFailure { error ->
                     uiState = uiState.copy(
@@ -75,16 +103,20 @@ class PropertyDetailsViewModel @Inject constructor(
         }
     }
 
-    private fun loadRentalIfExists(@Suppress("UNUSED_PARAMETER") propertyId: String) {
-        // TODO: Implémenter la récupération de la location active pour cette propriété
-        // Pour l'instant, on simule qu'il n'y a pas de location
+    private fun loadLandlord(landlordId: String) {
+        viewModelScope.launch {
+            userRepository.getUserById(landlordId)
+                .onSuccess { landlord ->
+                    uiState = uiState.copy(landlord = landlord)
+                }
+        }
     }
 
     private fun loadReviewIfExists(propertyId: String) {
         viewModelScope.launch {
             reviewRepository.getReviewsByProperty(propertyId)
                 .onSuccess { reviews ->
-                    // Charger les infos utilisateur pour chaque review
+                    // Load users for each review
                     val reviewsWithUsers = reviews.map { review ->
                         val user = userRepository.getUserById(review.tenantId).getOrNull()
                         ReviewWithUser(review, user)
@@ -122,24 +154,13 @@ class PropertyDetailsViewModel @Inject constructor(
                             .onSuccess {
                                 uiState = uiState.copy(isFavorite = false)
                             }
-                            .onFailure { error ->
-                                // Log error but keep current state
-                                println("Failed to remove favorite: ${error.message}")
-                            }
                     } else {
                         // Add to favorites
                         favoriteRepository.addFavorite(userId, propertyId)
                             .onSuccess {
                                 uiState = uiState.copy(isFavorite = true)
                             }
-                            .onFailure { error ->
-                                // Log error but keep current state
-                                println("Failed to add favorite: ${error.message}")
-                            }
                     }
-                }
-                .onFailure { error ->
-                    println("Failed to get current user: ${error.message}")
                 }
         }
     }
@@ -148,13 +169,3 @@ class PropertyDetailsViewModel @Inject constructor(
         uiState = uiState.copy(selectedReviewFilter = filterType)
     }
 }
-
-data class PropertyDetailsUiState(
-    val property: Property? = null,
-    val rental: Rental? = null,
-    val reviews: List<ReviewWithUser> = emptyList(),
-    val isFavorite: Boolean = false,
-    val selectedReviewFilter: ReviewFilterType = ReviewFilterType.PROPERTY,
-    val isLoading: Boolean = false,
-    val error: String? = null
-)

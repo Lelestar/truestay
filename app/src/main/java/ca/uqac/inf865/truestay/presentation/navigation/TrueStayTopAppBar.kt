@@ -77,3 +77,24 @@ private fun TrueStayTopAppBarPreview() {
         )
     }
 }
+
+@Preview(showBackground = true)
+@Composable
+private fun TrueStayTopAppBarActionPreview() {
+    TrueStayTheme {
+        TrueStayTopAppBar(
+            titleRes = R.string.screen_title_property_details,
+            onNavigateBack = {},
+            windowInsets = WindowInsets(0.dp),
+            hasActions = true,
+            actions = {
+                TrueStayIcon(
+                    iconRes = TrueStayIcons.Heart,
+                    contentDescriptionRes = null,
+                    size = 24.dp,
+                    modifier = Modifier.padding(end = AppSpacing.large)
+                )
+            }
+        )
+    }
+}
