@@ -13,5 +13,7 @@
 .externalNativeBuild
 .cxx
 local.properties
+secrets.properties
 /node_modules
 serviceAccountKey.json
+firebase-debug.log
