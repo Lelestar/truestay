@@ -17,8 +17,11 @@ import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
+import androidx.compose.material3.SnackbarHost
+import androidx.compose.material3.SnackbarHostState
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.layout.ContentScale
@@ -82,14 +85,25 @@ fun PropertyDetailsScreen(
     viewModel: PropertyDetailsViewModel = hiltViewModel()
 ) {
     val uiState = viewModel.uiState
+    val snackbarHostState = remember { SnackbarHostState() }
+    val context = LocalContext.current
     var showFullscreenCarousel by remember { mutableStateOf(false) }
     var fullscreenStartIndex by remember { mutableIntStateOf(0) }
     var fullscreenPhotos by remember { mutableStateOf<List<String>>(emptyList()) }
     var fullscreenTitle by remember { mutableStateOf("") }
 
+    LaunchedEffect(uiState.favoriteMessageRes) {
+        val msgRes = uiState.favoriteMessageRes
+        if (msgRes != null) {
+            snackbarHostState.showSnackbar(context.getString(msgRes))
+            viewModel.clearFavoriteMessage()
+        }
+    }
+
     Box(modifier = Modifier.fillMaxSize()) {
         Scaffold(
             contentWindowInsets = WindowInsets(0.dp),
+            snackbarHost = { SnackbarHost(snackbarHostState) },
             topBar = {
                 TrueStayTopAppBar(
                     titleRes = R.string.screen_title_property_details,
