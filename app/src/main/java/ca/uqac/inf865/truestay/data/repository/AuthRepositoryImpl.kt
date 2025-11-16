@@ -100,6 +100,15 @@ class AuthRepositoryImpl @Inject constructor(
         }
     }
 
+    override suspend fun isEmailVerified(): Result<Boolean> {
+        return try {
+            val firebaseUser = authDataSource.getCurrentUser()
+            Result.success(firebaseUser?.isEmailVerified == true)
+        } catch (e: Exception) {
+            Result.failure(e)
+        }
+    }
+
     /**
      * Re-authenticates the user before a sensitive operation
      * (required before changing email or password)

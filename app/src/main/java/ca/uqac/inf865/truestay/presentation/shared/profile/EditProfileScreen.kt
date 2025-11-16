@@ -1,241 +1,228 @@
 package ca.uqac.inf865.truestay.presentation.shared.profile
 
-import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.Row
-import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.rememberScrollState
-import androidx.compose.foundation.verticalScroll
-import androidx.compose.material3.Text
-import androidx.compose.runtime.Composable
-import androidx.compose.runtime.mutableStateOf
-import androidx.compose.ui.Modifier
-import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
-import ca.uqac.inf865.truestay.presentation.theme.LocalAppColors
-import androidx.compose.runtime.saveable.rememberSaveable
-
-import androidx.compose.foundation.background
-import androidx.compose.foundation.border
-import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
-import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.foundation.text.KeyboardOptions
-import androidx.compose.foundation.verticalScroll
+import androidx.compose.foundation.gestures.detectTapGestures
 import androidx.compose.foundation.rememberScrollState
-import androidx.compose.foundation.text.BasicTextField
+import androidx.compose.foundation.text.KeyboardActions
+import androidx.compose.foundation.verticalScroll
+import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
-import androidx.compose.material3.TextField
-import androidx.compose.material3.TextFieldDefaults
 import androidx.compose.runtime.*
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.ui.Alignment
-import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.unit.dp
-import ca.uqac.inf865.truestay.R
-
-// Tes composants personnalisés
-import ca.uqac.inf865.truestay.presentation.common.components.TrueStayIcon
-import ca.uqac.inf865.truestay.presentation.common.components.TrueStayButton
-import ca.uqac.inf865.truestay.presentation.common.components.TrueStaySwitch
-
-
-import ca.uqac.inf865.truestay.presentation.theme.LocalAppColors
-import ca.uqac.inf865.truestay.presentation.theme.AppSpacing
-import ca.uqac.inf865.truestay.presentation.common.icons.TrueStayIcons
-
-// Pour ArrowBack ou autre navigation (selon où il se trouve)
-import androidx.compose.material3.Icon
+import androidx.compose.ui.Modifier
+import androidx.compose.ui.focus.FocusDirection
+import androidx.compose.ui.input.pointer.pointerInput
+import androidx.compose.ui.platform.LocalFocusManager
 import androidx.compose.ui.res.stringResource
-import ca.uqac.inf865.truestay.presentation.shared.auth.rememberCurrentUser
-
+import androidx.compose.ui.text.input.ImeAction
+import androidx.compose.ui.text.input.KeyboardType
+import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
+import ca.uqac.inf865.truestay.R
+import ca.uqac.inf865.truestay.presentation.common.components.ButtonVariant
+import ca.uqac.inf865.truestay.presentation.common.components.TrueStayButton
+import ca.uqac.inf865.truestay.presentation.common.components.TrueStayCard
+import ca.uqac.inf865.truestay.presentation.common.components.TrueStayTextField
+import ca.uqac.inf865.truestay.presentation.common.icons.TrueStayIcons
+import ca.uqac.inf865.truestay.presentation.theme.AppSpacing
+import ca.uqac.inf865.truestay.presentation.theme.LocalAppColors
 
 @Composable
 fun EditProfileScreen(
-    onBack: () -> Unit,
+    onEditEmail: () -> Unit,
     viewModel: EditProfileViewModel = hiltViewModel()
 ) {
     val colors = LocalAppColors.current
-
-    // 🔥 Récupère l'utilisateur connecté
-    val currentUser = rememberCurrentUser()
+    val uiState by viewModel.uiState.collectAsState()
+    val user = uiState.user
+    val focusManager = LocalFocusManager.current
 
     var lastName by rememberSaveable { mutableStateOf("") }
     var firstName by rememberSaveable { mutableStateOf("") }
     var phone by rememberSaveable { mutableStateOf("") }
     var email by rememberSaveable { mutableStateOf("") }
+    var lastNameErrorRes by rememberSaveable { mutableStateOf<Int?>(null) }
+    var firstNameErrorRes by rememberSaveable { mutableStateOf<Int?>(null) }
+    var phoneErrorRes by rememberSaveable { mutableStateOf<Int?>(null) }
 
-    // 🔥 Remplit automatiquement les champs quand currentUser arrive
-    LaunchedEffect(currentUser) {
-        currentUser?.let { user ->
-            firstName = user.firstName ?: ""
-            lastName = user.lastName ?: ""
-            phone = user.phoneNumber ?: ""
-            email = user.email ?: ""
+    LaunchedEffect(user) {
+        user?.let {
+            firstName = it.firstName
+            lastName = it.lastName
+            phone = it.phoneNumber
+            email = it.email
         }
     }
 
-    Column(
-        modifier = Modifier
-            .fillMaxSize()
-            .verticalScroll(rememberScrollState())
-            .padding(AppSpacing.large)
-    ) {
+    val hasChanges = user != null &&
+            (firstName != user.firstName ||
+                    lastName != user.lastName ||
+                    phone != user.phoneNumber)
 
-        Spacer(modifier = Modifier.height(AppSpacing.large))
+    fun validateAndSave() {
+        lastNameErrorRes = null
+        firstNameErrorRes = null
+        phoneErrorRes = null
 
-        // CARD
-        Column(
-            modifier = Modifier
-                .fillMaxWidth()
-                .border(1.dp, colors.grayBorder, RoundedCornerShape(16.dp))
-                .background(colors.white, RoundedCornerShape(16.dp))
-                .padding(12.dp)
-        ) {
+        var hasError = false
 
-            // NOM
-            Text(
-                text = stringResource(R.string.edit_last_name),
-                style = MaterialTheme.typography.bodyMedium,
-                color = colors.grayDark
-            )
-            Spacer(modifier = Modifier.height(4.dp))
-
-            ProfileEditInput(
-                icon = TrueStayIcons.User,
-                value = lastName,
-                placeholder = stringResource(R.string.placeholder_last_name),
-                onValueChange = { lastName = it }
-            )
-
-            Spacer(modifier = Modifier.height(AppSpacing.large))
-
-            // PRÉNOM
-            Text(
-                text = stringResource(R.string.edit_first_name),
-                style = MaterialTheme.typography.bodyMedium,
-                color = colors.grayDark
-            )
-            Spacer(modifier = Modifier.height(6.dp))
-
-            ProfileEditInput(
-                icon = TrueStayIcons.User,
-                value = firstName,
-                placeholder = stringResource(R.string.placeholder_first_name),
-                onValueChange = { firstName = it }
-            )
-
-            Spacer(modifier = Modifier.height(AppSpacing.large))
-
-            // TELEPHONE
-            Text(
-                text = stringResource(R.string.edit_phone),
-                style = MaterialTheme.typography.bodyMedium,
-                color = colors.grayDark
-            )
-            Spacer(modifier = Modifier.height(6.dp))
-
-            ProfileEditInput(
-                icon = TrueStayIcons.Phone,
-                value = phone,
-                placeholder = stringResource(R.string.placeholder_phone),
-                onValueChange = { phone = it }
-            )
-
-            Spacer(modifier = Modifier.height(AppSpacing.large))
-
-            // EMAIL
-            Text(
-                text = stringResource(R.string.edit_email),
-                style = MaterialTheme.typography.bodyMedium,
-                color = colors.grayDark
-            )
-            Spacer(modifier = Modifier.height(6.dp))
-
-            ProfileEditInput(
-                icon = TrueStayIcons.Mail,
-                value = email,
-                placeholder = stringResource(R.string.placeholder_email),
-                onValueChange = { email = it },
-                enabled = false    // désactivé comme dans le design
-            )
-
-            Spacer(modifier = Modifier.height(8.dp))
-
-            Text(
-                text = stringResource(R.string.edit_change_email),
-                color = colors.primary,
-                style = MaterialTheme.typography.bodyMedium,
-                modifier = Modifier
-                    .align(Alignment.CenterHorizontally)
-                    .clickable { }
-            )
-
-            Spacer(modifier = Modifier.height(AppSpacing.large))
-
-            // BOUTON
-            TrueStayButton(
-                text = stringResource(R.string.save_changes),
-                onClick = {},
-                enabled = false,
-                modifier = Modifier.fillMaxWidth()
-            )
+        if (lastName.isBlank()) {
+            lastNameErrorRes = R.string.register_error_last_name_required
+            hasError = true
         }
+
+        if (firstName.isBlank()) {
+            firstNameErrorRes = R.string.register_error_first_name_required
+            hasError = true
+        }
+
+        if (phone.isBlank()) {
+            phoneErrorRes = R.string.register_error_phone_required
+            hasError = true
+        }
+
+        if (hasError || !hasChanges || uiState.isSaving) return
+
+        viewModel.saveProfile(
+            firstName = firstName,
+            lastName = lastName,
+            phoneNumber = phone
+        )
     }
-}
-
-
-
-@Composable
-fun ProfileEditInput(
-    icon: Int,
-    value: String,
-    placeholder: String,
-    onValueChange: (String) -> Unit,
-    enabled: Boolean = true
-) {
-    val colors = LocalAppColors.current
-
-    val textColor = if (enabled) colors.grayDark else colors.grayDark.copy(alpha = 0.5f)
 
     Box(
         modifier = Modifier
-            .fillMaxWidth()
-            .height(40.dp) // 👈 TU PEUX METTRE 36dp, 32dp, ce que tu veux !
-            .border(1.dp, colors.grayBorder, RoundedCornerShape(10.dp))
-            .background(colors.grayLight.copy(alpha = 0.25f), RoundedCornerShape(10.dp))
-            .padding(horizontal = 12.dp),
-        contentAlignment = Alignment.CenterStart
+            .fillMaxSize()
+            .pointerInput(Unit) {
+                detectTapGestures(onTap = {
+                    focusManager.clearFocus()
+                })
+            },
+        contentAlignment = Alignment.Center
     ) {
-        Row(verticalAlignment = Alignment.CenterVertically) {
+        when {
+            uiState.isLoading && user == null -> {
+                CircularProgressIndicator(color = colors.primary)
+            }
 
-            TrueStayIcon(
-                iconRes = icon,
-                contentDescriptionRes = null,
-                tint = textColor
-            )
+            uiState.errorMessage != null && user == null -> {
+                Text(
+                    text = uiState.errorMessage ?: "",
+                    style = MaterialTheme.typography.bodyMedium,
+                    color = colors.error
+                )
+            }
 
-            Spacer(modifier = Modifier.width(12.dp))
-
-            // Champ texte ultra compact
-            BasicTextField(
-                value = value,
-                onValueChange = onValueChange,
-                enabled = enabled,
-                singleLine = true,
-                textStyle = MaterialTheme.typography.bodyMedium.copy(color = textColor),
-                decorationBox = { innerTextField ->
-                    if (value.isEmpty()) {
-                        Text(
-                            placeholder,
-                            color = colors.grayDark.copy(alpha = 0.4f),
-                            style = MaterialTheme.typography.bodyMedium
+            else -> {
+                Column(
+                    modifier = Modifier
+                        .fillMaxSize()
+                        .verticalScroll(rememberScrollState())
+                        .padding(AppSpacing.large),
+                    horizontalAlignment = Alignment.CenterHorizontally
+                ) {
+                    TrueStayCard(modifier = Modifier.fillMaxWidth()) {
+                    TrueStayTextField(
+                        leadingIcon = TrueStayIcons.User,
+                        value = lastName,
+                        label = stringResource(R.string.edit_last_name),
+                        placeholder = stringResource(R.string.edit_placeholder_last_name),
+                        onValueChange = { lastName = it },
+                        enabled = !uiState.isSaving,
+                        errorMessage = lastNameErrorRes?.let { stringResource(it) },
+                        imeAction = ImeAction.Next,
+                        keyboardActions = KeyboardActions(
+                            onNext = { focusManager.moveFocus(FocusDirection.Down) }
                         )
+                    )
+
+                        Spacer(modifier = Modifier.height(AppSpacing.large))
+
+                    TrueStayTextField(
+                        leadingIcon = TrueStayIcons.User,
+                        value = firstName,
+                        label = stringResource(R.string.edit_first_name),
+                        placeholder = stringResource(R.string.edit_placeholder_first_name),
+                        onValueChange = { firstName = it },
+                        enabled = !uiState.isSaving,
+                        errorMessage = firstNameErrorRes?.let { stringResource(it) },
+                        imeAction = ImeAction.Next,
+                        keyboardActions = KeyboardActions(
+                            onNext = { focusManager.moveFocus(FocusDirection.Down) }
+                        )
+                    )
+
+                        Spacer(modifier = Modifier.height(AppSpacing.large))
+
+                    TrueStayTextField(
+                        leadingIcon = TrueStayIcons.Phone,
+                        value = phone,
+                        label = stringResource(R.string.edit_phone),
+                        placeholder = stringResource(R.string.edit_placeholder_phone),
+                        onValueChange = { phone = it },
+                        enabled = !uiState.isSaving,
+                        keyboardType = KeyboardType.Phone,
+                        imeAction = ImeAction.Done,
+                        onImeAction = {
+                            validateAndSave()
+                        },
+                        errorMessage = phoneErrorRes?.let { stringResource(it) }
+                    )
+
+                        Spacer(modifier = Modifier.height(AppSpacing.large))
+
+                        TrueStayTextField(
+                            leadingIcon = TrueStayIcons.Mail,
+                            value = email,
+                            label = stringResource(R.string.edit_email),
+                            placeholder = stringResource(R.string.edit_placeholder_email),
+                            onValueChange = { },
+                            enabled = false
+                        )
+
+                        Spacer(modifier = Modifier.height(AppSpacing.small))
+
+                    TrueStayButton(
+                        text = stringResource(R.string.edit_change_email),
+                        onClick = onEditEmail,
+                        modifier = Modifier.fillMaxWidth(),
+                        variant = ButtonVariant.SECONDARY,
+                        enabled = !uiState.isSaving
+                    )
+
+                        Spacer(modifier = Modifier.height(AppSpacing.xlarge))
+
+                    TrueStayButton(
+                        text = stringResource(R.string.edit_save_changes),
+                        onClick = { validateAndSave() },
+                        enabled = !uiState.isSaving && hasChanges,
+                        isLoading = uiState.isSaving,
+                        modifier = Modifier.fillMaxWidth()
+                        )
+
+                        if (uiState.saveSuccess) {
+                            Spacer(modifier = Modifier.height(AppSpacing.large))
+                            Text(
+                                text = stringResource(R.string.edit_profile_success),
+                                style = MaterialTheme.typography.bodyMedium,
+                                color = colors.success,
+                                modifier = Modifier.align(Alignment.CenterHorizontally)
+                            )
+                        } else if (uiState.saveErrorMessage != null) {
+                            Spacer(modifier = Modifier.height(AppSpacing.large))
+                            Text(
+                                text = stringResource(R.string.edit_profile_error,
+                                    uiState.saveErrorMessage!!
+                                ),
+                                style = MaterialTheme.typography.bodyMedium,
+                                color = colors.error,
+                                modifier = Modifier.align(Alignment.CenterHorizontally)
+                            )
+                        }
                     }
-                    innerTextField()
-                },
-                modifier = Modifier.weight(1f)
-            )
+                }
+            }
         }
     }
 }

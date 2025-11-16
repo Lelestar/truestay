@@ -2,18 +2,19 @@ package ca.uqac.inf865.truestay.presentation.shared.profile
 
 import ca.uqac.inf865.truestay.presentation.shared.auth.AuthViewModel
 import androidx.compose.foundation.background
-import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.CircleShape
-import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
-import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.draw.clip
+import androidx.compose.ui.layout.ContentScale
+import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
 import ca.uqac.inf865.truestay.R
@@ -21,27 +22,314 @@ import ca.uqac.inf865.truestay.presentation.common.components.TrueStayButton
 import ca.uqac.inf865.truestay.presentation.common.components.ButtonVariant
 import ca.uqac.inf865.truestay.presentation.common.components.TrueStayIcon
 import ca.uqac.inf865.truestay.presentation.common.icons.TrueStayIcons
-import ca.uqac.inf865.truestay.presentation.shared.auth.rememberCurrentUser
 import ca.uqac.inf865.truestay.presentation.theme.AppSpacing
 import ca.uqac.inf865.truestay.presentation.theme.LocalAppColors
-import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.foundation.verticalScroll
-import androidx.compose.ui.text.input.KeyboardType
-
-import androidx.compose.material3.Icon
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.ui.res.stringResource
+import ca.uqac.inf865.truestay.presentation.common.components.BadgeVariant
+import ca.uqac.inf865.truestay.presentation.common.components.TrueStayBadge
 import ca.uqac.inf865.truestay.presentation.common.components.TrueStaySwitch
+import ca.uqac.inf865.truestay.presentation.theme.TrueStayTheme
+import androidx.compose.ui.tooling.preview.Preview
+import ca.uqac.inf865.truestay.domain.model.User
+import ca.uqac.inf865.truestay.domain.model.UserRole
+import ca.uqac.inf865.truestay.presentation.common.components.TrueStayCard
+import ca.uqac.inf865.truestay.presentation.common.components.TrueStayDropdown
+import androidx.activity.compose.rememberLauncherForActivityResult
+import androidx.activity.result.contract.ActivityResultContracts
+import android.content.Context
+import android.graphics.Bitmap
+import android.net.Uri
+import androidx.core.net.toUri
+import ca.uqac.inf865.truestay.presentation.theme.AppShapes
+import coil3.compose.AsyncImage
+import java.io.File
+import java.io.FileOutputStream
+import java.text.SimpleDateFormat
+import java.util.Date
+import java.util.Locale
 
 
-// --------------------------------------------------
-// 1. HEADER BLEU
-// --------------------------------------------------
+@Composable
+fun ProfileScreen(
+    onLogout: () -> Unit,
+    onEditProfile: () -> Unit,
+    onEditPassword: () -> Unit,
+    viewModel: ProfileViewModel = hiltViewModel(),
+    authViewModel: AuthViewModel = hiltViewModel()
+) {
+    val uiState by viewModel.uiState.collectAsState()
+    val user = uiState.user
+    val snackbarHostState = remember { SnackbarHostState() }
+    val context = LocalContext.current
+    var showPictureSourceDialog by remember { mutableStateOf(false) }
+
+    LaunchedEffect(Unit) {
+        viewModel.refreshProfile()
+    }
+
+    val galleryLauncher = rememberLauncherForActivityResult(
+        contract = ActivityResultContracts.GetContent()
+    ) { uri: Uri? ->
+        uri?.let { viewModel.updateProfilePicture(it) }
+    }
+
+    val cameraLauncher = rememberLauncherForActivityResult(
+        contract = ActivityResultContracts.TakePicturePreview()
+    ) { bitmap: Bitmap? ->
+        bitmap?.let {
+            val uri = saveBitmapToCache(context, it)
+            uri?.let { validUri -> viewModel.updateProfilePicture(validUri) }
+        }
+    }
+
+    LaunchedEffect(uiState.profileUpdateErrorRes) {
+        val messageRes = uiState.profileUpdateErrorRes ?: return@LaunchedEffect
+        snackbarHostState.showSnackbar(context.getString(messageRes))
+        viewModel.clearProfileUpdateError()
+    }
+
+    Scaffold(
+        contentWindowInsets = WindowInsets(0.dp),
+        snackbarHost = { SnackbarHost(hostState = snackbarHostState) }
+    ) { innerPadding ->
+        Column(
+            modifier = Modifier
+                .fillMaxSize()
+                .padding(innerPadding)
+        ) {
+            if (user != null) {
+                val memberSinceText = remember(user.createdAt) {
+                    formatMemberSinceDate(user.createdAt)
+                }
+                ProfileHeader(
+                    name = "${user.firstName} ${user.lastName}".trim(),
+                    role = if (user.role == UserRole.LANDLORD) stringResource(R.string.role_landlord) else stringResource(
+                        R.string.role_tenant
+                    ),
+                    memberSince = memberSinceText,
+                    profilePictureUrl = user.profilePictureUrl,
+                    onEditProfilePicture = { showPictureSourceDialog = true }
+                )
+            }
+
+            Box(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .weight(1f)
+                    .padding(horizontal = AppSpacing.large),
+                contentAlignment = Alignment.Center
+            ) {
+                when {
+                    uiState.isLoading && user == null && uiState.errorMessage == null -> {
+                        CircularProgressIndicator(
+                            color = LocalAppColors.current.primary
+                        )
+                    }
+
+                    uiState.errorMessage != null && user == null -> {
+                        ProfileErrorState(
+                            message = stringResource(R.string.auth_error_generic),
+                            onRetry = viewModel::refreshProfile
+                        )
+                    }
+
+                    else -> {
+                        ProfileContent(
+                            user = user,
+                            isDarkTheme = uiState.isDarkTheme,
+                            isEmailVerified = uiState.isEmailVerified,
+                            onEditProfile = onEditProfile,
+                            onEditPassword = onEditPassword,
+                            onLogoutClick = {
+                                authViewModel.logout()
+                                onLogout()
+                            },
+                            onDarkThemeChanged = viewModel::setTheme,
+                            onNotificationsChanged = { pushEnabled, emailEnabled ->
+                                viewModel.updateNotificationPreferences(
+                                    pushEnabled = pushEnabled,
+                                    emailEnabled = emailEnabled
+                                )
+                            },
+                            onTwoFactorChanged = viewModel::updateTwoFactorEnabled
+                        )
+                    }
+                }
+
+                if (showPictureSourceDialog) {
+                    ProfilePictureSourceDialog(
+                        onDismiss = { showPictureSourceDialog = false },
+                        onPickFromGallery = {
+                            showPictureSourceDialog = false
+                            galleryLauncher.launch("image/*")
+                        },
+                        onTakePhoto = {
+                            showPictureSourceDialog = false
+                            cameraLauncher.launch(null)
+                        }
+                    )
+                }
+            }
+        }
+    }
+}
+
+@Composable
+private fun ProfileContent(
+    user: User?,
+    isDarkTheme: Boolean,
+    isEmailVerified: Boolean,
+    onEditProfile: () -> Unit,
+    onEditPassword: () -> Unit,
+    onLogoutClick: () -> Unit,
+    onDarkThemeChanged: (Boolean) -> Unit,
+    onNotificationsChanged: (pushEnabled: Boolean, emailEnabled: Boolean) -> Unit,
+    onTwoFactorChanged: (Boolean) -> Unit
+) {
+    Column(
+        modifier = Modifier
+            .fillMaxWidth()
+            .verticalScroll(rememberScrollState())
+    ) {
+        Spacer(modifier = Modifier.height(AppSpacing.large))
+
+        AccountCard(
+            name = "${user?.firstName.orEmpty()} ${user?.lastName.orEmpty()}".trim(),
+            email = user?.email.orEmpty(),
+            phone = user?.phoneNumber.orEmpty(),
+            onEditProfile = onEditProfile
+        )
+
+        Spacer(modifier = Modifier.height(AppSpacing.large))
+
+        VerificationCard(isEmailVerified = isEmailVerified)
+
+        Spacer(modifier = Modifier.height(AppSpacing.large))
+
+        PreferencesCard(
+            user = user,
+            isDarkTheme = isDarkTheme,
+            onDarkThemeChanged = onDarkThemeChanged,
+            onNotificationsChanged = onNotificationsChanged
+        )
+
+        Spacer(modifier = Modifier.height(AppSpacing.large))
+
+        SecurityCard(
+            onEditPassword = onEditPassword,
+            twoFactorEnabled = user?.twoFactorEnabled ?: false,
+            onTwoFactorChanged = onTwoFactorChanged
+        )
+
+        Spacer(modifier = Modifier.height(AppSpacing.large))
+
+        HelpCard()
+
+        Spacer(modifier = Modifier.height(AppSpacing.large))
+
+        TrueStayButton(
+            text = stringResource(R.string.profile_logout),
+            leadingIcon = R.drawable.ic_log_out,
+            onClick = onLogoutClick,
+            variant = ButtonVariant.DANGER,
+            modifier = Modifier.fillMaxWidth()
+        )
+
+        Spacer(modifier = Modifier.height(AppSpacing.large))
+    }
+}
+
+// Display-only row with icon, label and value
+@Composable
+fun AccountInfoRow(
+    icon: Int,
+    label: String,
+    value: String,
+) {
+    val colors = LocalAppColors.current
+
+    Row(
+        verticalAlignment = Alignment.CenterVertically,
+        horizontalArrangement = Arrangement.spacedBy(AppSpacing.large),
+        modifier = Modifier
+            .fillMaxWidth()
+            .sizeIn(minHeight = 56.dp)
+            .padding(vertical = AppSpacing.small)
+    ) {
+        TrueStayIcon(
+            iconRes = icon,
+            contentDescriptionRes = null,
+            tint = colors.grayDark,
+            size = 20.dp
+        )
+
+        Column(
+            modifier = Modifier.weight(1f),
+            verticalArrangement = Arrangement.spacedBy(AppSpacing.xsmall)
+        ) {
+            Text(
+                text = label,
+                style = MaterialTheme.typography.bodySmall,
+                color = colors.grayDark
+            )
+            Text(
+                text = value,
+                style = MaterialTheme.typography.titleMedium,
+                color = colors.black
+            )
+        }
+    }
+}
+
+// Display-only row with icon, one main text and a trailing slot (badge, switch, etc.)
+@Composable
+fun AccountInfoWithTrailingRow(
+    icon: Int,
+    text: String,
+    trailingContent: @Composable () -> Unit,
+    modifier: Modifier = Modifier
+) {
+    val colors = LocalAppColors.current
+
+    Row(
+        verticalAlignment = Alignment.CenterVertically,
+        horizontalArrangement = Arrangement.spacedBy(AppSpacing.large),
+        modifier = modifier
+            .fillMaxWidth()
+            .sizeIn(minHeight = 56.dp)
+            .padding(vertical = AppSpacing.small)
+    ) {
+        TrueStayIcon(
+            iconRes = icon,
+            contentDescriptionRes = null,
+            tint = colors.grayDark,
+            size = 20.dp
+        )
+
+        Text(
+            text = text,
+            style = MaterialTheme.typography.titleMedium,
+            color = colors.black,
+            modifier = Modifier.weight(1f)
+        )
+
+        Box(
+            contentAlignment = Alignment.CenterEnd
+        ) {
+            trailingContent()
+        }
+    }
+}
+
 @Composable
 fun ProfileHeader(
     name: String,
     role: String,
-    memberSince: String
+    memberSince: String,
+    profilePictureUrl: String?,
+    onEditProfilePicture: () -> Unit
 ) {
     val colors = LocalAppColors.current
 
@@ -54,204 +342,128 @@ fun ProfileHeader(
 
         Row(verticalAlignment = Alignment.CenterVertically) {
 
-            // Avatar rond
-            Box(modifier = Modifier.size(64.dp)) {
+            // Avatar
+            Box(
+                modifier = Modifier
+                    .size(64.dp)
+                    .clickable(onClick = onEditProfilePicture)
+            ) {
 
-                Box(
-                    modifier = Modifier
-                        .size(64.dp)
-                        .background(colors.white.copy(alpha = 0.25f), CircleShape),
-                    contentAlignment = Alignment.Center
-                ) {
-                    Text(text = name.firstOrNull()?.uppercase() ?: "?",
-
-                        style = MaterialTheme.typography.headlineLarge,
-                        color = colors.white
+                if (!profilePictureUrl.isNullOrBlank()) {
+                    AsyncImage(
+                        model = profilePictureUrl,
+                        contentDescription = null,
+                        modifier = Modifier
+                            .size(64.dp)
+                            .clip(CircleShape)
+                            .background(colors.primaryLight, CircleShape),
+                        contentScale = ContentScale.Crop,
+                        placeholder = painterResource(R.drawable.img_placeholder),
+                        error = painterResource(R.drawable.img_placeholder),
                     )
+                } else {
+                    Box(
+                        modifier = Modifier
+                            .size(64.dp)
+                            .background(colors.primaryLight, CircleShape),
+                        contentAlignment = Alignment.Center
+                    ) {
+                        Text(
+                            text = name.firstOrNull()?.uppercase() ?: "?",
+                            style = MaterialTheme.typography.headlineLarge,
+                            color = colors.white
+                        )
+                    }
                 }
 
-                // Icône crayon
+                // Edit icon
                 Box(
                     modifier = Modifier
                         .size(24.dp)
                         .align(Alignment.BottomEnd)
-                        .background(colors.white, CircleShape),
+                        .background(colors.white, CircleShape)
+                        .clickable(onClick = onEditProfilePicture),
                     contentAlignment = Alignment.Center
                 ) {
-                    Text("✏️", color = colors.primary)
+                    TrueStayIcon(
+                        iconRes = TrueStayIcons.SquarePen,
+                        contentDescriptionRes = null,
+                        size = 16.dp,
+                    )
                 }
             }
 
             Spacer(modifier = Modifier.width(AppSpacing.large))
 
             Column {
-
-                // Nom + badge rôle
+                // Name and role
                 Row(verticalAlignment = Alignment.CenterVertically) {
-
                     Text(
                         text = name,
-                        style = MaterialTheme.typography.titleLarge,
+                        style = MaterialTheme.typography.headlineMedium,
                         color = colors.white
                     )
 
-                    Spacer(modifier = Modifier.width(8.dp))
+                    Spacer(modifier = Modifier.width(AppSpacing.small))
 
-                    Box(
-                        modifier = Modifier
-                            .background(colors.white, RoundedCornerShape(20.dp))
-                            .padding(horizontal = 10.dp, vertical = 4.dp)
-                    ) {
-                        Text(
-                            text = role,
-                            color = colors.primary,
-                            style = MaterialTheme.typography.labelSmall,
-                            fontWeight = FontWeight.Bold
-                        )
-                    }
+                    TrueStayBadge(
+                        text = role,
+                        variant = BadgeVariant.INFO,
+                    )
                 }
 
-                Spacer(modifier = Modifier.height(6.dp))
+                Spacer(modifier = Modifier.height(AppSpacing.small))
 
                 Text(
                     text = stringResource(R.string.profile_member_since) + " $memberSince",
                     style = MaterialTheme.typography.bodyMedium,
-                    color = colors.white.copy(alpha = 0.9f)
+                    color = colors.white
                 )
             }
         }
     }
 }
 
-// --------------------------------------------------
-// 2. INPUT AVEC ICONE
-// --------------------------------------------------
-@Composable
-fun AccountInputRow(
-    icon: Int,
-    label: String,
-    value: String,
-    onValueChange: (String) -> Unit
-) {
-    val colors = LocalAppColors.current
-
-    Row(
-        verticalAlignment = Alignment.CenterVertically,
-        horizontalArrangement = Arrangement.spacedBy(AppSpacing.medium),
-        modifier = Modifier.fillMaxWidth()
-    ) {
-        // Icône TrueStay
-        TrueStayIcon(
-            iconRes = icon,
-            contentDescriptionRes = null,
-            tint = colors.grayDark
-        )
-
-        // TextField flottant
-        TextField(
-            value = value,
-            onValueChange = onValueChange,
-            label = {
-                Text(
-                    text = label,
-                    style = MaterialTheme.typography.labelSmall.copy(
-                        fontWeight = FontWeight.Normal   // ← PAS GRAS
-                    )
-                )
-            },
-            textStyle = MaterialTheme.typography.bodyMedium.copy(
-                fontWeight = FontWeight.Bold           // ← LA VALEUR EN GRAS
-            ),
-            colors = TextFieldDefaults.colors(
-                focusedIndicatorColor = colors.primary,
-                unfocusedIndicatorColor = colors.grayBorder,
-                focusedContainerColor = colors.white,
-                unfocusedContainerColor = colors.white,
-                cursorColor = colors.primary
-            ),
-            keyboardOptions = KeyboardOptions(
-                keyboardType = when (label) {
-                    "Téléphone" -> KeyboardType.Phone
-                    "E-mail", "Email" -> KeyboardType.Email
-                    else -> KeyboardType.Text
-                }
-            ),
-            modifier = Modifier.weight(1f)
-        )
-
-    }
-}
-
-// --------------------------------------------------
-// 3. CARTE BLANCHE : FORMULAIRE
-// --------------------------------------------------
 @Composable
 fun AccountCard(
-    userId: String,
-    initialName: String,
-    initialEmail: String,
-    initialPhone: String,
+    name: String,
+    email: String,
+    phone: String,
     onEditProfile: () -> Unit
-
 ) {
     val colors = LocalAppColors.current
 
-    var name by rememberSaveable { mutableStateOf("") }
-    var email by rememberSaveable { mutableStateOf("") }
-    var phoneNumber by rememberSaveable { mutableStateOf("") }
-
-    // 🔥 Met à jour les champs quand currentUser arrive
-    LaunchedEffect(initialName, initialEmail, initialPhone) {
-        name = initialName
-        email = initialEmail
-        phoneNumber = initialPhone
-    }
-
-    Column(
-        modifier = Modifier
-            .fillMaxWidth()
-            .border(1.dp, colors.grayBorder, RoundedCornerShape(16.dp))
-            .background(colors.white, RoundedCornerShape(16.dp))
-            .padding(AppSpacing.large)
-    ) {
-
+    TrueStayCard(modifier = Modifier.fillMaxWidth()) {
         Text(
-            text = stringResource(R.string.account_title),
-            style = MaterialTheme.typography.titleMedium,
-            color = colors.grayDark
+            text = stringResource(R.string.profile_account_title),
+            style = MaterialTheme.typography.headlineSmall,
+            color = colors.black
         )
 
-        Spacer(modifier = Modifier.height(AppSpacing.medium))
+        Spacer(modifier = Modifier.height(AppSpacing.small))
 
-        AccountInputRow(
+        AccountInfoRow(
             icon = TrueStayIcons.User,
-            label = stringResource(R.string.account_name),
-            value = name,
-            onValueChange = { name = it }
+            label = stringResource(R.string.profile_account_name),
+            value = name
         )
-
-        Spacer(modifier = Modifier.height(AppSpacing.medium))
-
-        AccountInputRow(
+        HorizontalDivider(color = colors.grayBorder, thickness = 1.dp)
+        AccountInfoRow(
             icon = TrueStayIcons.Mail,
-            label = stringResource(R.string.account_email),
-            value = email,
-            onValueChange = { email = it }
+            label = stringResource(R.string.profile_account_email),
+            value = email
         )
-
-        Spacer(modifier = Modifier.height(AppSpacing.medium))
-
-        AccountInputRow(
+        HorizontalDivider(color = colors.grayBorder, thickness = 1.dp)
+        AccountInfoRow(
             icon = TrueStayIcons.Phone,
-            label = stringResource(R.string.account_phone),
-            value = phoneNumber,
-            onValueChange = { phoneNumber = it }
+            label = stringResource(R.string.profile_account_phone),
+            value = phone
         )
 
-        Spacer(modifier = Modifier.height(AppSpacing.large))
+        Spacer(modifier = Modifier.height(AppSpacing.small))
 
         TrueStayButton(
-            text = stringResource(R.string.account_edit_info),
+            text = stringResource(R.string.profile_account_edit_info),
             onClick = onEditProfile,
             variant = ButtonVariant.PRIMARY,
             modifier = Modifier.fillMaxWidth()
@@ -259,481 +471,322 @@ fun AccountCard(
     }
 }
 
-// --------------------------------------------------
-// 4. ÉCRAN PROFIL COMPLET
-// --------------------------------------------------
 @Composable
-fun ProfileScreen(
-    onLogout: () -> Unit,
-    onEditProfile: () -> Unit,
-    viewModel: ProfileViewModel = hiltViewModel(),
-    authViewModel: AuthViewModel = hiltViewModel()
+fun VerificationCard(
+    isEmailVerified: Boolean
 ) {
-
-
-    Column(modifier = Modifier.fillMaxSize()) {
-        val currentUser = rememberCurrentUser()
-
-        ProfileHeader(
-            name = "${currentUser?.firstName ?: ""} ${currentUser?.lastName ?: ""}".trim(),
-            role = "Propriétaire",
-            memberSince = "octobre 2025"
-        )
-
-        Spacer(modifier = Modifier.height(AppSpacing.large))
-
-        Column(
-            modifier = Modifier
-                .fillMaxWidth()
-                .padding(horizontal = AppSpacing.large)
-                .verticalScroll(rememberScrollState())
-        ) {
-
-
-            AccountCard(
-                userId = currentUser?.id ?: "",
-                initialName = "${currentUser?.firstName ?: ""} ${currentUser?.lastName ?: ""}".trim(),
-                initialEmail = currentUser?.email ?: "",
-                initialPhone = currentUser?.phoneNumber ?: "",
-                onEditProfile = onEditProfile
-            )
-
-            Spacer(modifier = Modifier.height(AppSpacing.large))
-
-            VerificationCard()
-
-            Spacer(modifier = Modifier.height(AppSpacing.large))
-
-            PreferencesCard()
-
-            Spacer(modifier = Modifier.height(AppSpacing.large))
-
-            SecuriteCard()
-
-            Spacer(modifier = Modifier.height(AppSpacing.large))
-
-            AideCard()
-
-            Spacer(modifier = Modifier.height(AppSpacing.large))
-
-            TrueStayButton(
-                text = stringResource(R.string.logout),
-                leadingIcon = R.drawable.ic_log_out,
-                onClick = {
-                    authViewModel.logout()
-                    onLogout()
-                },
-                variant = ButtonVariant.DANGER,
-                modifier = Modifier.fillMaxWidth()
-            )
-        }
-    }
-}
-
-
-@Composable
-fun VerificationCard() {
     val colors = LocalAppColors.current
 
-    Column(
-        modifier = Modifier
-            .fillMaxWidth()
-            .border(1.dp, colors.grayBorder, RoundedCornerShape(16.dp))
-            .background(colors.white, RoundedCornerShape(16.dp))
-            .padding(AppSpacing.large)
-    ) {
-
+    TrueStayCard(modifier = Modifier.fillMaxWidth()) {
         Text(
-            text = stringResource(R.string.verification_title),
-            style = MaterialTheme.typography.titleMedium,
-            color = colors.grayDark
+            text = stringResource(R.string.profile_verification_title),
+            style = MaterialTheme.typography.headlineSmall,
+            color = colors.black
         )
 
-        Spacer(modifier = Modifier.height(AppSpacing.medium))
+        Spacer(modifier = Modifier.height(AppSpacing.small))
 
-        // EMAIL
-        Row(
-            verticalAlignment = Alignment.CenterVertically,
-            modifier = Modifier
-                .fillMaxWidth()
-                .padding(vertical = AppSpacing.small)
-        ) {
-
-            TrueStayIcon(
-                iconRes = TrueStayIcons.Mail,
-                contentDescriptionRes = null,
-                tint = colors.grayDark
-            )
-
-            Spacer(modifier = Modifier.width(AppSpacing.medium))
-
-            Text(
-                text = stringResource(R.string.account_email),
-                style = MaterialTheme.typography.bodyMedium,
-                color = colors.grayDark,
-                modifier = Modifier.weight(1f)
-            )
-
-            Box(
-                modifier = Modifier
-                    .background(colors.yellow, RoundedCornerShape(12.dp))
-                    .padding(horizontal = 12.dp, vertical = 4.dp)
-            ) {
-                Text(
-                    stringResource(R.string.verification_unverified),
-                    color = colors.black,
-                    style = MaterialTheme.typography.labelSmall
+        // Email
+        AccountInfoWithTrailingRow(
+            icon = TrueStayIcons.Mail,
+            text = stringResource(R.string.profile_account_email),
+            trailingContent = {
+                TrueStayBadge(
+                    text = if (isEmailVerified) {
+                        stringResource(R.string.profile_verification_verified)
+                    } else {
+                        stringResource(R.string.profile_verification_unverified)
+                    },
+                    variant = if (isEmailVerified) BadgeVariant.SUCCESS else BadgeVariant.WARNING,
                 )
             }
-        }
+        )
 
-        Divider(color = colors.grayBorder, thickness = 1.dp)
+        HorizontalDivider(color = colors.grayBorder, thickness = 1.dp)
 
-        // TELEPHONE
-        Row(
-            verticalAlignment = Alignment.CenterVertically,
-            modifier = Modifier
-                .fillMaxWidth()
-                .padding(vertical = AppSpacing.small)
-        ) {
-
-            TrueStayIcon(
-                iconRes = TrueStayIcons.Phone,
-                contentDescriptionRes = null,
-                tint = colors.grayDark
-            )
-
-            Spacer(modifier = Modifier.width(AppSpacing.medium))
-
-            Text(
-                text = stringResource(R.string.account_phone),
-                style = MaterialTheme.typography.bodyMedium,
-                color = colors.grayDark,
-                modifier = Modifier.weight(1f)
-            )
-
-            Box(
-                modifier = Modifier
-                    .background(colors.yellow, RoundedCornerShape(12.dp))
-                    .padding(horizontal = 12.dp, vertical = 4.dp)
-            ) {
-                Text(
-                    stringResource(R.string.verification_unverified),
-                    color = colors.black,
-                    style = MaterialTheme.typography.labelSmall
+        // Phone
+        AccountInfoWithTrailingRow(
+            icon = TrueStayIcons.Phone,
+            text = stringResource(R.string.profile_account_phone),
+            trailingContent = {
+                TrueStayBadge(
+                    text = stringResource(R.string.profile_verification_unverified),
+                    variant = BadgeVariant.WARNING,
                 )
             }
-        }
+        )
     }
 }
 
-
-
 @Composable
-fun PreferencesCard() {
+fun PreferencesCard(
+    user: User?,
+    isDarkTheme: Boolean,
+    onDarkThemeChanged: (Boolean) -> Unit,
+    onNotificationsChanged: (pushEnabled: Boolean, emailEnabled: Boolean) -> Unit
+) {
     val colors = LocalAppColors.current
 
-    var darkTheme by rememberSaveable { mutableStateOf(false) }
     var pushNotif by rememberSaveable { mutableStateOf(false) }
     var emailNotif by rememberSaveable { mutableStateOf(false) }
 
-    Column(
-        modifier = Modifier
-            .fillMaxWidth()
-            .border(1.dp, colors.grayBorder, RoundedCornerShape(16.dp))
-            .background(colors.white, RoundedCornerShape(16.dp))
-            .padding(AppSpacing.large)
-    ) {
+    LaunchedEffect(user?.id) {
+        if (user != null) {
+            pushNotif = user.pushNotificationsEnabled
+            emailNotif = user.emailNotificationsEnabled
+        }
+    }
 
+    TrueStayCard(modifier = Modifier.fillMaxWidth()) {
         Text(
-            text = stringResource(R.string.preferences_title),
-            style = MaterialTheme.typography.titleMedium,
-            color = colors.grayDark
+            text = stringResource(R.string.profile_preferences_title),
+            style = MaterialTheme.typography.headlineSmall,
+            color = colors.black
         )
 
-        Spacer(modifier = Modifier.height(AppSpacing.medium))
+        Spacer(modifier = Modifier.height(AppSpacing.small))
 
-        // 1) Thème sombre
+        // Dark theme
+        AccountInfoWithTrailingRow(
+            icon = TrueStayIcons.SunMoon,
+            text = stringResource(R.string.profile_preferences_dark_theme),
+            trailingContent = {
+                TrueStaySwitch(
+                    checked = isDarkTheme,
+                    onCheckedChange = onDarkThemeChanged
+                )
+            }
+        )
+
+        HorizontalDivider(color = colors.grayBorder, thickness = 1.dp)
+
+        // Language
         Row(
             verticalAlignment = Alignment.CenterVertically,
-            modifier = Modifier.fillMaxWidth()
-        ) {
-            TrueStayIcon(
-                iconRes = TrueStayIcons.SunMoon,
-                contentDescriptionRes = null,
-                tint = colors.grayDark
-            )
-
-            Spacer(modifier = Modifier.width(AppSpacing.medium))
-
-            Text(
-                text = stringResource(R.string.preferences_dark_theme),
-                style = MaterialTheme.typography.bodyMedium,
-                color = colors.grayDark,
-                modifier = Modifier.weight(1f)
-            )
-
-            TrueStaySwitch(
-                checked = darkTheme,
-                onCheckedChange = { darkTheme = it }
-            )
-        }
-
-        Spacer(modifier = Modifier.height(AppSpacing.large))
-        Divider(color = colors.grayBorder, thickness = 1.dp)
-        Spacer(modifier = Modifier.height(AppSpacing.large))
-
-        // 2) Langue + select
-        Row(
-            verticalAlignment = Alignment.Top,
-            modifier = Modifier.fillMaxWidth()
+            modifier = Modifier.fillMaxWidth().padding(vertical = AppSpacing.small)
         ) {
             TrueStayIcon(
                 iconRes = TrueStayIcons.Globe,
                 contentDescriptionRes = null,
-                tint = colors.grayDark
+                tint = colors.grayDark,
+                size = 20.dp
             )
 
-            Spacer(modifier = Modifier.width(AppSpacing.medium))
+            Spacer(modifier = Modifier.width(AppSpacing.large))
 
             Column(modifier = Modifier.weight(1f)) {
                 Text(
-                    text = stringResource(R.string.preferences_language),
-                    style = MaterialTheme.typography.bodyMedium,
-                    color = colors.grayDark
+                    text = stringResource(R.string.profile_preferences_language),
+                    style = MaterialTheme.typography.titleMedium,
+                    color = colors.black
                 )
 
-                Spacer(modifier = Modifier.height(8.dp))
+                Spacer(modifier = Modifier.height(AppSpacing.xsmall))
 
-                Box(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .border(1.dp, colors.grayBorder, RoundedCornerShape(12.dp))
-                        .background(colors.grayLight.copy(alpha = 0.2f))
-                        .padding(horizontal = 12.dp, vertical = 10.dp)
-                ) {
-                    Row(
-                        modifier = Modifier.fillMaxWidth(),
-                        verticalAlignment = Alignment.CenterVertically,
-                        horizontalArrangement = Arrangement.SpaceBetween
-                    ) {
-                        Text(
-                            text = stringResource(R.string.preferences_language_fr),
-                            style = MaterialTheme.typography.bodyMedium,
-                            color = colors.grayDark
-                        )
-                        TrueStayIcon(
-                            iconRes = TrueStayIcons.ChevronDown,
-                            contentDescriptionRes = null,
-                            tint = colors.grayDark
-                        )
+                TrueStayDropdown(
+                    options = listOf("Français"),
+                    selectedValue = "Français",
+                    onOptionSelected = { }
+                )
+            }
+        }
+
+        HorizontalDivider(color = colors.grayBorder, thickness = 1.dp)
+
+        // Push notifications
+        AccountInfoWithTrailingRow(
+            icon = TrueStayIcons.Bell,
+            text = stringResource(R.string.profile_preferences_push),
+            trailingContent = {
+                TrueStaySwitch(
+                    checked = pushNotif,
+                    onCheckedChange = {
+                        pushNotif = it
+                        onNotificationsChanged(pushNotif, emailNotif)
                     }
-                }
-            }
-        }
-
-        Spacer(modifier = Modifier.height(AppSpacing.large))
-        Divider(color = colors.grayBorder, thickness = 1.dp)
-        Spacer(modifier = Modifier.height(AppSpacing.large))
-
-        // 3) Notification push
-        Row(
-            verticalAlignment = Alignment.CenterVertically,
-            modifier = Modifier.fillMaxWidth()
-        ) {
-            TrueStayIcon(
-                iconRes = TrueStayIcons.Bell,
-                contentDescriptionRes = null,
-                tint = colors.grayDark
-            )
-
-            Spacer(modifier = Modifier.width(AppSpacing.medium))
-
-            Column(modifier = Modifier.weight(1f)) {
-                Text(
-                    text = stringResource(R.string.preferences_push),
-                    style = MaterialTheme.typography.bodyMedium,
-                    color = colors.grayDark
-                )
-                Text(
-                    text = stringResource(R.string.preferences_push_desc),
-                    style = MaterialTheme.typography.labelSmall,
-                    color = colors.grayDark.copy(alpha = 0.6f)
                 )
             }
+        )
 
-            TrueStaySwitch(
-                checked = pushNotif,
-                onCheckedChange = { pushNotif = it }
-            )
-        }
+        HorizontalDivider(color = colors.grayBorder, thickness = 1.dp)
 
-        Spacer(modifier = Modifier.height(AppSpacing.large))
-        Divider(color = colors.grayBorder, thickness = 1.dp)
-        Spacer(modifier = Modifier.height(AppSpacing.large))
-
-        // 4) Notifications email
-        Row(
-            verticalAlignment = Alignment.CenterVertically,
-            modifier = Modifier.fillMaxWidth()
-        ) {
-            TrueStayIcon(
-                iconRes = TrueStayIcons.Mail,
-                contentDescriptionRes = null,
-                tint = colors.grayDark
-            )
-
-            Spacer(modifier = Modifier.width(AppSpacing.medium))
-
-            Text(
-                text = stringResource(R.string.preferences_email_notifications),
-                style = MaterialTheme.typography.bodyMedium,
-                color = colors.grayDark,
-                modifier = Modifier.weight(1f)
-            )
-
-            TrueStaySwitch(
-                checked = emailNotif,
-                onCheckedChange = { emailNotif = it }
-            )
-        }
+        // Email notifications
+        AccountInfoWithTrailingRow(
+            icon = TrueStayIcons.Mail,
+            text = stringResource(R.string.profile_preferences_email_notifications),
+            trailingContent = {
+                TrueStaySwitch(
+                    checked = emailNotif,
+                    onCheckedChange = {
+                        emailNotif = it
+                        onNotificationsChanged(pushNotif, emailNotif)
+                    }
+                )
+            }
+        )
     }
 }
 
 @Composable
-fun SecuriteCard() {
+fun SecurityCard(
+    onEditPassword: () -> Unit,
+    twoFactorEnabled: Boolean,
+    onTwoFactorChanged: (Boolean) -> Unit
+) {
     val colors = LocalAppColors.current
-    var twoFA by rememberSaveable { mutableStateOf(false) }
 
-    Column(
-        modifier = Modifier
-            .fillMaxWidth()
-            .border(1.dp, colors.grayBorder, RoundedCornerShape(16.dp))
-            .background(colors.white, RoundedCornerShape(16.dp))
-            .padding(AppSpacing.large)
-    ) {
-
+    TrueStayCard(modifier = Modifier.fillMaxWidth()) {
         Text(
-            text = stringResource(R.string.security_title),
-            style = MaterialTheme.typography.titleMedium,
-            color = colors.grayDark
+            text = stringResource(R.string.profile_security_title),
+            style = MaterialTheme.typography.headlineSmall,
+            color = colors.black
         )
 
-        Spacer(modifier = Modifier.height(AppSpacing.large))
+        Spacer(modifier = Modifier.height(AppSpacing.small))
 
-        // Modifier mot de passe
-        Row(
-            verticalAlignment = Alignment.CenterVertically,
-            modifier = Modifier
-                .fillMaxWidth()
-                .clickable { }
-        ) {
+        // Update password
+        AccountInfoWithTrailingRow(
+            icon = TrueStayIcons.Key,
+            text = stringResource(R.string.profile_security_change_password),
+            trailingContent = { },
+            modifier = Modifier.clickable { onEditPassword() }
+        )
 
-            TrueStayIcon(
-                iconRes = TrueStayIcons.Key,
-                contentDescriptionRes = null,
-                tint = colors.grayDark
-            )
+        HorizontalDivider(color = colors.grayBorder, thickness = 1.dp)
 
-            Spacer(modifier = Modifier.width(AppSpacing.medium))
-
-            Text(
-                text = stringResource(R.string.security_change_password),
-                style = MaterialTheme.typography.bodyMedium,
-                color = colors.grayDark,
-                modifier = Modifier.weight(1f)
-            )
-        }
-
-        Spacer(modifier = Modifier.height(AppSpacing.large))
-        Divider(color = colors.grayBorder, thickness = 1.dp)
-        Spacer(modifier = Modifier.height(AppSpacing.large))
-
-        // Double authentification
-        Row(
-            verticalAlignment = Alignment.CenterVertically,
-            modifier = Modifier.fillMaxWidth()
-        ) {
-            TrueStayIcon(
-                iconRes = TrueStayIcons.ShieldCheck,
-                contentDescriptionRes = null,
-                tint = colors.grayDark
-            )
-
-            Spacer(modifier = Modifier.width(AppSpacing.medium))
-
-            Column(modifier = Modifier.weight(1f)) {
-                Text(
-                    text = stringResource(R.string.security_2fa),
-                    style = MaterialTheme.typography.bodyMedium,
-                    color = colors.grayDark
-                )
-                Text(
-                    text = stringResource(R.string.securite_davantage),
-                    style = MaterialTheme.typography.labelSmall,
-                    color = colors.grayDark.copy(alpha = 0.6f)
+        // 2FA
+        AccountInfoWithTrailingRow(
+            icon = TrueStayIcons.ShieldCheck,
+            text = stringResource(R.string.profile_security_2fa),
+            trailingContent = {
+                TrueStaySwitch(
+                    checked = twoFactorEnabled,
+                    onCheckedChange = onTwoFactorChanged
                 )
             }
+        )
+    }
+}
 
-            TrueStaySwitch(
-                checked = twoFA,
-                onCheckedChange = { twoFA = it }
+@Composable
+private fun ProfileErrorState(
+    message: String,
+    onRetry: () -> Unit
+) {
+    Column(
+        horizontalAlignment = Alignment.CenterHorizontally,
+        verticalArrangement = Arrangement.spacedBy(AppSpacing.medium),
+        modifier = Modifier.fillMaxWidth()
+    ) {
+        Text(
+            text = message,
+            style = MaterialTheme.typography.titleMedium,
+            color = LocalAppColors.current.error,
+            textAlign = TextAlign.Center
+        )
+
+        TrueStayButton(
+            text = stringResource(R.string.common_retry),
+            onClick = onRetry,
+            variant = ButtonVariant.SECONDARY
+        )
+    }
+}
+
+@Composable
+private fun ProfilePictureSourceDialog(
+    onDismiss: () -> Unit,
+    onPickFromGallery: () -> Unit,
+    onTakePhoto: () -> Unit
+) {
+    AlertDialog(
+        onDismissRequest = onDismiss,
+        title = { Text(text = stringResource(R.string.profile_picture_choose_source_title)) },
+        text = { Text(text = stringResource(R.string.profile_picture_choose_source_message), color = LocalAppColors.current.grayDark) },
+        confirmButton = {
+            TrueStayButton(
+                text = stringResource(R.string.profile_picture_gallery),
+                onClick = { onPickFromGallery() },
+                variant = ButtonVariant.SECONDARY,
+                leadingIcon = TrueStayIcons.Image
             )
+        },
+        dismissButton = {
+            TrueStayButton(
+                text = stringResource(R.string.profile_picture_camera),
+                onClick = { onTakePhoto() },
+                variant = ButtonVariant.SECONDARY,
+                leadingIcon = TrueStayIcons.Camera
+            )
+        },
+        shape = AppShapes.large,
+        containerColor = LocalAppColors.current.white,
+    )
+}
+
+private fun saveBitmapToCache(context: Context, bitmap: Bitmap): Uri? {
+    return try {
+        val file = File(context.cacheDir, "profile_${System.currentTimeMillis()}.jpg")
+        FileOutputStream(file).use { out ->
+            bitmap.compress(Bitmap.CompressFormat.JPEG, 90, out)
         }
+        file.toUri()
+    } catch (_: Exception) {
+        null
+    }
+}
+
+private fun formatMemberSinceDate(timestamp: Long): String {
+    if (timestamp <= 0L) return ""
+    return try {
+        val date = Date(timestamp)
+        val formatter = SimpleDateFormat("MMMM yyyy", Locale.getDefault())
+        formatter.format(date)
+    } catch (_: Exception) {
+        ""
     }
 }
 
 
 @Composable
-fun AideCard() {
+fun HelpCard() {
     val colors = LocalAppColors.current
 
-    Column(
-        modifier = Modifier
-            .fillMaxWidth()
-            .border(1.dp, colors.grayBorder, RoundedCornerShape(16.dp))
-            .background(colors.white, RoundedCornerShape(16.dp))
-            .padding(AppSpacing.large)
-    ) {
-
+    TrueStayCard(modifier = Modifier.fillMaxWidth()) {
         Text(
-            text = stringResource(R.string.help_title),
-            style = MaterialTheme.typography.titleMedium,
-            color = colors.grayDark
+            text = stringResource(R.string.profile_help_title),
+            style = MaterialTheme.typography.headlineSmall,
+            color = colors.black
         )
 
-        Spacer(modifier = Modifier.height(AppSpacing.large))
+        Spacer(modifier = Modifier.height(AppSpacing.small))
 
-        // Centre d'aide
-        AideItem(
-            label = stringResource(R.string.help_faq),
+        // Help center
+        HelpItem(
+            label = stringResource(R.string.profile_help_faq),
             icon = TrueStayIcons.ChevronRight
         )
 
-        Spacer(modifier = Modifier.height(AppSpacing.large))
-        Divider(color = colors.grayBorder, thickness = 1.dp)
-        Spacer(modifier = Modifier.height(AppSpacing.large))
+        HorizontalDivider(color = colors.grayBorder, thickness = 1.dp)
 
-        // Nous contacter
-        AideItem(
-            label = stringResource(R.string.help_contact),
+        // Contact us
+        HelpItem(
+            label = stringResource(R.string.profile_help_contact),
             icon = TrueStayIcons.ChevronRight
         )
 
-        Spacer(modifier = Modifier.height(AppSpacing.large))
-        Divider(color = colors.grayBorder, thickness = 1.dp)
-        Spacer(modifier = Modifier.height(AppSpacing.large))
+        HorizontalDivider(color = colors.grayBorder, thickness = 1.dp)
 
         // Conditions d'utilisation
-        AideItem(
-            label = stringResource(R.string.help_terms),
+        HelpItem(
+            label = stringResource(R.string.profile_help_terms),
             icon = TrueStayIcons.ChevronRight
         )
     }
 }
 
 @Composable
-fun AideItem(label: String, icon: Int) {
+fun HelpItem(label: String, icon: Int) {
     val colors = LocalAppColors.current
 
     Row(
@@ -741,12 +794,13 @@ fun AideItem(label: String, icon: Int) {
         modifier = Modifier
             .fillMaxWidth()
             .clickable { }
+            .sizeIn(minHeight = 56.dp)
+            .padding(vertical = AppSpacing.small)
     ) {
-
         Text(
             text = label,
-            style = MaterialTheme.typography.bodyMedium,
-            color = colors.grayDark,
+            style = MaterialTheme.typography.titleMedium,
+            color = colors.black,
             modifier = Modifier.weight(1f)
         )
 
@@ -755,6 +809,98 @@ fun AideItem(label: String, icon: Int) {
             contentDescriptionRes = null,
             tint = colors.grayDark
         )
+    }
+}
+
+// ==========================================
+// Previews
+// ==========================================
+@Preview(showBackground = true, name = "Profile - Content")
+@Composable
+private fun ProfileScreenContentPreview() {
+    TrueStayTheme {
+        val sampleUser = User(
+            id = "user_1",
+            email = "jean.dupont@example.com",
+            firstName = "Jean",
+            lastName = "Dupont",
+            role = UserRole.TENANT,
+            phoneNumber = "+33612345678",
+            twoFactorEnabled = true,
+            emailNotificationsEnabled = true,
+            pushNotificationsEnabled = false,
+            profilePictureUrl = "https://example.com/avatar.jpg"
+        )
+
+        Column(modifier = Modifier.fillMaxSize()) {
+            ProfileHeader(
+                name = "${sampleUser.firstName} ${sampleUser.lastName}",
+                role = stringResource(R.string.role_tenant),
+                memberSince = formatMemberSinceDate(System.currentTimeMillis()),
+                profilePictureUrl = sampleUser.profilePictureUrl,
+                onEditProfilePicture = {}
+            )
+
+            Box(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .weight(1f)
+                    .padding(horizontal = AppSpacing.large)
+            ) {
+                ProfileContent(
+                    user = sampleUser,
+                    isDarkTheme = false,
+                    isEmailVerified = true,
+                    onEditProfile = {},
+                    onEditPassword = {},
+                    onLogoutClick = {},
+                    onDarkThemeChanged = {},
+                    onNotificationsChanged = { _, _ -> },
+                    onTwoFactorChanged = {}
+                )
+            }
+        }
+    }
+}
+
+@Preview(showBackground = true, name = "Profile - Loading")
+@Composable
+private fun ProfileScreenLoadingPreview() {
+    TrueStayTheme {
+        Column(modifier = Modifier.fillMaxSize()) {
+            Box(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .weight(1f)
+                    .padding(horizontal = AppSpacing.large),
+                contentAlignment = Alignment.Center
+            ) {
+                CircularProgressIndicator(
+                    color = LocalAppColors.current.primary
+                )
+            }
+        }
+    }
+}
+
+@Preview(showBackground = true, name = "Profile - Error")
+@Composable
+private fun ProfileScreenErrorPreview() {
+    TrueStayTheme {
+        Column(modifier = Modifier.fillMaxSize()) {
+            Box(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .weight(1f)
+                    .padding(horizontal = AppSpacing.large),
+                contentAlignment = Alignment.Center
+            ) {
+                ProfileErrorState(
+                    message = stringResource(R.string.auth_error_generic),
+                    onRetry = {}
+                )
+            }
+        }
     }
 }
 
