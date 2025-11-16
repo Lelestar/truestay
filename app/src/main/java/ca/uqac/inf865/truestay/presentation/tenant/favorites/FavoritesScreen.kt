@@ -23,6 +23,7 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
@@ -64,6 +65,11 @@ fun FavoritesScreen(
     onPropertyClick: (String) -> Unit,
     viewModel: FavoritesViewModel = hiltViewModel()
 ) {
+    // Reload favorites when screen is displayed
+    LaunchedEffect(Unit) {
+        viewModel.refreshFavorites()
+    }
+
     val uiState by viewModel.uiState.collectAsStateWithLifecycle()
     val sortOptions = remember { FavoritesSortOption.entries }
     val arrowRotation by animateFloatAsState(

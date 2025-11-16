@@ -32,6 +32,7 @@
 
     <!-- Common -->
     <string name="common_retry">R&#233;essayer</string>
+    <string name="image_carousel_photos_counter">Photos %1$d sur %2$d</string>
 
     <!-- Login -->
     <string name="login_tagline">La transparence au service de la location</string>
@@ -161,6 +162,30 @@
     <string name="property_rental_days_left_label">Temps restant</string>
     <string name="property_rental_days_left">%1$d jours</string>
     <string name="property_rental_in_progress">En cours</string>
+
+    <!-- Property Details -->
+    <string name="property_details_no_review">Aucun avis pour l\'instant</string>
+    <plurals name="property_details_bedrooms_count">
+        <item quantity="one">%1$d chambre</item>
+        <item quantity="other">%1$d chambres</item>
+    </plurals>
+    <string name="property_details_beds_count">%1$d lits</string>
+    <plurals name="property_details_bathrooms_count">
+        <item quantity="one">%1$d salle de bain</item>
+        <item quantity="other">%1$d salles de bain</item>
+    </plurals>
+    <string name="property_details_contact_button">Contacter</string>
+    <string name="property_details_contact_chooser_title">Contacter le propriétaire</string>
+    <string name="property_details_description_title">Description</string>
+    <string name="property_details_reviews_title">Avis et notes</string>
+    <string name="property_details_filter_property">Logement</string>
+    <string name="property_details_filter_building">Immeuble</string>
+    <string name="property_details_filter_neighborhood">Quartier</string>
+    <string name="property_details_anonymous">Utilisateur</string>
+    <string name="property_details_no_property_reviews">Encore aucun avis pour le logement</string>
+    <string name="property_details_no_building_reviews">Encore aucun avis pour l\'immeuble</string>
+    <string name="property_details_no_neighborhood_reviews">Encore aucun avis pour le quartier</string>
+    <string name="property_details_error_loading">Impossible de charger ce logement pour le moment.</string>
 
     <!-- Favorites -->
     <string name="favorites_sort_by">Trier par :</string>
