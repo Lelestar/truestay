@@ -1,6 +1,5 @@
 package ca.uqac.inf865.truestay.presentation.shared.property
 
-import android.util.Log
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
@@ -14,7 +13,6 @@ import ca.uqac.inf865.truestay.domain.model.User
 import ca.uqac.inf865.truestay.domain.repository.AuthRepository
 import ca.uqac.inf865.truestay.domain.repository.FavoriteRepository
 import ca.uqac.inf865.truestay.domain.repository.PropertyRepository
-import ca.uqac.inf865.truestay.domain.repository.RentalRepository
 import ca.uqac.inf865.truestay.domain.repository.ReviewRepository
 import ca.uqac.inf865.truestay.domain.repository.UserRepository
 import dagger.hilt.android.lifecycle.HiltViewModel
@@ -49,7 +47,8 @@ data class PropertyDetailsUiState(
     val isFavorite: Boolean = false,
     val selectedReviewFilter: ReviewFilterType = ReviewFilterType.PROPERTY,
     val isLoading: Boolean = false,
-    val error: String? = null
+    val error: String? = null,
+    val favoriteMessageRes: Int? = null
 )
 
 
@@ -152,17 +151,37 @@ class PropertyDetailsViewModel @Inject constructor(
                         // Remove from favorites
                         favoriteRepository.removeFavorite(userId, propertyId)
                             .onSuccess {
-                                uiState = uiState.copy(isFavorite = false)
+                                uiState = uiState.copy(
+                                    isFavorite = false,
+                                    favoriteMessageRes = ca.uqac.inf865.truestay.R.string.property_details_favorite_removed
+                                )
+                            }
+                            .onFailure {
+                                uiState = uiState.copy(
+                                    favoriteMessageRes = ca.uqac.inf865.truestay.R.string.property_details_favorite_error
+                                )
                             }
                     } else {
                         // Add to favorites
                         favoriteRepository.addFavorite(userId, propertyId)
                             .onSuccess {
-                                uiState = uiState.copy(isFavorite = true)
+                                uiState = uiState.copy(
+                                    isFavorite = true,
+                                    favoriteMessageRes = ca.uqac.inf865.truestay.R.string.property_details_favorite_added
+                                )
+                            }
+                            .onFailure {
+                                uiState = uiState.copy(
+                                    favoriteMessageRes = ca.uqac.inf865.truestay.R.string.property_details_favorite_error
+                                )
                             }
                     }
                 }
         }
+    }
+
+    fun clearFavoriteMessage() {
+        uiState = uiState.copy(favoriteMessageRes = null)
     }
 
     fun setReviewFilter(filterType: ReviewFilterType) {

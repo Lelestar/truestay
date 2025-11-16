@@ -186,6 +186,9 @@
     <string name="property_details_no_building_reviews">Encore aucun avis pour l\'immeuble</string>
     <string name="property_details_no_neighborhood_reviews">Encore aucun avis pour le quartier</string>
     <string name="property_details_error_loading">Impossible de charger ce logement pour le moment.</string>
+    <string name="property_details_favorite_added">Ajouté aux favoris</string>
+    <string name="property_details_favorite_removed">Retiré des favoris</string>
+    <string name="property_details_favorite_error">Impossible de mettre à jour le favori</string>
 
     <!-- Favorites -->
     <string name="favorites_sort_by">Trier par :</string>
