@@ -5,6 +5,7 @@ import ca.uqac.inf865.truestay.data.model.toDomain
 import ca.uqac.inf865.truestay.data.source.FirestoreDataSource
 import ca.uqac.inf865.truestay.domain.model.Favorite
 import ca.uqac.inf865.truestay.domain.repository.FavoriteRepository
+import kotlinx.coroutines.tasks.await
 import javax.inject.Inject
 
 class FavoriteRepositoryImpl @Inject constructor(
@@ -13,31 +14,47 @@ class FavoriteRepositoryImpl @Inject constructor(
 
     override suspend fun addFavorite(userId: String, propertyId: String): Result<String> {
         return try {
-            val favorite = FavoriteDto(
-                userId = userId,
-                propertyId = propertyId,
-                addedAt = System.currentTimeMillis()
+            println("FavoriteRepository: Adding favorite - userId: $userId, propertyId: $propertyId")
+            // Generate a document reference to get the ID first
+            val docRef = firestoreDataSource.favoritesCollection().document()
+            val documentId = docRef.id
+
+            println("FavoriteRepository: Generated documentId: $documentId")
+
+            // Create a map with the document ID included
+            val favoriteData = mapOf(
+                "id" to documentId,
+                "userId" to userId,
+                "propertyId" to propertyId,
+                "addedAt" to System.currentTimeMillis()
             )
-            val id = firestoreDataSource.addDocument("favorites", favorite)
-            Result.success(id)
+
+            // Set the document with the data
+            docRef.set(favoriteData).await()
+            println("FavoriteRepository: Successfully added favorite")
+            Result.success(documentId)
         } catch (e: Exception) {
+            println("FavoriteRepository: Error adding favorite: ${e.message}")
+            e.printStackTrace()
             Result.failure(e)
         }
     }
 
     override suspend fun removeFavorite(userId: String, propertyId: String): Result<Unit> {
         return try {
-            val favorites = firestoreDataSource.queryDocuments(
+            val favoritesWithIds = firestoreDataSource.queryDocumentsWithIds(
                 "favorites",
                 "userId",
                 userId,
                 FavoriteDto::class.java
             )
 
-            val favorite = favorites.find { it.propertyId == propertyId }
-                ?: return Result.failure(Exception("Favorite not found"))
+            val favoriteEntry = favoritesWithIds.find { (_, favorite) ->
+                favorite.propertyId == propertyId
+            } ?: return Result.failure(Exception("Favorite not found"))
 
-            firestoreDataSource.deleteDocument("favorites", favorite.id)
+            val (documentId, _) = favoriteEntry
+            firestoreDataSource.deleteDocument("favorites", documentId)
             Result.success(Unit)
         } catch (e: Exception) {
             Result.failure(e)
@@ -46,14 +63,30 @@ class FavoriteRepositoryImpl @Inject constructor(
 
     override suspend fun getFavorites(userId: String): Result<List<Favorite>> {
         return try {
-            val favorites = firestoreDataSource.queryDocuments(
+            println("FavoriteRepository: Getting favorites for userId: $userId")
+            val favoritesWithIds = firestoreDataSource.queryDocumentsWithIds(
                 "favorites",
                 "userId",
                 userId,
                 FavoriteDto::class.java
-            ).map { it.toDomain() }
+            )
+
+            println("FavoriteRepository: Found ${favoritesWithIds.size} favorites")
+
+            val favorites = favoritesWithIds.map { (documentId, favoriteDto) ->
+                println("FavoriteRepository: Favorite - documentId: $documentId, propertyId: ${favoriteDto.propertyId}")
+                // Create a new FavoriteDto with the correct document ID
+                FavoriteDto(
+                    id = documentId,
+                    userId = favoriteDto.userId,
+                    propertyId = favoriteDto.propertyId,
+                    addedAt = favoriteDto.addedAt
+                ).toDomain()
+            }
             Result.success(favorites)
         } catch (e: Exception) {
+            println("FavoriteRepository: Error getting favorites: ${e.message}")
+            e.printStackTrace()
             Result.failure(e)
         }
     }

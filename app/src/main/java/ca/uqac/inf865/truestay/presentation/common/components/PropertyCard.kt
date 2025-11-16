@@ -19,6 +19,7 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
@@ -43,6 +44,7 @@ import ca.uqac.inf865.truestay.presentation.theme.AppSpacing
 import ca.uqac.inf865.truestay.presentation.theme.LocalAppColors
 import ca.uqac.inf865.truestay.presentation.theme.TrueStayTheme
 import coil3.compose.AsyncImage
+import ca.uqac.inf865.truestay.presentation.common.utils.DateUtils
 import java.util.Locale
 
 enum class PropertyCardVariant {
@@ -69,8 +71,9 @@ fun PropertyCard(
     isFavorite: Boolean = false,
     isFavoriteActionEnabled: Boolean = true,
     metadataText: String? = null,
-    actions: List<PropertyAction>? = null, // For INTERACTIVE variant
-    // TODO: Complete
+    actions: List<PropertyAction>? = null,
+    startDate: Long? = null,
+    endDate: Long? = null,
 ) {
     when (variant) {
         PropertyCardVariant.COMPACT -> PropertyCardCompact(
@@ -91,6 +94,8 @@ fun PropertyCard(
             property = property,
             modifier = modifier,
             actions = actions ?: emptyList(),
+            startDate = startDate,
+            endDate = endDate,
             onClick = onClick
         )
     }
@@ -506,17 +511,232 @@ private fun PropertyCardInteractive(
     property: Property,
     onClick: () -> Unit,
     modifier: Modifier = Modifier,
-    actions: List<PropertyAction> = emptyList()
+    actions: List<PropertyAction> = emptyList(),
+    startDate: Long? = null,
+    endDate: Long? = null
 ) {
-    // TODO: Implement interactive variant
     TrueStayCard(
         modifier = modifier
             .fillMaxWidth()
-            .clickable(onClick = onClick)
+            .clickable(onClick = onClick),
+        padding = 0.dp
     ) {
-        Text("Interactive variant - TODO")
+        Column {
+            // Header image with badges (reuse Detailed style)
+            Box(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .height(180.dp)
+                    .background(LocalAppColors.current.grayLight)
+            ) {
+                if (property.photos.isNotEmpty()) {
+                    AsyncImage(
+                        model = property.photos.first(),
+                        contentDescription = property.name,
+                        modifier = Modifier.matchParentSize(),
+                        contentScale = ContentScale.Crop,
+                        placeholder = painterResource(R.drawable.img_placeholder),
+                        error = painterResource(R.drawable.img_placeholder),
+                    )
+                } else {
+                    Image(
+                        painter = painterResource(R.drawable.img_placeholder),
+                        contentDescription = stringResource(R.string.property_image_placeholder),
+                        modifier = Modifier.matchParentSize(),
+                        contentScale = ContentScale.Crop
+                    )
+                }
+
+                // Availability badge
+                TrueStayBadge(
+                    text = stringResource(R.string.property_rental_in_progress),
+                    variant = BadgeVariant.SUCCESS,
+                    modifier = Modifier
+                        .align(Alignment.TopStart)
+                        .padding(AppSpacing.medium)
+                )
+
+                // Price badge
+                TrueStayBadge(
+                    text = stringResource(R.string.property_monthly_rent, property.monthlyRent),
+                    variant = BadgeVariant.INFO,
+                    modifier = Modifier
+                        .align(Alignment.BottomEnd)
+                        .padding(AppSpacing.medium)
+                )
+            }
+
+            // Content
+            Column(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(AppSpacing.large)
+            ) {
+                // Property name
+                Text(
+                    text = property.name,
+                    style = MaterialTheme.typography.headlineSmall,
+                    color = LocalAppColors.current.black,
+                    maxLines = 2,
+                    overflow = TextOverflow.Ellipsis
+                )
+
+                Spacer(modifier = Modifier.height(AppSpacing.small))
+
+                // Address
+                Row (
+                    verticalAlignment = Alignment.CenterVertically,
+                    horizontalArrangement = Arrangement.spacedBy(AppSpacing.xsmall)
+                ) {
+                    TrueStayIcon(
+                        iconRes = TrueStayIcons.MapPin,
+                        contentDescriptionRes = null,
+                        tint = LocalAppColors.current.grayDark,
+                        size = 16.dp
+                    )
+                    Text(
+                        text = "${property.address.street}, ${property.address.city}",
+                        style = MaterialTheme.typography.bodyMedium,
+                        color = LocalAppColors.current.grayDark,
+                        maxLines = 1,
+                        overflow = TextOverflow.Ellipsis
+                    )
+                }
+
+                Spacer(modifier = Modifier.height(AppSpacing.medium))
+
+                // Rental period (start / end dates)
+                val startText = startDate?.let { DateUtils.formatLocalDate(it) }
+                val endText = endDate?.let { DateUtils.formatLocalDate(it) }
+                if (startText != null || endText != null) {
+                    Column (
+                        verticalArrangement = Arrangement.spacedBy(AppSpacing.small),
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .background(LocalAppColors.current.graySurface)
+                            .padding(AppSpacing.large)
+                            .clip(AppShapes.medium)
+                    ) {
+                        if (startText != null) {
+                            Row(
+                                modifier = Modifier.fillMaxWidth(),
+                                horizontalArrangement = Arrangement.SpaceBetween,
+                                verticalAlignment = Alignment.CenterVertically
+                            ) {
+                                Row(
+                                    horizontalArrangement = Arrangement.spacedBy(AppSpacing.xsmall),
+                                    verticalAlignment = Alignment.CenterVertically
+                                ) {
+                                    TrueStayIcon(
+                                        iconRes = TrueStayIcons.Calendar,
+                                        contentDescriptionRes = null,
+                                        tint = LocalAppColors.current.grayDark,
+                                        size = 16.dp
+                                    )
+                                    Text(
+                                        text = stringResource(R.string.property_rental_start_label),
+                                        style = MaterialTheme.typography.bodyMedium,
+                                        color = LocalAppColors.current.grayDark
+                                    )
+                                }
+                                Text(
+                                    text = startText,
+                                    style = MaterialTheme.typography.titleMedium,
+                                    color = LocalAppColors.current.black
+                                )
+                            }
+                        }
+                        if (endText != null) {
+                            Row(
+                                modifier = Modifier.fillMaxWidth(),
+                                horizontalArrangement = Arrangement.SpaceBetween,
+                                verticalAlignment = Alignment.CenterVertically
+                            ) {
+                                Row(
+                                    horizontalArrangement = Arrangement.spacedBy(AppSpacing.xsmall),
+                                    verticalAlignment = Alignment.CenterVertically
+                                ) {
+                                    TrueStayIcon(
+                                        iconRes = TrueStayIcons.Calendar,
+                                        contentDescriptionRes = null,
+                                        tint = LocalAppColors.current.grayDark,
+                                        size = 16.dp
+                                    )
+                                    Text(
+                                        text = stringResource(R.string.property_rental_end_label),
+                                        style = MaterialTheme.typography.bodyMedium,
+                                        color = LocalAppColors.current.grayDark
+                                    )
+                                }
+                                Text(
+                                    text = endText,
+                                    style = MaterialTheme.typography.titleMedium,
+                                    color = LocalAppColors.current.black
+                                )
+                            }
+                        }
+                        // Days left until end
+                        val daysLeft = endDate?.let { computeDaysLeft(it) }
+                        if (daysLeft != null) {
+                            Row(
+                                modifier = Modifier.fillMaxWidth(),
+                                horizontalArrangement = Arrangement.SpaceBetween,
+                                verticalAlignment = Alignment.CenterVertically
+                            ) {
+                                Row(
+                                    horizontalArrangement = Arrangement.spacedBy(AppSpacing.xsmall),
+                                    verticalAlignment = Alignment.CenterVertically
+                                ) {
+                                    TrueStayIcon(
+                                        iconRes = TrueStayIcons.History,
+                                        contentDescriptionRes = null,
+                                        tint = LocalAppColors.current.grayDark,
+                                        size = 16.dp
+                                    )
+                                    Text(
+                                        text = stringResource(R.string.property_rental_days_left_label),
+                                        style = MaterialTheme.typography.bodyMedium,
+                                        color = LocalAppColors.current.grayDark
+                                    )
+                                }
+                                Text(
+                                    text = stringResource(R.string.property_rental_days_left, daysLeft.coerceAtLeast(0)),
+                                    style = MaterialTheme.typography.titleMedium,
+                                    color = LocalAppColors.current.primary
+                                )
+                            }
+                        }
+                    }
+                }
+
+                // Actions
+                if (actions.isNotEmpty()) {
+                    Spacer(modifier = Modifier.height(AppSpacing.large))
+                    Column(
+                        verticalArrangement = Arrangement.spacedBy(AppSpacing.small)
+                    ) {
+                        actions.forEach { action ->
+                            TrueStayButton(
+                                text = action.label,
+                                onClick = action.onClick,
+                                variant = action.variant,
+                                leadingIcon = action.iconRes
+                            )
+                        }
+                    }
+                }
+            }
+        }
     }
 }
+
+private fun computeDaysLeft(endTimestamp: Long): Int {
+    val now = System.currentTimeMillis()
+    val millisInDay = 24L * 60L * 60L * 1000L
+    val diff = (endTimestamp - now)
+    return (diff / millisInDay).toInt()
+}
+
 
 // ==========================================
 // Previews
@@ -603,6 +823,43 @@ private fun PropertyCardDetailedPreview() {
             onFavoriteClick = {},
             isFavorite = true,
             metadataText = "Ajouté le 12 octobre 2025"
+        )
+    }
+}
+
+@Preview(name = "PropertyCard - Interactive", showBackground = true)
+@Composable
+private fun PropertyCardInteractivePreview() {
+    TrueStayTheme {
+        PropertyCard(
+            property = Property(
+                id = "3",
+                name = "Appartement interactif",
+                address = Address(
+                    street = "10 Rue des Fleurs",
+                    city = "Nice",
+                    postalCode = "06000"
+                ),
+                monthlyRent = 1200,
+                photos = listOf("https://picsum.photos/seed/3/600/400")
+            ),
+            variant = PropertyCardVariant.INTERACTIVE,
+            onClick = {},
+            startDate = System.currentTimeMillis() - 7L * 24L * 60L * 60L * 1000L,
+            endDate = System.currentTimeMillis() + 30L * 24L * 60L * 60L * 1000L,
+            actions = listOf(
+                PropertyAction(
+                    iconRes = TrueStayIcons.FileText,
+                    label = "État des lieux",
+                    onClick = {}
+                ),
+                PropertyAction(
+                    iconRes = TrueStayIcons.MessageSquare,
+                    label = "Ajouter un commentaire",
+                    onClick = {},
+                    variant = ButtonVariant.SECONDARY
+                )
+            )
         )
     }
 }
