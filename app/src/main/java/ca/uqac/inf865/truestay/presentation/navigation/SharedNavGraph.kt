@@ -26,6 +26,12 @@ fun NavGraphBuilder.sharedNavGraph(
                 navController.navigate(Screen.Login.route) {
                     popUpTo(0) { inclusive = true }
                 }
+            },
+            onEditProfile = {
+                navController.navigate(Screen.EditProfile.route)
+            },
+            onEditPassword = {
+                navController.navigate(Screen.ChangePassword.route)
             }
         )
     }
@@ -124,7 +130,9 @@ fun NavGraphBuilder.sharedNavGraph(
     }
 
     composable(Screen.EditProfile.route) {
-        EditProfileScreen()
+        EditProfileScreen(
+            onEditEmail = { navController.navigate(Screen.ChangeEmail.route) }
+        )
     }
 
     composable(Screen.ChangeEmail.route) {

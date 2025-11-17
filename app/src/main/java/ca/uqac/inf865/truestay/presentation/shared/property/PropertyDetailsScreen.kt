@@ -17,8 +17,11 @@ import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
+import androidx.compose.material3.SnackbarHost
+import androidx.compose.material3.SnackbarHostState
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.layout.ContentScale
@@ -82,14 +85,25 @@ fun PropertyDetailsScreen(
     viewModel: PropertyDetailsViewModel = hiltViewModel()
 ) {
     val uiState = viewModel.uiState
+    val snackbarHostState = remember { SnackbarHostState() }
+    val context = LocalContext.current
     var showFullscreenCarousel by remember { mutableStateOf(false) }
     var fullscreenStartIndex by remember { mutableIntStateOf(0) }
     var fullscreenPhotos by remember { mutableStateOf<List<String>>(emptyList()) }
     var fullscreenTitle by remember { mutableStateOf("") }
 
+    LaunchedEffect(uiState.favoriteMessageRes) {
+        val msgRes = uiState.favoriteMessageRes
+        if (msgRes != null) {
+            snackbarHostState.showSnackbar(context.getString(msgRes))
+            viewModel.clearFavoriteMessage()
+        }
+    }
+
     Box(modifier = Modifier.fillMaxSize()) {
         Scaffold(
             contentWindowInsets = WindowInsets(0.dp),
+            snackbarHost = { SnackbarHost(snackbarHostState) },
             topBar = {
                 TrueStayTopAppBar(
                     titleRes = R.string.screen_title_property_details,
@@ -483,22 +497,6 @@ private fun ReviewsListHeader(
     selectedFilter: ReviewFilterType,
     onFilterChange: (ReviewFilterType) -> Unit
 ) {
-    // Calculate actual averages from reviews
-    val propertyAverageRating = reviews
-        .mapNotNull { it.review.propertyReview?.overallRating }
-        .takeIf { it.isNotEmpty() }
-        ?.average()?.toFloat() ?: 0f
-
-    val buildingAverageRating = reviews
-        .mapNotNull { it.review.buildingReview?.overallRating }
-        .takeIf { it.isNotEmpty() }
-        ?.average()?.toFloat() ?: 0f
-
-    val neighborhoodAverageRating = reviews
-        .mapNotNull { it.review.neighborhoodReview?.overallRating }
-        .takeIf { it.isNotEmpty() }
-        ?.average()?.toFloat() ?: 0f
-
     val hasPropertyReviews = reviews.any { it.review.propertyReview != null }
     val hasBuildingReviews = reviews.any { it.review.buildingReview != null }
     val hasNeighborhoodReviews = reviews.any { it.review.neighborhoodReview != null }
@@ -519,7 +517,7 @@ private fun ReviewsListHeader(
         ) {
             FilterButton(
                 text = stringResource(R.string.property_details_filter_property),
-                rating = propertyAverageRating,
+                rating = property.ratings.propertyAverageRating,
                 isSelected = selectedFilter == ReviewFilterType.PROPERTY,
                 onClick = { onFilterChange(ReviewFilterType.PROPERTY) },
                 modifier = Modifier.weight(1f)
@@ -527,7 +525,7 @@ private fun ReviewsListHeader(
             if (property.isInBuilding) {
                 FilterButton(
                     text = stringResource(R.string.property_details_filter_building),
-                    rating = buildingAverageRating,
+                    rating = property.ratings.buildingAverageRating,
                     isSelected = selectedFilter == ReviewFilterType.BUILDING,
                     onClick = { onFilterChange(ReviewFilterType.BUILDING) },
                     modifier = Modifier.weight(1f)
@@ -535,7 +533,7 @@ private fun ReviewsListHeader(
             }
             FilterButton(
                 text = stringResource(R.string.property_details_filter_neighborhood),
-                rating = neighborhoodAverageRating,
+                rating = property.ratings.neighborhoodAverageRating,
                 isSelected = selectedFilter == ReviewFilterType.NEIGHBORHOOD,
                 onClick = { onFilterChange(ReviewFilterType.NEIGHBORHOOD) },
                 modifier = Modifier.weight(1f)
@@ -586,20 +584,25 @@ private fun FilterButton(
                 style = MaterialTheme.typography.titleSmall,
             )
 
-            if (rating > 0) {
-                Row(
-                    horizontalArrangement = Arrangement.spacedBy(AppSpacing.xsmall),
-                    verticalAlignment = Alignment.CenterVertically
-                ) {
-                    TrueStayIcon(
-                        iconRes = TrueStayIcons.StarFilled,
-                        contentDescriptionRes = null,
-                        tint = LocalAppColors.current.warning,
-                        size = 16.dp
-                    )
+            Row(
+                horizontalArrangement = Arrangement.spacedBy(AppSpacing.xsmall),
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                TrueStayIcon(
+                    iconRes = TrueStayIcons.StarFilled,
+                    contentDescriptionRes = null,
+                    tint = LocalAppColors.current.warning,
+                    size = 16.dp
+                )
+                if (rating > 0) {
                     Text(
                         text = String.format(Locale.getDefault(), "%.1f", rating),
                         style = MaterialTheme.typography.titleSmall,
+                    )
+                } else {
+                    Text(
+                        text = stringResource(R.string.property_details_no_ratings),
+                        style = MaterialTheme.typography.titleSmall
                     )
                 }
             }

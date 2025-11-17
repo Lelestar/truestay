@@ -45,6 +45,7 @@ interface TrueStayColors {
     val grayDark: Color
     val graySurface: Color
     val grayBorder: Color
+    val yellow: Color
 }
 
 /**
@@ -89,6 +90,7 @@ object AppColorsLight : TrueStayColors {
     override val grayDark: Color = Color(0xFF4F4F4F)
     override val graySurface: Color = Color(0xFFF9FAFB)
     override val grayBorder: Color = Color(0xFFE5E5E5)
+    override val yellow: Color = Color(0xFFF7C948)
 }
 
 /**
@@ -133,4 +135,6 @@ object AppColorsDark : TrueStayColors {
     override val grayDark: Color = Color(0xFF3A404A)
     override val graySurface: Color = Color(0xFF121418)
     override val grayBorder: Color = Color(0xFF2A2F36)
+    override val yellow: Color = Color(0xFFF7C948)
+
 }
