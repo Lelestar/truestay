@@ -25,6 +25,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.focus.FocusDirection
 import androidx.compose.ui.input.pointer.pointerInput
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalFocusManager
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.AnnotatedString
@@ -38,8 +39,10 @@ import androidx.compose.ui.text.LinkAnnotation
 import androidx.compose.ui.text.withLink
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
+import androidx.activity.ComponentActivity
 import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import androidx.lifecycle.viewmodel.compose.viewModel
 import ca.uqac.inf865.truestay.R
 import ca.uqac.inf865.truestay.domain.model.UserRole
 import ca.uqac.inf865.truestay.presentation.common.components.ButtonVariant
@@ -60,7 +63,7 @@ fun RegisterScreen(
     onNavigateToTerms: () -> Unit,
     onNavigateToPrivacy: () -> Unit,
     registerViewModel: RegisterViewModel = hiltViewModel(),
-    authViewModel: AuthViewModel = hiltViewModel()
+    authViewModel: AuthViewModel = viewModel(LocalContext.current as ComponentActivity)
 ) {
     val uiState by registerViewModel.uiState.collectAsStateWithLifecycle()
 
