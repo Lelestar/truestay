@@ -183,6 +183,7 @@
     <string name="property_details_filter_building">Immeuble</string>
     <string name="property_details_filter_neighborhood">Quartier</string>
     <string name="property_details_anonymous">Utilisateur</string>
+    <string name="property_details_no_ratings">N/A</string>
     <string name="property_details_no_property_reviews">Encore aucun avis pour le logement</string>
     <string name="property_details_no_building_reviews">Encore aucun avis pour l\'immeuble</string>
     <string name="property_details_no_neighborhood_reviews">Encore aucun avis pour le quartier</string>

@@ -233,8 +233,8 @@ private fun SearchScreenContent(
     val scaffoldState = rememberBottomSheetScaffoldState(
         bottomSheetState = rememberStandardBottomSheetState(
             initialValue = SheetValue.PartiallyExpanded,
-            skipHiddenState = false,
-            confirmValueChange = { true }
+            skipHiddenState = true,
+            confirmValueChange = { target -> target != SheetValue.Hidden }
         )
     )
 
