@@ -38,7 +38,7 @@ class PropertyRepositoryImpl @Inject constructor(
         return try {
             val properties = firestoreDataSource.queryDocuments(
                 "properties",
-                "ownerId",
+                "landlordId",
                 landlordId,
                 PropertyDto::class.java
             ).map { it.toDomain() }
@@ -81,10 +81,6 @@ class PropertyRepositoryImpl @Inject constructor(
     }
 
     override suspend fun searchProperties(filters: PropertyFilters): Result<List<Property>> {
-        // TODO: Optimize filtering
-        // 1. Move filtering to Firestore queries where possible
-        // 2. Use the composite index for common filter combinations
-        // 3. Implement pagination with limit() and startAfter()
         return try {
             // 1. Get all properties
             var properties = firestoreDataSource.getDocuments("properties", PropertyDto::class.java)

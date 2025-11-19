@@ -44,7 +44,10 @@ fun NavGraphBuilder.sharedNavGraph(
         val propertyId = backStackEntry.arguments?.getString("propertyId") ?: ""
         PropertyDetailsScreen(
             propertyId = propertyId,
-            onBackClick = { navController.navigateUp() }
+            onBackClick = { navController.navigateUp() },
+            onEditProperty = { propertyId ->
+                navController.navigate(Screen.PropertyForm.createRouteForEdit(propertyId))
+            }
         )
     }
 

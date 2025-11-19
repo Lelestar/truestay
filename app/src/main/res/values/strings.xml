@@ -192,6 +192,12 @@
     <string name="property_details_favorite_removed">Retiré des favoris</string>
     <string name="property_details_favorite_error">Impossible de mettre à jour le favori</string>
 
+    <!-- Property Actions -->
+    <string name="property_action_edit">Modifier</string>
+    <string name="property_action_delete">Supprimer</string>
+    <string name="property_action_pause">Mettre en pause</string>
+    <string name="property_action_publish">Publier</string>
+
     <!-- Favorites -->
     <string name="favorites_sort_by">Trier par :</string>
     <plurals name="favorites_count">
@@ -281,7 +287,14 @@
     <string name="change_password_new">Nouveau mot de passe</string>
     <string name="change_password_submit">Modifier le mot de passe</string>
     <string name="change_password_success">Mot de passe modifié avec succès.</string>
+
+    <!-- Properties (Landlord) -->
+    <string name="properties_subtitle">Gérez vos logements en location</string>
+    <string name="properties_add_button">Ajouter un logement</string>
+    <string name="properties_empty_title">Aucun logement</string>
+    <string name="properties_empty_message">Commencez par ajouter votre premier logement à louer</string>
+    <plurals name="properties_count">
+        <item quantity="one">%1$d résultat</item>
+        <item quantity="other">%1$d résultats</item>
+    </plurals>
 </resources>
-
-
-

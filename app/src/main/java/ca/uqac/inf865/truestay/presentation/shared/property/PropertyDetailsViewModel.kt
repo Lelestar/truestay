@@ -44,6 +44,7 @@ data class PropertyDetailsUiState(
     val rental: Rental? = null,
     val reviews: List<ReviewWithUser> = emptyList(),
     val landlord: User? = null,
+    val currentUser: User? = null,
     val isFavorite: Boolean = false,
     val selectedReviewFilter: ReviewFilterType = ReviewFilterType.PROPERTY,
     val isLoading: Boolean = false,
@@ -72,8 +73,18 @@ class PropertyDetailsViewModel @Inject constructor(
     }
 
     fun refresh() {
+        loadCurrentUser()
         loadPropertyDetails()
         checkIfFavorite()
+    }
+
+    private fun loadCurrentUser() {
+        viewModelScope.launch {
+            authRepository.getCurrentUser()
+                .onSuccess { user ->
+                    uiState = uiState.copy(currentUser = user)
+                }
+        }
     }
 
     private fun loadPropertyDetails() {
@@ -186,5 +197,43 @@ class PropertyDetailsViewModel @Inject constructor(
 
     fun setReviewFilter(filterType: ReviewFilterType) {
         uiState = uiState.copy(selectedReviewFilter = filterType)
+    }
+
+    fun deleteProperty(onSuccess: () -> Unit) {
+        viewModelScope.launch {
+            val property = uiState.property ?: return@launch
+            propertyRepository.deleteProperty(property.id)
+                .onSuccess {
+                    onSuccess()
+                }
+                .onFailure {
+                    uiState = uiState.copy(error = it.message)
+                }
+        }
+    }
+
+    fun togglePropertyStatus(onSuccess: () -> Unit) {
+        viewModelScope.launch {
+            val property = uiState.property ?: return@launch
+            val newStatus = if (property.status == ca.uqac.inf865.truestay.domain.model.PropertyStatus.PUBLISHED) {
+                ca.uqac.inf865.truestay.domain.model.PropertyStatus.PAUSED
+            } else {
+                ca.uqac.inf865.truestay.domain.model.PropertyStatus.PUBLISHED
+            }
+
+            val updatedProperty = property.copy(
+                status = newStatus,
+                updatedAt = System.currentTimeMillis()
+            )
+
+            propertyRepository.updateProperty(updatedProperty)
+                .onSuccess {
+                    uiState = uiState.copy(property = updatedProperty)
+                    onSuccess()
+                }
+                .onFailure {
+                    uiState = uiState.copy(error = it.message)
+                }
+        }
     }
 }

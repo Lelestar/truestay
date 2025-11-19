@@ -39,7 +39,6 @@ import androidx.compose.ui.res.pluralStringResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import android.content.Intent
-import android.net.Uri
 import android.text.format.DateFormat
 import androidx.compose.ui.platform.LocalContext
 import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
@@ -82,6 +81,7 @@ import androidx.core.net.toUri
 fun PropertyDetailsScreen(
     propertyId: String,
     onBackClick: () -> Unit,
+    onEditProperty: ((String) -> Unit)? = null,
     viewModel: PropertyDetailsViewModel = hiltViewModel()
 ) {
     val uiState = viewModel.uiState
@@ -91,6 +91,7 @@ fun PropertyDetailsScreen(
     var fullscreenStartIndex by remember { mutableIntStateOf(0) }
     var fullscreenPhotos by remember { mutableStateOf<List<String>>(emptyList()) }
     var fullscreenTitle by remember { mutableStateOf("") }
+    var showDropdownMenu by remember { mutableStateOf(false) }
 
     LaunchedEffect(uiState.favoriteMessageRes) {
         val msgRes = uiState.favoriteMessageRes
@@ -99,6 +100,9 @@ fun PropertyDetailsScreen(
             viewModel.clearFavoriteMessage()
         }
     }
+
+    // Determine if current user is the landlord of this property
+    val isLandlord = uiState.currentUser?.id == uiState.property?.landlordId
 
     Box(modifier = Modifier.fillMaxSize()) {
         Scaffold(
@@ -111,19 +115,72 @@ fun PropertyDetailsScreen(
                     hasActions = true,
                     windowInsets = WindowInsets(0.dp),
                     actions = {
-                        // Favorite button
-                        TrueStayIcon(
-                            iconRes = if (uiState.isFavorite) TrueStayIcons.HeartFilled else TrueStayIcons.Heart,
-                            contentDescriptionRes = null,
-                            tint = if (uiState.isFavorite)
-                                LocalAppColors.current.error
-                            else
-                                LocalAppColors.current.grayDark,
-                            size = 24.dp,
-                            modifier = Modifier
-                                .padding(end = AppSpacing.large)
-                                .clickable { viewModel.toggleFavorite() }
-                        )
+                        if (isLandlord) {
+                            // Landlord actions: 3-dot menu
+                            Box {
+                                TrueStayIcon(
+                                    iconRes = TrueStayIcons.EllipsisVertical,
+                                    contentDescriptionRes = null,
+                                    tint = LocalAppColors.current.grayDark,
+                                    size = 24.dp,
+                                    modifier = Modifier
+                                        .padding(end = AppSpacing.large)
+                                        .clickable { showDropdownMenu = true }
+                                )
+
+                                androidx.compose.material3.DropdownMenu(
+                                    expanded = showDropdownMenu,
+                                    onDismissRequest = { showDropdownMenu = false }
+                                ) {
+                                    androidx.compose.material3.DropdownMenuItem(
+                                        text = { Text(stringResource(R.string.property_action_edit)) },
+                                        onClick = {
+                                            showDropdownMenu = false
+                                            onEditProperty?.invoke(propertyId)
+                                        }
+                                    )
+                                    androidx.compose.material3.DropdownMenuItem(
+                                        text = {
+                                            Text(
+                                                if (uiState.property?.status == ca.uqac.inf865.truestay.domain.model.PropertyStatus.PUBLISHED)
+                                                    stringResource(R.string.property_action_pause)
+                                                else
+                                                    stringResource(R.string.property_action_publish)
+                                            )
+                                        },
+                                        onClick = {
+                                            showDropdownMenu = false
+                                            viewModel.togglePropertyStatus {
+                                                // Success callback
+                                            }
+                                        }
+                                    )
+                                    androidx.compose.material3.DropdownMenuItem(
+                                        text = { Text(stringResource(R.string.property_action_delete)) },
+                                        onClick = {
+                                            showDropdownMenu = false
+                                            viewModel.deleteProperty {
+                                                onBackClick()
+                                            }
+                                        }
+                                    )
+                                }
+                            }
+                        } else {
+                            // Tenant actions: favorite button
+                            TrueStayIcon(
+                                iconRes = if (uiState.isFavorite) TrueStayIcons.HeartFilled else TrueStayIcons.Heart,
+                                contentDescriptionRes = null,
+                                tint = if (uiState.isFavorite)
+                                    LocalAppColors.current.error
+                                else
+                                    LocalAppColors.current.grayDark,
+                                size = 24.dp,
+                                modifier = Modifier
+                                    .padding(end = AppSpacing.large)
+                                    .clickable { viewModel.toggleFavorite() }
+                            )
+                        }
                     }
                 )
             }
