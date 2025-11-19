@@ -110,10 +110,21 @@ class PropertiesViewModel @Inject constructor(
     }
 
     /**
-     * Deletes a property
+     * Deletes a property if it belongs to the current user
      */
     fun deleteProperty(propertyId: String) {
         viewModelScope.launch {
+            val currentUserId = _uiState.value.currentUserId
+            val property = _uiState.value.properties.find { it.id == propertyId }
+
+            // Security check: Only allow deletion if the property belongs to the current user
+            if (currentUserId == null || property == null || property.landlordId != currentUserId) {
+                _uiState.update {
+                    it.copy(error = PropertiesError.LOAD_FAILED)
+                }
+                return@launch
+            }
+
             propertyRepository.deleteProperty(propertyId)
                 .onSuccess {
                     // Refresh the list after deletion
@@ -128,11 +139,20 @@ class PropertiesViewModel @Inject constructor(
     }
 
     /**
-     * Toggles the status of a property between PUBLISHED and PAUSED
+     * Toggles the status of a property between PUBLISHED and PAUSED if it belongs to the current user
      */
     fun togglePropertyStatus(propertyId: String) {
         viewModelScope.launch {
-            val property = _uiState.value.properties.find { it.id == propertyId } ?: return@launch
+            val currentUserId = _uiState.value.currentUserId
+            val property = _uiState.value.properties.find { it.id == propertyId }
+
+            // Security check: Only allow status change if the property belongs to the current user
+            if (currentUserId == null || property == null || property.landlordId != currentUserId) {
+                _uiState.update {
+                    it.copy(error = PropertiesError.LOAD_FAILED)
+                }
+                return@launch
+            }
 
             val newStatus = if (property.status == ca.uqac.inf865.truestay.domain.model.PropertyStatus.PUBLISHED) {
                 ca.uqac.inf865.truestay.domain.model.PropertyStatus.PAUSED
