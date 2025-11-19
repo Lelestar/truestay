@@ -280,12 +280,26 @@ private fun PropertyCardDetailed(
                 }
 
                 // Availability badge
+                val availabilityText = when {
+                    property.status == ca.uqac.inf865.truestay.domain.model.PropertyStatus.PAUSED ->
+                        stringResource(R.string.property_paused)
+                    property.isAvailable ->
+                        stringResource(R.string.property_available)
+                    else ->
+                        stringResource(R.string.property_unavailable)
+                }
+                val availabilityVariant = when {
+                    property.status == ca.uqac.inf865.truestay.domain.model.PropertyStatus.PAUSED ->
+                        BadgeVariant.WARNING  // Orange badge for paused properties
+                    property.isAvailable ->
+                        BadgeVariant.SUCCESS  // Green badge for available properties
+                    else ->
+                        BadgeVariant.ERROR  // Red badge for unavailable properties
+                }
+
                 TrueStayBadge(
-                    text = stringResource(
-                        if (property.isAvailable) R.string.property_available
-                        else R.string.property_unavailable
-                    ),
-                    variant = if (property.isAvailable) BadgeVariant.SUCCESS else BadgeVariant.ERROR,
+                    text = availabilityText,
+                    variant = availabilityVariant,
                     modifier = Modifier
                         .align(Alignment.TopStart)
                         .padding(AppSpacing.medium)
