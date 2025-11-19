@@ -202,6 +202,14 @@ class PropertyDetailsViewModel @Inject constructor(
     fun deleteProperty(onSuccess: () -> Unit) {
         viewModelScope.launch {
             val property = uiState.property ?: return@launch
+            val currentUser = uiState.currentUser
+
+            // Security check: Only allow deletion if the property belongs to the current user
+            if (currentUser == null || property.landlordId != currentUser.id) {
+                uiState = uiState.copy(error = "Unauthorized action")
+                return@launch
+            }
+
             propertyRepository.deleteProperty(property.id)
                 .onSuccess {
                     onSuccess()
@@ -215,6 +223,14 @@ class PropertyDetailsViewModel @Inject constructor(
     fun togglePropertyStatus(onSuccess: () -> Unit) {
         viewModelScope.launch {
             val property = uiState.property ?: return@launch
+            val currentUser = uiState.currentUser
+
+            // Security check: Only allow status change if the property belongs to the current user
+            if (currentUser == null || property.landlordId != currentUser.id) {
+                uiState = uiState.copy(error = "Unauthorized action")
+                return@launch
+            }
+
             val newStatus = if (property.status == ca.uqac.inf865.truestay.domain.model.PropertyStatus.PUBLISHED) {
                 ca.uqac.inf865.truestay.domain.model.PropertyStatus.PAUSED
             } else {
