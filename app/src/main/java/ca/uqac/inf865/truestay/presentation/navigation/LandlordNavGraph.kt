@@ -18,7 +18,7 @@ fun NavGraphBuilder.landlordNavGraph(navController: NavHostController) {
                 navController.navigate(Screen.PropertyForm.createRouteForAdd())
             },
             onEditProperty = { propertyId ->
-                navController.navigate(Screen.PropertyForm.createRouteForEdit(propertyId))
+                navController.navigate(Screen.PropertyDetails.createRoute(propertyId))
             }
         )
     }
