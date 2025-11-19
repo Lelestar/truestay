@@ -158,6 +158,7 @@
     <string name="property_rating_neighborhood_label">Quartier</string>
     <string name="property_available">Disponible</string>
     <string name="property_unavailable">Non disponible</string>
+    <string name="property_paused">En pause</string>
     <string name="property_rental_start_label">Début</string>
     <string name="property_rental_end_label">Fin</string>
     <string name="property_rental_days_left_label">Temps restant</string>

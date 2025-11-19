@@ -223,6 +223,7 @@ private fun SearchScreenContent(
     val keyboardController = androidx.compose.ui.platform.LocalSoftwareKeyboardController.current
     val successColor = LocalAppColors.current.success.toArgb()
     val dangerColor = LocalAppColors.current.error.toArgb()
+    val warningColor = LocalAppColors.current.warning.toArgb()
     val whiteColor = LocalAppColors.current.white.toArgb()
     val borderColor = LocalAppColors.current.grayBorder
     val coroutineScope = rememberCoroutineScope()
@@ -255,13 +256,17 @@ private fun SearchScreenContent(
     // Track if map is ready to prevent CameraUpdateFactory crashes
     var isMapReady by remember { mutableStateOf(false) }
 
-    val customMarkers = remember(properties, successColor, dangerColor, whiteColor, isMapReady) {
+    val customMarkers = remember(properties, successColor, dangerColor, warningColor, whiteColor, isMapReady) {
         if (!isMapReady) {
             emptyMap()
         } else {
             properties.associateWith { property ->
                 val rating = property.ratings.propertyAverageRating
-                val markerColor = if (property.isAvailable) successColor else dangerColor
+                val markerColor = when {
+                    property.status == ca.uqac.inf865.truestay.domain.model.PropertyStatus.PAUSED -> warningColor
+                    property.isAvailable -> successColor
+                    else -> dangerColor
+                }
                 createCustomMarkerBitmap(context, rating, markerColor, whiteColor)
             }
         }
