@@ -17,6 +17,10 @@ import androidx.compose.material3.IconButtonDefaults
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -74,6 +78,11 @@ fun PropertyCard(
     actions: List<PropertyAction>? = null,
     startDate: Long? = null,
     endDate: Long? = null,
+    // Landlord actions menu
+    onEditClick: (() -> Unit)? = null,
+    onDeleteClick: (() -> Unit)? = null,
+    onToggleStatusClick: (() -> Unit)? = null,
+    showLandlordMenu: Boolean = false,
 ) {
     when (variant) {
         PropertyCardVariant.COMPACT -> PropertyCardCompact(
@@ -88,7 +97,11 @@ fun PropertyCard(
             isFavorite = isFavorite,
             isFavoriteActionEnabled = isFavoriteActionEnabled,
             onClick = onClick,
-            metadataText = metadataText
+            metadataText = metadataText,
+            onEditClick = onEditClick,
+            onDeleteClick = onDeleteClick,
+            onToggleStatusClick = onToggleStatusClick,
+            showLandlordMenu = showLandlordMenu
         )
         PropertyCardVariant.INTERACTIVE -> PropertyCardInteractive(
             property = property,
@@ -219,7 +232,11 @@ private fun PropertyCardDetailed(
     onFavoriteClick: (() -> Unit)? = null,
     isFavorite: Boolean = false,
     isFavoriteActionEnabled: Boolean = true,
-    metadataText: String? = null
+    metadataText: String? = null,
+    onEditClick: (() -> Unit)? = null,
+    onDeleteClick: (() -> Unit)? = null,
+    onToggleStatusClick: (() -> Unit)? = null,
+    showLandlordMenu: Boolean = false
 ) {
     val bedroomCount = property.rooms.count { it.type == RoomType.BEDROOM }
     val bathroomCount = property.rooms.count { it.type == RoomType.BATHROOM }
@@ -228,6 +245,8 @@ private fun PropertyCardDetailed(
         isFavorite -> LocalAppColors.current.error
         else -> LocalAppColors.current.grayDark
     }
+
+    var showDropdownMenu by remember { mutableStateOf(false) }
 
     TrueStayCard(
         modifier = modifier
@@ -281,7 +300,71 @@ private fun PropertyCardDetailed(
                         .padding(AppSpacing.medium)
                 )
 
-                if (onFavoriteClick != null) {
+                // Top right: Favorite button OR Landlord menu
+                if (showLandlordMenu) {
+                    // Landlord menu with 3 dots
+                    Box(
+                        modifier = Modifier
+                            .align(Alignment.TopEnd)
+                            .padding(AppSpacing.small)
+                    ) {
+                        IconButton(
+                            onClick = { showDropdownMenu = true },
+                            shape = AppShapes.medium,
+                            colors = IconButtonDefaults.iconButtonColors(
+                                containerColor = LocalAppColors.current.white.copy(alpha = 0.5f)
+                            )
+                        ) {
+                            TrueStayIcon(
+                                iconRes = TrueStayIcons.EllipsisVertical,
+                                contentDescriptionRes = null,
+                                tint = LocalAppColors.current.grayDark,
+                                size = 24.dp
+                            )
+                        }
+
+                        androidx.compose.material3.DropdownMenu(
+                            expanded = showDropdownMenu,
+                            onDismissRequest = { showDropdownMenu = false }
+                        ) {
+                            if (onEditClick != null) {
+                                androidx.compose.material3.DropdownMenuItem(
+                                    text = { Text(stringResource(R.string.property_action_edit)) },
+                                    onClick = {
+                                        showDropdownMenu = false
+                                        onEditClick()
+                                    }
+                                )
+                            }
+                            if (onToggleStatusClick != null) {
+                                androidx.compose.material3.DropdownMenuItem(
+                                    text = {
+                                        Text(
+                                            if (property.status == ca.uqac.inf865.truestay.domain.model.PropertyStatus.PUBLISHED)
+                                                stringResource(R.string.property_action_pause)
+                                            else
+                                                stringResource(R.string.property_action_publish)
+                                        )
+                                    },
+                                    onClick = {
+                                        showDropdownMenu = false
+                                        onToggleStatusClick()
+                                    }
+                                )
+                            }
+                            if (onDeleteClick != null) {
+                                androidx.compose.material3.DropdownMenuItem(
+                                    text = { Text(stringResource(R.string.property_action_delete)) },
+                                    onClick = {
+                                        showDropdownMenu = false
+                                        onDeleteClick()
+                                    }
+                                )
+                            }
+                        }
+                    }
+                } else if (onFavoriteClick != null) {
+                    // Favorite button (for tenant)
                     IconButton(
                         onClick = onFavoriteClick,
                         enabled = isFavoriteActionEnabled,
