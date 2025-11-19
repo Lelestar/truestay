@@ -127,7 +127,16 @@ fun PropertiesScreen(
                 else -> {
                     PropertiesList(
                         uiState = uiState,
-                        onPropertyClick = onEditProperty
+                        onPropertyClick = onEditProperty,
+                        onEditProperty = { propertyId ->
+                            onEditProperty(propertyId)
+                        },
+                        onDeleteProperty = { propertyId ->
+                            viewModel.deleteProperty(propertyId)
+                        },
+                        onTogglePropertyStatus = { propertyId ->
+                            viewModel.togglePropertyStatus(propertyId)
+                        }
                     )
                 }
             }
@@ -174,7 +183,10 @@ private fun HeaderSection(
 @Composable
 private fun PropertiesList(
     uiState: PropertiesUiState,
-    onPropertyClick: (String) -> Unit
+    onPropertyClick: (String) -> Unit,
+    onEditProperty: (String) -> Unit,
+    onDeleteProperty: (String) -> Unit,
+    onTogglePropertyStatus: (String) -> Unit
 ) {
     LazyColumn(
         modifier = Modifier.fillMaxSize(),
@@ -189,7 +201,11 @@ private fun PropertiesList(
                 property = property,
                 variant = PropertyCardVariant.DETAILED,
                 onClick = { onPropertyClick(property.id) },
-                isFavoriteActionEnabled = false
+                isFavoriteActionEnabled = false,
+                showLandlordMenu = true,
+                onEditClick = { onEditProperty(property.id) },
+                onDeleteClick = { onDeleteProperty(property.id) },
+                onToggleStatusClick = { onTogglePropertyStatus(property.id) }
             )
         }
     }

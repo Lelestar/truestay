@@ -108,4 +108,53 @@ class PropertiesViewModel @Inject constructor(
                 }
             }
     }
+
+    /**
+     * Deletes a property
+     */
+    fun deleteProperty(propertyId: String) {
+        viewModelScope.launch {
+            propertyRepository.deleteProperty(propertyId)
+                .onSuccess {
+                    // Refresh the list after deletion
+                    loadProperties()
+                }
+                .onFailure {
+                    _uiState.update {
+                        it.copy(error = PropertiesError.LOAD_FAILED)
+                    }
+                }
+        }
+    }
+
+    /**
+     * Toggles the status of a property between PUBLISHED and PAUSED
+     */
+    fun togglePropertyStatus(propertyId: String) {
+        viewModelScope.launch {
+            val property = _uiState.value.properties.find { it.id == propertyId } ?: return@launch
+
+            val newStatus = if (property.status == ca.uqac.inf865.truestay.domain.model.PropertyStatus.PUBLISHED) {
+                ca.uqac.inf865.truestay.domain.model.PropertyStatus.PAUSED
+            } else {
+                ca.uqac.inf865.truestay.domain.model.PropertyStatus.PUBLISHED
+            }
+
+            val updatedProperty = property.copy(
+                status = newStatus,
+                updatedAt = System.currentTimeMillis()
+            )
+
+            propertyRepository.updateProperty(updatedProperty)
+                .onSuccess {
+                    // Refresh the list after update
+                    loadProperties()
+                }
+                .onFailure {
+                    _uiState.update {
+                        it.copy(error = PropertiesError.LOAD_FAILED)
+                    }
+                }
+        }
+    }
 }
