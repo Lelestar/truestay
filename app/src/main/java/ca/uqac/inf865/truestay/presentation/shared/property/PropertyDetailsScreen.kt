@@ -130,22 +130,44 @@ fun PropertyDetailsScreen(
 
                                 androidx.compose.material3.DropdownMenu(
                                     expanded = showDropdownMenu,
-                                    onDismissRequest = { showDropdownMenu = false }
+                                    onDismissRequest = { showDropdownMenu = false },
+                                    modifier = Modifier
+                                        .background(
+                                            color = LocalAppColors.current.white,
+                                            shape = AppShapes.medium
+                                        )
+                                        .padding(vertical = AppSpacing.xsmall),
+                                    shape = AppShapes.medium,
+                                    containerColor = LocalAppColors.current.white,
+                                    tonalElevation = 2.dp,
+                                    shadowElevation = 8.dp
                                 ) {
                                     androidx.compose.material3.DropdownMenuItem(
-                                        text = { Text(stringResource(R.string.property_action_edit)) },
+                                        text = {
+                                            Text(
+                                                text = stringResource(R.string.property_action_edit),
+                                                style = MaterialTheme.typography.bodyMedium,
+                                                color = LocalAppColors.current.black
+                                            )
+                                        },
                                         onClick = {
                                             showDropdownMenu = false
                                             onEditProperty?.invoke(propertyId)
-                                        }
+                                        },
+                                        modifier = Modifier.padding(horizontal = AppSpacing.small),
+                                        colors = androidx.compose.material3.MenuDefaults.itemColors(
+                                            textColor = LocalAppColors.current.black
+                                        )
                                     )
                                     androidx.compose.material3.DropdownMenuItem(
                                         text = {
                                             Text(
-                                                if (uiState.property?.status == ca.uqac.inf865.truestay.domain.model.PropertyStatus.PUBLISHED)
+                                                text = if (uiState.property?.status == ca.uqac.inf865.truestay.domain.model.PropertyStatus.PUBLISHED)
                                                     stringResource(R.string.property_action_pause)
                                                 else
-                                                    stringResource(R.string.property_action_publish)
+                                                    stringResource(R.string.property_action_publish),
+                                                style = MaterialTheme.typography.bodyMedium,
+                                                color = LocalAppColors.current.black
                                             )
                                         },
                                         onClick = {
@@ -153,16 +175,30 @@ fun PropertyDetailsScreen(
                                             viewModel.togglePropertyStatus {
                                                 // Success callback
                                             }
-                                        }
+                                        },
+                                        modifier = Modifier.padding(horizontal = AppSpacing.small),
+                                        colors = androidx.compose.material3.MenuDefaults.itemColors(
+                                            textColor = LocalAppColors.current.black
+                                        )
                                     )
                                     androidx.compose.material3.DropdownMenuItem(
-                                        text = { Text(stringResource(R.string.property_action_delete)) },
+                                        text = {
+                                            Text(
+                                                text = stringResource(R.string.property_action_delete),
+                                                style = MaterialTheme.typography.bodyMedium,
+                                                color = LocalAppColors.current.error
+                                            )
+                                        },
                                         onClick = {
                                             showDropdownMenu = false
                                             viewModel.deleteProperty {
                                                 onBackClick()
                                             }
-                                        }
+                                        },
+                                        modifier = Modifier.padding(horizontal = AppSpacing.small),
+                                        colors = androidx.compose.material3.MenuDefaults.itemColors(
+                                            textColor = LocalAppColors.current.error
+                                        )
                                     )
                                 }
                             }

@@ -325,40 +325,76 @@ private fun PropertyCardDetailed(
 
                         androidx.compose.material3.DropdownMenu(
                             expanded = showDropdownMenu,
-                            onDismissRequest = { showDropdownMenu = false }
+                            onDismissRequest = { showDropdownMenu = false },
+                            modifier = androidx.compose.ui.Modifier
+                                .background(
+                                    color = LocalAppColors.current.white,
+                                    shape = AppShapes.medium
+                                )
+                                .padding(vertical = AppSpacing.xsmall),
+                            shape = AppShapes.medium,
+                            containerColor = LocalAppColors.current.white,
+                            tonalElevation = 2.dp,
+                            shadowElevation = 8.dp
                         ) {
                             if (onEditClick != null) {
                                 androidx.compose.material3.DropdownMenuItem(
-                                    text = { Text(stringResource(R.string.property_action_edit)) },
+                                    text = {
+                                        Text(
+                                            text = stringResource(R.string.property_action_edit),
+                                            style = MaterialTheme.typography.bodyMedium,
+                                            color = LocalAppColors.current.black
+                                        )
+                                    },
                                     onClick = {
                                         showDropdownMenu = false
                                         onEditClick()
-                                    }
+                                    },
+                                    modifier = androidx.compose.ui.Modifier.padding(horizontal = AppSpacing.small),
+                                    colors = androidx.compose.material3.MenuDefaults.itemColors(
+                                        textColor = LocalAppColors.current.black
+                                    )
                                 )
                             }
                             if (onToggleStatusClick != null) {
                                 androidx.compose.material3.DropdownMenuItem(
                                     text = {
                                         Text(
-                                            if (property.status == ca.uqac.inf865.truestay.domain.model.PropertyStatus.PUBLISHED)
+                                            text = if (property.status == ca.uqac.inf865.truestay.domain.model.PropertyStatus.PUBLISHED)
                                                 stringResource(R.string.property_action_pause)
                                             else
-                                                stringResource(R.string.property_action_publish)
+                                                stringResource(R.string.property_action_publish),
+                                            style = MaterialTheme.typography.bodyMedium,
+                                            color = LocalAppColors.current.black
                                         )
                                     },
                                     onClick = {
                                         showDropdownMenu = false
                                         onToggleStatusClick()
-                                    }
+                                    },
+                                    modifier = androidx.compose.ui.Modifier.padding(horizontal = AppSpacing.small),
+                                    colors = androidx.compose.material3.MenuDefaults.itemColors(
+                                        textColor = LocalAppColors.current.black
+                                    )
                                 )
                             }
                             if (onDeleteClick != null) {
                                 androidx.compose.material3.DropdownMenuItem(
-                                    text = { Text(stringResource(R.string.property_action_delete)) },
+                                    text = {
+                                        Text(
+                                            text = stringResource(R.string.property_action_delete),
+                                            style = MaterialTheme.typography.bodyMedium,
+                                            color = LocalAppColors.current.error
+                                        )
+                                    },
                                     onClick = {
                                         showDropdownMenu = false
                                         onDeleteClick()
-                                    }
+                                    },
+                                    modifier = androidx.compose.ui.Modifier.padding(horizontal = AppSpacing.small),
+                                    colors = androidx.compose.material3.MenuDefaults.itemColors(
+                                        textColor = LocalAppColors.current.error
+                                    )
                                 )
                             }
                         }
