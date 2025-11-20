@@ -13,6 +13,7 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.MaterialTheme
@@ -45,7 +46,6 @@ import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
 import ca.uqac.inf865.truestay.R
 import ca.uqac.inf865.truestay.domain.model.Property
 import ca.uqac.inf865.truestay.domain.model.Address
-import ca.uqac.inf865.truestay.domain.model.Rental
 import ca.uqac.inf865.truestay.domain.model.Review
 import ca.uqac.inf865.truestay.domain.model.PropertyReview
 import ca.uqac.inf865.truestay.domain.model.BuildingReview
@@ -75,6 +75,7 @@ import java.text.SimpleDateFormat
 import java.util.Date
 import java.util.Locale
 import androidx.core.net.toUri
+import ca.uqac.inf865.truestay.domain.model.PropertyStatus
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -82,6 +83,7 @@ fun PropertyDetailsScreen(
     propertyId: String,
     onBackClick: () -> Unit,
     onEditProperty: ((String) -> Unit)? = null,
+    onCreateRental: ((String) -> Unit)? = null,
     viewModel: PropertyDetailsViewModel = hiltViewModel()
 ) {
     val uiState = viewModel.uiState
@@ -92,6 +94,7 @@ fun PropertyDetailsScreen(
     var fullscreenPhotos by remember { mutableStateOf<List<String>>(emptyList()) }
     var fullscreenTitle by remember { mutableStateOf("") }
     var showDropdownMenu by remember { mutableStateOf(false) }
+    var showDeleteDialog by remember { mutableStateOf(false) }
 
     LaunchedEffect(uiState.favoriteMessageRes) {
         val msgRes = uiState.favoriteMessageRes
@@ -146,7 +149,7 @@ fun PropertyDetailsScreen(
                                         text = {
                                             Text(
                                                 text = stringResource(R.string.property_action_edit),
-                                                style = MaterialTheme.typography.bodyMedium,
+                                                style = MaterialTheme.typography.headlineSmall,
                                                 color = LocalAppColors.current.black
                                             )
                                         },
@@ -159,47 +162,54 @@ fun PropertyDetailsScreen(
                                             textColor = LocalAppColors.current.black
                                         )
                                     )
-                                    androidx.compose.material3.DropdownMenuItem(
-                                        text = {
-                                            Text(
-                                                text = if (uiState.property?.status == ca.uqac.inf865.truestay.domain.model.PropertyStatus.PUBLISHED)
-                                                    stringResource(R.string.property_action_pause)
-                                                else
-                                                    stringResource(R.string.property_action_publish),
-                                                style = MaterialTheme.typography.bodyMedium,
-                                                color = LocalAppColors.current.black
+                                    val canToggleStatus = uiState.property?.let { property ->
+                                        property.isAvailable || property.status == PropertyStatus.PAUSED
+                                    } == true
+                                    if (canToggleStatus) {
+                                        androidx.compose.material3.DropdownMenuItem(
+                                            text = {
+                                                Text(
+                                                    text = if (uiState.property.status == PropertyStatus.PUBLISHED)
+                                                        stringResource(R.string.property_action_pause)
+                                                    else
+                                                        stringResource(R.string.property_action_publish),
+                                                    style = MaterialTheme.typography.headlineSmall,
+                                                    color = LocalAppColors.current.black
+                                                )
+                                            },
+                                            onClick = {
+                                                showDropdownMenu = false
+                                                viewModel.togglePropertyStatus {
+                                                    // Success callback
+                                                }
+                                            },
+                                            modifier = Modifier.padding(horizontal = AppSpacing.small),
+                                            colors = androidx.compose.material3.MenuDefaults.itemColors(
+                                                textColor = LocalAppColors.current.black
                                             )
-                                        },
-                                        onClick = {
-                                            showDropdownMenu = false
-                                            viewModel.togglePropertyStatus {
-                                                // Success callback
-                                            }
-                                        },
-                                        modifier = Modifier.padding(horizontal = AppSpacing.small),
-                                        colors = androidx.compose.material3.MenuDefaults.itemColors(
-                                            textColor = LocalAppColors.current.black
                                         )
-                                    )
-                                    androidx.compose.material3.DropdownMenuItem(
-                                        text = {
-                                            Text(
-                                                text = stringResource(R.string.property_action_delete),
-                                                style = MaterialTheme.typography.bodyMedium,
-                                                color = LocalAppColors.current.error
+                                    }
+                                    val canDelete = uiState.property?.isAvailable == true
+                                    if (canDelete) {
+                                        androidx.compose.material3.DropdownMenuItem(
+                                            text = {
+                                                Text(
+                                                    text = stringResource(R.string.property_action_delete),
+                                                    style = MaterialTheme.typography.headlineSmall,
+                                                    color = LocalAppColors.current.error
+                                                )
+                                            },
+                                            onClick = {
+                                                showDropdownMenu = false
+                                                showDropdownMenu = false
+                                                showDeleteDialog = true
+                                            },
+                                            modifier = Modifier.padding(horizontal = AppSpacing.small),
+                                            colors = androidx.compose.material3.MenuDefaults.itemColors(
+                                                textColor = LocalAppColors.current.error
                                             )
-                                        },
-                                        onClick = {
-                                            showDropdownMenu = false
-                                            viewModel.deleteProperty {
-                                                onBackClick()
-                                            }
-                                        },
-                                        modifier = Modifier.padding(horizontal = AppSpacing.small),
-                                        colors = androidx.compose.material3.MenuDefaults.itemColors(
-                                            textColor = LocalAppColors.current.error
                                         )
-                                    )
+                                    }
                                 }
                             }
                         } else {
@@ -264,11 +274,46 @@ fun PropertyDetailsScreen(
                                 fullscreenStartIndex = index
                                 showFullscreenCarousel = true
                             },
-                            landlordPhone = uiState.landlord?.phoneNumber
+                            landlordPhone = uiState.landlord?.phoneNumber,
+                            isLandlord = isLandlord,
+                            onCreateRental = onCreateRental
                         )
                     }
                 }
             }
+        }
+
+        if (showDeleteDialog) {
+            AlertDialog(
+                onDismissRequest = { showDeleteDialog = false },
+                title = {
+                    Text(text = stringResource(R.string.properties_delete_dialog_title))
+                },
+                text = {
+                    Text(text = stringResource(R.string.properties_delete_dialog_message))
+                },
+                confirmButton = {
+                    TrueStayButton(
+                        text = stringResource(R.string.properties_delete_dialog_confirm),
+                        onClick = {
+                            showDeleteDialog = false
+                            viewModel.deleteProperty {
+                                onBackClick()
+                            }
+                        },
+                        variant = ButtonVariant.DANGER
+                    )
+                },
+                dismissButton = {
+                    TrueStayButton(
+                        text = stringResource(R.string.properties_delete_dialog_cancel),
+                        onClick = { showDeleteDialog = false },
+                        variant = ButtonVariant.SECONDARY
+                    )
+                },
+                shape = AppShapes.large,
+                containerColor = LocalAppColors.current.white
+            )
         }
 
         if (showFullscreenCarousel && fullscreenPhotos.isNotEmpty()) {
@@ -317,6 +362,8 @@ private fun PropertyDetailsContent(
     onImageClick: ((Int) -> Unit)? = null,
     onReviewPhotoClick: ((List<String>, Int) -> Unit)? = null,
     landlordPhone: String? = null,
+    isLandlord: Boolean = false,
+    onCreateRental: ((String) -> Unit)? = null,
 ) {
     val context = LocalContext.current
 
@@ -346,32 +393,41 @@ private fun PropertyDetailsContent(
                     // Features
                     PropertyFeaturesSection(property = property)
 
-                    // Contact button (opens chooser to call or send SMS to landlord, if phone available)
-                    val phone = landlordPhone?.takeIf { it.isNotBlank() }
-                    if (phone != null) {
+                    if (!isLandlord) {
+                        // Contact button (opens chooser to call or send SMS to landlord, if phone available)
+                        val phone = landlordPhone?.takeIf { it.isNotBlank() }
+                        if (phone != null) {
+                            TrueStayButton(
+                                text = stringResource(R.string.property_details_contact_button),
+                                onClick = {
+                                    val phoneUri = "tel:$phone".toUri()
+                                    val callIntent = Intent(Intent.ACTION_DIAL, phoneUri)
+
+                                    val smsUri = "smsto:$phone".toUri()
+                                    val smsIntent = Intent(Intent.ACTION_SENDTO, smsUri)
+
+                                    val chooser = Intent.createChooser(
+                                        smsIntent,
+                                        context.getString(R.string.property_details_contact_chooser_title)
+                                    )
+                                    chooser.putExtra(
+                                        Intent.EXTRA_INITIAL_INTENTS,
+                                        arrayOf(callIntent)
+                                    )
+
+                                    context.startActivity(chooser)
+                                },
+                                variant = ButtonVariant.PRIMARY,
+                                modifier = Modifier.fillMaxWidth(),
+                                leadingIcon = TrueStayIcons.Phone
+                            )
+                        }
+                    } else if (onCreateRental != null) {
                         TrueStayButton(
-                            text = stringResource(R.string.property_details_contact_button),
-                            onClick = {
-                                val phoneUri = "tel:$phone".toUri()
-                                val callIntent = Intent(Intent.ACTION_DIAL, phoneUri)
-
-                                val smsUri = "smsto:$phone".toUri()
-                                val smsIntent = Intent(Intent.ACTION_SENDTO, smsUri)
-
-                                val chooser = Intent.createChooser(
-                                    smsIntent,
-                                    context.getString(R.string.property_details_contact_chooser_title)
-                                )
-                                chooser.putExtra(
-                                    Intent.EXTRA_INITIAL_INTENTS,
-                                    arrayOf(callIntent)
-                                )
-
-                                context.startActivity(chooser)
-                            },
+                            text = stringResource(R.string.property_details_create_location),
+                            onClick = { onCreateRental(property.id) },
                             variant = ButtonVariant.PRIMARY,
-                            modifier = Modifier.fillMaxWidth(),
-                            leadingIcon = TrueStayIcons.Phone
+                            modifier = Modifier.fillMaxWidth()
                         )
                     }
 
@@ -465,15 +521,17 @@ private fun PropertyImageSection(
 
         // Availability badge
         val availabilityText = when {
-            property.status == ca.uqac.inf865.truestay.domain.model.PropertyStatus.PAUSED ->
+            property.status == PropertyStatus.PAUSED ->
                 stringResource(R.string.property_paused)
+            !property.isAvailable ->
+                stringResource(R.string.property_rented)
             property.isAvailable ->
                 stringResource(R.string.property_available)
             else ->
                 stringResource(R.string.property_unavailable)
         }
         val availabilityVariant = when {
-            property.status == ca.uqac.inf865.truestay.domain.model.PropertyStatus.PAUSED ->
+            property.status == PropertyStatus.PAUSED ->
                 BadgeVariant.WARNING  // Orange badge for paused properties
             property.isAvailable ->
                 BadgeVariant.SUCCESS  // Green badge for available properties
@@ -901,14 +959,6 @@ private fun PropertyDetailsContentPreview() {
             ),
             photos = listOf("https://picsum.photos/seed/11/600/400"),
             isAvailable = true,
-        )
-        val rental = Rental(
-            id = "rent-1",
-            propertyId = property.id,
-            tenantId = "tenant-1",
-            landlordId = "landlord-1",
-            startDate = System.currentTimeMillis() - 10L * 24L * 60L * 60L * 1000L,
-            endDate = System.currentTimeMillis() + 20L * 24L * 60L * 60L * 1000L
         )
         val reviews = listOf(
             ReviewWithUser(

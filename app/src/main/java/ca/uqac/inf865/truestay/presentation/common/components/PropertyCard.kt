@@ -12,6 +12,8 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
+import androidx.compose.material3.DropdownMenu
+import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.IconButtonDefaults
 import androidx.compose.material3.MaterialTheme
@@ -40,6 +42,7 @@ import ca.uqac.inf865.truestay.R
 import ca.uqac.inf865.truestay.domain.model.Address
 import ca.uqac.inf865.truestay.domain.model.Property
 import ca.uqac.inf865.truestay.domain.model.PropertyRatings
+import ca.uqac.inf865.truestay.domain.model.PropertyStatus
 import ca.uqac.inf865.truestay.domain.model.Room
 import ca.uqac.inf865.truestay.domain.model.RoomType
 import ca.uqac.inf865.truestay.presentation.common.icons.TrueStayIcons
@@ -79,6 +82,7 @@ fun PropertyCard(
     startDate: Long? = null,
     endDate: Long? = null,
     // Landlord actions menu
+    isLandlord: Boolean = false,
     onEditClick: (() -> Unit)? = null,
     onDeleteClick: (() -> Unit)? = null,
     onToggleStatusClick: (() -> Unit)? = null,
@@ -98,6 +102,7 @@ fun PropertyCard(
             isFavoriteActionEnabled = isFavoriteActionEnabled,
             onClick = onClick,
             metadataText = metadataText,
+            isLandlord = isLandlord,
             onEditClick = onEditClick,
             onDeleteClick = onDeleteClick,
             onToggleStatusClick = onToggleStatusClick,
@@ -233,6 +238,7 @@ private fun PropertyCardDetailed(
     isFavorite: Boolean = false,
     isFavoriteActionEnabled: Boolean = true,
     metadataText: String? = null,
+    isLandlord: Boolean = false,
     onEditClick: (() -> Unit)? = null,
     onDeleteClick: (() -> Unit)? = null,
     onToggleStatusClick: (() -> Unit)? = null,
@@ -281,15 +287,17 @@ private fun PropertyCardDetailed(
 
                 // Availability badge
                 val availabilityText = when {
-                    property.status == ca.uqac.inf865.truestay.domain.model.PropertyStatus.PAUSED ->
+                    property.status == PropertyStatus.PAUSED ->
                         stringResource(R.string.property_paused)
+                    !property.isAvailable && isLandlord ->
+                        stringResource(R.string.property_rented)
                     property.isAvailable ->
                         stringResource(R.string.property_available)
                     else ->
                         stringResource(R.string.property_unavailable)
                 }
                 val availabilityVariant = when {
-                    property.status == ca.uqac.inf865.truestay.domain.model.PropertyStatus.PAUSED ->
+                    property.status == PropertyStatus.PAUSED ->
                         BadgeVariant.WARNING  // Orange badge for paused properties
                     property.isAvailable ->
                         BadgeVariant.SUCCESS  // Green badge for available properties
@@ -326,7 +334,7 @@ private fun PropertyCardDetailed(
                             onClick = { showDropdownMenu = true },
                             shape = AppShapes.medium,
                             colors = IconButtonDefaults.iconButtonColors(
-                                containerColor = LocalAppColors.current.white.copy(alpha = 0.5f)
+                                containerColor = LocalAppColors.current.white.copy(alpha = 0.7f)
                             )
                         ) {
                             TrueStayIcon(
@@ -337,10 +345,10 @@ private fun PropertyCardDetailed(
                             )
                         }
 
-                        androidx.compose.material3.DropdownMenu(
+                        DropdownMenu(
                             expanded = showDropdownMenu,
                             onDismissRequest = { showDropdownMenu = false },
-                            modifier = androidx.compose.ui.Modifier
+                            modifier = Modifier
                                 .background(
                                     color = LocalAppColors.current.white,
                                     shape = AppShapes.medium
@@ -352,11 +360,11 @@ private fun PropertyCardDetailed(
                             shadowElevation = 8.dp
                         ) {
                             if (onEditClick != null) {
-                                androidx.compose.material3.DropdownMenuItem(
+                                DropdownMenuItem(
                                     text = {
                                         Text(
                                             text = stringResource(R.string.property_action_edit),
-                                            style = MaterialTheme.typography.bodyMedium,
+                                            style = MaterialTheme.typography.headlineSmall,
                                             color = LocalAppColors.current.black
                                         )
                                     },
@@ -364,21 +372,22 @@ private fun PropertyCardDetailed(
                                         showDropdownMenu = false
                                         onEditClick()
                                     },
-                                    modifier = androidx.compose.ui.Modifier.padding(horizontal = AppSpacing.small),
+                                    modifier = Modifier.padding(horizontal = AppSpacing.small),
                                     colors = androidx.compose.material3.MenuDefaults.itemColors(
                                         textColor = LocalAppColors.current.black
                                     )
                                 )
                             }
-                            if (onToggleStatusClick != null) {
-                                androidx.compose.material3.DropdownMenuItem(
+                            val canToggleStatus = property.isAvailable || property.status == PropertyStatus.PAUSED
+                            if (onToggleStatusClick != null && canToggleStatus) {
+                                DropdownMenuItem(
                                     text = {
                                         Text(
-                                            text = if (property.status == ca.uqac.inf865.truestay.domain.model.PropertyStatus.PUBLISHED)
+                                            text = if (property.status == PropertyStatus.PUBLISHED)
                                                 stringResource(R.string.property_action_pause)
                                             else
                                                 stringResource(R.string.property_action_publish),
-                                            style = MaterialTheme.typography.bodyMedium,
+                                            style = MaterialTheme.typography.headlineSmall,
                                             color = LocalAppColors.current.black
                                         )
                                     },
@@ -386,18 +395,19 @@ private fun PropertyCardDetailed(
                                         showDropdownMenu = false
                                         onToggleStatusClick()
                                     },
-                                    modifier = androidx.compose.ui.Modifier.padding(horizontal = AppSpacing.small),
+                                    modifier = Modifier.padding(horizontal = AppSpacing.small),
                                     colors = androidx.compose.material3.MenuDefaults.itemColors(
                                         textColor = LocalAppColors.current.black
                                     )
                                 )
                             }
-                            if (onDeleteClick != null) {
-                                androidx.compose.material3.DropdownMenuItem(
+                            val canDelete = property.isAvailable
+                            if (onDeleteClick != null && canDelete) {
+                                DropdownMenuItem(
                                     text = {
                                         Text(
                                             text = stringResource(R.string.property_action_delete),
-                                            style = MaterialTheme.typography.bodyMedium,
+                                            style = MaterialTheme.typography.headlineSmall,
                                             color = LocalAppColors.current.error
                                         )
                                     },
@@ -405,7 +415,7 @@ private fun PropertyCardDetailed(
                                         showDropdownMenu = false
                                         onDeleteClick()
                                     },
-                                    modifier = androidx.compose.ui.Modifier.padding(horizontal = AppSpacing.small),
+                                    modifier = Modifier.padding(horizontal = AppSpacing.small),
                                     colors = androidx.compose.material3.MenuDefaults.itemColors(
                                         textColor = LocalAppColors.current.error
                                     )
