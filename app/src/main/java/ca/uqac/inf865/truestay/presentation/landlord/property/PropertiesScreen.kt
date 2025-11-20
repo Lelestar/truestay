@@ -12,6 +12,7 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
+import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Surface
@@ -19,6 +20,9 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.pluralStringResource
@@ -35,6 +39,7 @@ import ca.uqac.inf865.truestay.presentation.common.components.PropertyCardVarian
 import ca.uqac.inf865.truestay.presentation.common.components.TrueStayButton
 import ca.uqac.inf865.truestay.presentation.common.components.TrueStayIcon
 import ca.uqac.inf865.truestay.presentation.common.icons.TrueStayIcons
+import ca.uqac.inf865.truestay.presentation.theme.AppShapes
 import ca.uqac.inf865.truestay.presentation.theme.AppSpacing
 import ca.uqac.inf865.truestay.presentation.theme.LocalAppColors
 import ca.uqac.inf865.truestay.presentation.theme.TrueStayTheme
@@ -47,6 +52,7 @@ import ca.uqac.inf865.truestay.presentation.theme.TrueStayTheme
  */
 @Composable
 fun PropertiesScreen(
+    onPropertyClick: (String) -> Unit,
     onAddProperty: () -> Unit,
     onEditProperty: (String) -> Unit,
     viewModel: PropertiesViewModel = hiltViewModel()
@@ -57,14 +63,16 @@ fun PropertiesScreen(
     }
 
     val uiState by viewModel.uiState.collectAsStateWithLifecycle()
+    var propertyIdPendingDeletion by remember { mutableStateOf<String?>(null) }
 
     // Determines the type of error to display: blocking (full screen) or inline (list header).
     val blockingErrorRes = when {
-        uiState.error == PropertiesError.NOT_AUTHENTICATED -> R.string.favorites_error_not_authenticated
-        uiState.error == PropertiesError.LOAD_FAILED && uiState.properties.isEmpty() -> R.string.favorites_error_loading
+        uiState.error == PropertiesError.NOT_AUTHENTICATED -> R.string.properties_error_not_authenticated
+        uiState.error == PropertiesError.LOAD_FAILED && uiState.properties.isEmpty() -> R.string.properties_error_loading
         else -> null
     }
-    val showBlockingLoader = uiState.isLoading && uiState.properties.isEmpty() && blockingErrorRes == null
+    val showBlockingLoader = uiState.isLoading && uiState.properties.isEmpty()
+    val shouldShowHeader = !showBlockingLoader && blockingErrorRes == null && uiState.properties.isNotEmpty()
 
     Column(modifier = Modifier.fillMaxSize()) {
         Surface(
@@ -92,10 +100,12 @@ fun PropertiesScreen(
             }
         }
 
-        HeaderSection(
-            resultsCount = uiState.properties.size,
-            onAddProperty = onAddProperty
-        )
+        if (shouldShowHeader) {
+            HeaderSection(
+                resultsCount = uiState.properties.size,
+                onAddProperty = onAddProperty
+            )
+        }
 
         Box(
             modifier = Modifier
@@ -127,12 +137,12 @@ fun PropertiesScreen(
                 else -> {
                     PropertiesList(
                         uiState = uiState,
-                        onPropertyClick = onEditProperty,
+                        onPropertyClick = onPropertyClick,
                         onEditProperty = { propertyId ->
                             onEditProperty(propertyId)
                         },
                         onDeleteProperty = { propertyId ->
-                            viewModel.deleteProperty(propertyId)
+                            propertyIdPendingDeletion = propertyId
                         },
                         onTogglePropertyStatus = { propertyId ->
                             viewModel.togglePropertyStatus(propertyId)
@@ -140,6 +150,40 @@ fun PropertiesScreen(
                     )
                 }
             }
+        }
+
+        propertyIdPendingDeletion?.let { pendingId ->
+            AlertDialog(
+                onDismissRequest = { propertyIdPendingDeletion = null },
+                title = {
+                    Text(
+                        text = stringResource(R.string.properties_delete_dialog_title),
+                        style = MaterialTheme.typography.headlineSmall
+                    )
+                },
+                text = {
+                    Text(text = stringResource(R.string.properties_delete_dialog_message))
+                },
+                confirmButton = {
+                    TrueStayButton(
+                        text = stringResource(R.string.properties_delete_dialog_confirm),
+                        onClick = {
+                            propertyIdPendingDeletion = null
+                            viewModel.deleteProperty(pendingId)
+                        },
+                        variant = ButtonVariant.DANGER
+                    )
+                },
+                dismissButton = {
+                    TrueStayButton(
+                        text = stringResource(R.string.properties_delete_dialog_cancel),
+                        onClick = { propertyIdPendingDeletion = null },
+                        variant = ButtonVariant.SECONDARY
+                    )
+                },
+                shape = AppShapes.large,
+                containerColor = LocalAppColors.current.white
+            )
         }
     }
 }
@@ -202,6 +246,7 @@ private fun PropertiesList(
                 variant = PropertyCardVariant.DETAILED,
                 onClick = { onPropertyClick(property.id) },
                 isFavoriteActionEnabled = false,
+                isLandlord = true,
                 showLandlordMenu = true,
                 onEditClick = { onEditProperty(property.id) },
                 onDeleteClick = { onDeleteProperty(property.id) },
@@ -283,13 +328,75 @@ private fun EmptyState(
     }
 }
 
-@Preview
+// ==========================================
+// Previews
+// ==========================================
+@Preview(showBackground = true)
 @Composable
-private fun PropertiesScreenPreview() {
+private fun PropertiesScreenEmptyPreview() {
     TrueStayTheme {
-        PropertiesScreen(
-            onAddProperty = {},
-            onEditProperty = {}
+        Column(modifier = Modifier.fillMaxSize()) {
+            Box(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .weight(1f)
+                    .padding(horizontal = AppSpacing.large),
+                contentAlignment = Alignment.Center
+            ) {
+                EmptyState(onAddProperty = {})
+            }
+        }
+    }
+}
+
+@Preview(showBackground = true)
+@Composable
+private fun PropertiesScreenLoadingPreview() {
+    TrueStayTheme {
+        Column(modifier = Modifier.fillMaxSize()) {
+            Box(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .weight(1f)
+                    .padding(horizontal = AppSpacing.large),
+                contentAlignment = Alignment.Center
+            ) {
+                CircularProgressIndicator(
+                    color = LocalAppColors.current.primary
+                )
+            }
+        }
+    }
+}
+
+@Preview(showBackground = true)
+@Composable
+private fun PropertiesScreenErrorPreview() {
+    TrueStayTheme {
+        Column(modifier = Modifier.fillMaxSize()) {
+            Box(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .weight(1f)
+                    .padding(horizontal = AppSpacing.large),
+                contentAlignment = Alignment.Center
+            ) {
+                ErrorState(
+                    messageRes = R.string.properties_error_loading,
+                    onRetry = {}
+                )
+            }
+        }
+    }
+}
+
+@Preview(showBackground = true)
+@Composable
+private fun PropertiesHeaderSectionPreview() {
+    TrueStayTheme {
+        HeaderSection(
+            resultsCount = 3,
+            onAddProperty = {}
         )
     }
 }

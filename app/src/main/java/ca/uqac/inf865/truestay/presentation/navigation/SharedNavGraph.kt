@@ -47,6 +47,9 @@ fun NavGraphBuilder.sharedNavGraph(
             onBackClick = { navController.navigateUp() },
             onEditProperty = { propertyId ->
                 navController.navigate(Screen.PropertyForm.createRouteForEdit(propertyId))
+            },
+            onCreateRental = { propertyId ->
+                navController.navigate(Screen.CreateRental.createRoute(propertyId))
             }
         )
     }

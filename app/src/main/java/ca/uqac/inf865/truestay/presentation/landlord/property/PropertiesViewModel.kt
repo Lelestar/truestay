@@ -3,6 +3,7 @@ package ca.uqac.inf865.truestay.presentation.landlord.property
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import ca.uqac.inf865.truestay.domain.model.Property
+import ca.uqac.inf865.truestay.domain.model.PropertyStatus
 import ca.uqac.inf865.truestay.domain.repository.AuthRepository
 import ca.uqac.inf865.truestay.domain.repository.PropertyRepository
 import dagger.hilt.android.lifecycle.HiltViewModel
@@ -125,6 +126,13 @@ class PropertiesViewModel @Inject constructor(
                 return@launch
             }
 
+            if (!property.isAvailable) {
+                _uiState.update {
+                    it.copy(error = PropertiesError.LOAD_FAILED)
+                }
+                return@launch
+            }
+
             propertyRepository.deleteProperty(propertyId)
                 .onSuccess {
                     // Refresh the list after deletion
@@ -154,10 +162,17 @@ class PropertiesViewModel @Inject constructor(
                 return@launch
             }
 
-            val newStatus = if (property.status == ca.uqac.inf865.truestay.domain.model.PropertyStatus.PUBLISHED) {
-                ca.uqac.inf865.truestay.domain.model.PropertyStatus.PAUSED
+            if (!property.isAvailable && property.status == PropertyStatus.PUBLISHED) {
+                _uiState.update {
+                    it.copy(error = PropertiesError.LOAD_FAILED)
+                }
+                return@launch
+            }
+
+            val newStatus = if (property.status == PropertyStatus.PUBLISHED) {
+                PropertyStatus.PAUSED
             } else {
-                ca.uqac.inf865.truestay.domain.model.PropertyStatus.PUBLISHED
+                PropertyStatus.PUBLISHED
             }
 
             val updatedProperty = property.copy(

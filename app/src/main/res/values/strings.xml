@@ -158,6 +158,7 @@
     <string name="property_rating_neighborhood_label">Quartier</string>
     <string name="property_available">Disponible</string>
     <string name="property_unavailable">Non disponible</string>
+    <string name="property_rented">Loué</string>
     <string name="property_paused">En pause</string>
     <string name="property_rental_start_label">Début</string>
     <string name="property_rental_end_label">Fin</string>
@@ -192,6 +193,7 @@
     <string name="property_details_favorite_added">Ajouté aux favoris</string>
     <string name="property_details_favorite_removed">Retiré des favoris</string>
     <string name="property_details_favorite_error">Impossible de mettre à jour le favori</string>
+    <string name="property_details_create_location">Mettre en location</string>
 
     <!-- Property Actions -->
     <string name="property_action_edit">Modifier</string>
@@ -298,4 +300,10 @@
         <item quantity="one">%1$d résultat</item>
         <item quantity="other">%1$d résultats</item>
     </plurals>
+    <string name="properties_error_not_authenticated">Connectez-vous pour consulter vos logements.</string>
+    <string name="properties_error_loading">Impossible de charger vos logements pour le moment.</string>
+    <string name="properties_delete_dialog_title">Supprimer l\'annonce</string>
+    <string name="properties_delete_dialog_message">Cette action est définitive. Voulez-vous vraiment supprimer cette annonce ?</string>
+    <string name="properties_delete_dialog_confirm">Supprimer</string>
+    <string name="properties_delete_dialog_cancel">Annuler</string>
 </resources>

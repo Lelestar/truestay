@@ -14,11 +14,14 @@ fun NavGraphBuilder.landlordNavGraph(navController: NavHostController) {
     // Main screens
     composable(Screen.Properties.route) {
         PropertiesScreen(
+            onPropertyClick = { propertyId ->
+                navController.navigate(Screen.PropertyDetails.createRoute(propertyId))
+            },
             onAddProperty = {
                 navController.navigate(Screen.PropertyForm.createRouteForAdd())
             },
             onEditProperty = { propertyId ->
-                navController.navigate(Screen.PropertyDetails.createRoute(propertyId))
+                navController.navigate(Screen.PropertyForm.createRouteForEdit(propertyId))
             }
         )
     }

@@ -8,6 +8,7 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import ca.uqac.inf865.truestay.domain.model.Property
 import ca.uqac.inf865.truestay.domain.model.Rental
+import ca.uqac.inf865.truestay.domain.model.PropertyStatus
 import ca.uqac.inf865.truestay.domain.model.Review
 import ca.uqac.inf865.truestay.domain.model.User
 import ca.uqac.inf865.truestay.domain.repository.AuthRepository
@@ -210,6 +211,11 @@ class PropertyDetailsViewModel @Inject constructor(
                 return@launch
             }
 
+            if (!property.isAvailable) {
+                uiState = uiState.copy(error = "Unauthorized action")
+                return@launch
+            }
+
             propertyRepository.deleteProperty(property.id)
                 .onSuccess {
                     onSuccess()
@@ -231,10 +237,15 @@ class PropertyDetailsViewModel @Inject constructor(
                 return@launch
             }
 
-            val newStatus = if (property.status == ca.uqac.inf865.truestay.domain.model.PropertyStatus.PUBLISHED) {
-                ca.uqac.inf865.truestay.domain.model.PropertyStatus.PAUSED
+            if (!property.isAvailable && property.status == PropertyStatus.PUBLISHED) {
+                uiState = uiState.copy(error = "Unauthorized action")
+                return@launch
+            }
+
+            val newStatus = if (property.status == PropertyStatus.PUBLISHED) {
+                PropertyStatus.PAUSED
             } else {
-                ca.uqac.inf865.truestay.domain.model.PropertyStatus.PUBLISHED
+                PropertyStatus.PUBLISHED
             }
 
             val updatedProperty = property.copy(
