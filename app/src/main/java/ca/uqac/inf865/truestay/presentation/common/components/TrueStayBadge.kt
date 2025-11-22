@@ -23,7 +23,8 @@ enum class BadgeVariant {
     SUCCESS,
     WARNING,
     ERROR,
-    INFO
+    INFO,
+    NEUTRAL
 }
 
 /**
@@ -46,10 +47,12 @@ fun TrueStayBadge(
         BadgeVariant.WARNING -> colors.warning
         BadgeVariant.ERROR -> colors.error
         BadgeVariant.INFO -> colors.white
+        BadgeVariant.NEUTRAL -> colors.grayLight
     }
 
     val textColor = when (variant) {
         BadgeVariant.INFO -> colors.primary
+        BadgeVariant.NEUTRAL -> colors.grayDark
         else -> colors.white
     }
 

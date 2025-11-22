@@ -1,17 +1,11 @@
 package ca.uqac.inf865.truestay.presentation.navigation
 
 import androidx.annotation.StringRes
-import androidx.compose.foundation.layout.WindowInsets
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material3.ExperimentalMaterial3Api
-import androidx.compose.material3.IconButton
 import androidx.compose.material3.Scaffold
-import androidx.compose.material3.Text
-import androidx.compose.material3.TopAppBar
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
-import androidx.compose.ui.unit.dp
-import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.Modifier
 import androidx.navigation.NavGraph.Companion.findStartDestination
 import androidx.navigation.NavHostController
@@ -20,8 +14,6 @@ import androidx.navigation.compose.currentBackStackEntryAsState
 import androidx.navigation.compose.rememberNavController
 import ca.uqac.inf865.truestay.R
 import ca.uqac.inf865.truestay.domain.model.UserRole
-import ca.uqac.inf865.truestay.presentation.common.components.TrueStayIcon
-import ca.uqac.inf865.truestay.presentation.common.icons.TrueStayIcons
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -126,7 +118,8 @@ private fun getAuthScreenRoutes(): List<String> {
 
 private fun getCustomTopBarScreenRoutes(): List<String> {
     return listOf(
-        Screen.PropertyDetails.route
+        Screen.PropertyDetails.route,
+        Screen.RentalDetails.route
     )
 }
 
