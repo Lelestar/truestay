@@ -79,6 +79,7 @@ fun NavGraphBuilder.sharedNavGraph(
 
         RentalDetailsScreen(
             rentalId = rentalId,
+            onBackClick = { navController.navigateUp() },
             initialSection = section,
             onAddOrEditReviewClick = { reviewType ->
                 navController.navigate(Screen.ReviewForm.createRoute(rentalId, reviewType))

@@ -560,7 +560,7 @@ private fun PropertyImageSection(
 }
 
 @Composable
-private fun PropertyHeaderSection(property: Property) {
+fun PropertyHeaderSection(property: Property) {
     Column(
         verticalArrangement = Arrangement.spacedBy(AppSpacing.small)
     ) {
@@ -590,7 +590,7 @@ private fun PropertyHeaderSection(property: Property) {
 }
 
 @Composable
-private fun PropertyFeaturesSection(property: Property) {
+fun PropertyFeaturesSection(property: Property) {
     val bedroomCount = property.rooms.count { it.type == RoomType.BEDROOM }
     val bathroomCount = property.rooms.count { it.type == RoomType.BATHROOM }
 

@@ -63,6 +63,7 @@ import androidx.compose.ui.unit.IntSize
 import ca.uqac.inf865.truestay.domain.model.AutocompleteSuggestion
 import ca.uqac.inf865.truestay.domain.model.BedroomCount
 import ca.uqac.inf865.truestay.domain.model.PropertyFilters
+import ca.uqac.inf865.truestay.domain.model.PropertyStatus
 import ca.uqac.inf865.truestay.presentation.common.components.ButtonVariant
 import ca.uqac.inf865.truestay.presentation.common.components.TextFieldSize
 import ca.uqac.inf865.truestay.presentation.common.components.TextSelectableButton
@@ -223,7 +224,6 @@ private fun SearchScreenContent(
     val keyboardController = androidx.compose.ui.platform.LocalSoftwareKeyboardController.current
     val successColor = LocalAppColors.current.success.toArgb()
     val dangerColor = LocalAppColors.current.error.toArgb()
-    val warningColor = LocalAppColors.current.warning.toArgb()
     val whiteColor = LocalAppColors.current.white.toArgb()
     val borderColor = LocalAppColors.current.grayBorder
     val coroutineScope = rememberCoroutineScope()
@@ -256,17 +256,13 @@ private fun SearchScreenContent(
     // Track if map is ready to prevent CameraUpdateFactory crashes
     var isMapReady by remember { mutableStateOf(false) }
 
-    val customMarkers = remember(properties, successColor, dangerColor, warningColor, whiteColor, isMapReady) {
+    val customMarkers = remember(properties, successColor, dangerColor, whiteColor, isMapReady) {
         if (!isMapReady) {
             emptyMap()
         } else {
             properties.associateWith { property ->
                 val rating = property.ratings.propertyAverageRating
-                val markerColor = when {
-                    property.status == ca.uqac.inf865.truestay.domain.model.PropertyStatus.PAUSED -> warningColor
-                    property.isAvailable -> successColor
-                    else -> dangerColor
-                }
+                val markerColor = if (property.isAvailable) successColor else dangerColor
                 createCustomMarkerBitmap(context, rating, markerColor, whiteColor)
             }
         }
@@ -511,8 +507,9 @@ private fun SearchScreenContent(
                                 modifier = Modifier.fillMaxWidth(),
                                 contentPadding = PaddingValues(bottom = 56.dp)
                             ) {
+                                val publishedProperties = properties.filter { it.status == PropertyStatus.PUBLISHED }
                                 items(
-                                    items = properties,
+                                    items = publishedProperties,
                                     key = { it.id }
                                 ) { property ->
                                     PropertyCard(

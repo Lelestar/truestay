@@ -232,6 +232,45 @@
     <string name="rentals_action_inventory">État des lieux</string>
     <string name="rentals_action_review">Laisser un avis</string>
 
+    <!-- Rental details -->
+    <string name="rental_details_error_loading">Impossible de charger la location.</string>
+    <string name="rental_status_pending">En attente</string>
+    <string name="rental_status_active">En cours</string>
+    <string name="rental_status_ended">Terminée</string>
+    <string name="rental_status_cancelled">Annulée</string>
+    <string name="rental_progress_title">Déroulement du bail</string>
+    <string name="rental_progress_step_entry">État des lieux d\'entrée</string>
+    <string name="rental_progress_step_ongoing">Bail en cours</string>
+    <string name="rental_progress_step_exit">État des lieux de sortie</string>
+    <string name="rental_progress_step_todo">À effectuer</string>
+    <string name="rental_progress_step_done_on">Effectué le %1$s</string>
+    <string name="rental_progress_step_since_days">Depuis %1$d jours</string>
+    <string name="rental_progress_step_during_days">Pendant %1$d jours</string>
+    <string name="rental_inventories_title">États des lieux</string>
+    <string name="rental_inventory_entry_title">EDL d\'entrée</string>
+    <string name="rental_inventory_exit_title">EDL de sortie</string>
+    <string name="rental_inventory_not_done">Non réalisé</string>
+    <string name="rental_inventory_status_draft">Brouillon</string>
+    <string name="rental_inventory_status_in_progress">En cours</string>
+    <string name="rental_inventory_status_pending_signature">Attente signature</string>
+    <string name="rental_inventory_status_signed">Signé</string>
+    <string name="rental_inventory_status_completed">Terminé</string>
+    <string name="rental_inventory_status_cancelled">Annulé</string>
+    <string name="rental_reviews_title">Mes avis</string>
+    <string name="rental_reviews_category_property">Logement</string>
+    <string name="rental_reviews_category_building">Immeuble</string>
+    <string name="rental_reviews_category_neighborhood">Quartier</string>
+    <string name="rental_reviews_none_property">Aucun avis pour le logement</string>
+    <string name="rental_reviews_none_building">Aucun avis pour l\'immeuble</string>
+    <string name="rental_reviews_none_neighborhood">Aucun avis pour le quartier</string>
+    <string name="rental_reviews_none_property_tenant">%1$s n\'a pas encore donné d\'avis pour le logement</string>
+    <string name="rental_reviews_none_building_tenant">%1$s n\'a pas encore donné d\'avis pour l\'immeuble</string>
+    <string name="rental_reviews_none_neighborhood_tenant">%1$s n\'a pas encore donné d\'avis pour le quartier</string>
+    <string name="rental_reviews_add_button">Ajouter un avis</string>
+    <string name="rental_contact_title">Contact</string>
+    <string name="rental_contact_role_landlord">Propriétaire</string>
+    <string name="rental_contact_role_tenant">Locataire</string>
+
     <!-- Profile -->
     <string name="profile_picture_choose_source_title">Photo de profil</string>
     <string name="profile_picture_choose_source_message">Choisissez une source pour votre nouvelle photo de profil.</string>

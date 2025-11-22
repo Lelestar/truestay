@@ -6,6 +6,7 @@ import ca.uqac.inf865.truestay.data.model.toDomain
 import ca.uqac.inf865.truestay.data.source.FirestoreDataSource
 import ca.uqac.inf865.truestay.domain.model.Property
 import ca.uqac.inf865.truestay.domain.model.PropertyFilters
+import ca.uqac.inf865.truestay.domain.model.PropertyStatus
 import ca.uqac.inf865.truestay.domain.model.RoomType
 import ca.uqac.inf865.truestay.domain.repository.PropertyRepository
 import javax.inject.Inject
@@ -85,6 +86,7 @@ class PropertyRepositoryImpl @Inject constructor(
             // 1. Get all properties
             var properties = firestoreDataSource.getDocuments("properties", PropertyDto::class.java)
                 .map { it.toDomain() }
+                .filter { it.status == PropertyStatus.PUBLISHED } // Only published properties
 
             // 2. Apply filters locally
             properties = properties.filter { property ->
