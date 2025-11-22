@@ -119,7 +119,8 @@ private fun getAuthScreenRoutes(): List<String> {
 private fun getCustomTopBarScreenRoutes(): List<String> {
     return listOf(
         Screen.PropertyDetails.route,
-        Screen.RentalDetails.route
+        Screen.RentalDetails.route,
+        Screen.Inventory.route
     )
 }
 

@@ -13,6 +13,8 @@ import androidx.compose.material3.TopAppBar
 import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.drawWithContent
+import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
@@ -33,12 +35,14 @@ fun TrueStayTopAppBar(
     actions: @Composable RowScope.() -> Unit = {},
     windowInsets: WindowInsets = TopAppBarDefaults.windowInsets
 ) {
+    val colors = LocalAppColors.current
+
     TopAppBar(
         title = {
             Text(
                 text = stringResource(id = titleRes),
                 style = MaterialTheme.typography.headlineSmall,
-                color = LocalAppColors.current.black,
+                color = colors.black,
                 modifier = Modifier.fillMaxWidth(),
                 textAlign = TextAlign.Center
             )
@@ -60,9 +64,20 @@ fun TrueStayTopAppBar(
             }
         },
         colors = TopAppBarDefaults.topAppBarColors(
-            containerColor = LocalAppColors.current.white
+            containerColor = colors.white
         ),
-        windowInsets = windowInsets
+        windowInsets = windowInsets,
+        modifier = Modifier.drawWithContent {
+            drawContent()
+            val stroke = with(density) { 1.dp.toPx() }
+            val y = size.height - stroke / 2f
+            drawLine(
+                color = colors.grayBorder,
+                start = Offset(0f, y),
+                end = Offset(size.width, y),
+                strokeWidth = stroke
+            )
+        }
     )
 }
 

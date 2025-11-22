@@ -105,6 +105,9 @@ fun NavGraphBuilder.sharedNavGraph(
             },
             onSignClick = {
                 navController.navigate(Screen.Signature.createRoute(inventoryId))
+            },
+            onNavigateBack = {
+                navController.navigateUp()
             }
         )
     }
