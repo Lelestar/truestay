@@ -345,4 +345,38 @@
     <string name="properties_delete_dialog_message">Cette action est définitive. Voulez-vous vraiment supprimer cette annonce ?</string>
     <string name="properties_delete_dialog_confirm">Supprimer</string>
     <string name="properties_delete_dialog_cancel">Annuler</string>
+
+    <!-- Inventory -->
+    <string name="inventory_error_loading">Impossible de charger l\'état des lieux</string>
+    <string name="inventory_progress_label">Progression</string>
+    <string name="inventory_type_label">Type</string>
+    <string name="inventory_status_label">Statut</string>
+    <string name="inventory_type_entry">Entrée</string>
+    <string name="inventory_type_exit">Sortie</string>
+    <string name="inventory_signatures_title">Signatures</string>
+    <string name="inventory_signatures_unavailable">Sera disponible lorsque le propriétaire aura complété l\'état des lieux</string>
+    <string name="inventory_signature_role_landlord">Propriétaire :</string>
+    <string name="inventory_signature_role_tenant">Locataire :</string>
+    <string name="inventory_signature_status_signed">Signé</string>
+    <string name="inventory_signature_status_missing">En attente</string>
+    <string name="inventory_document_title">Document final</string>
+    <string name="inventory_document_unavailable">Le document PDF sera disponible une fois que les deux signatures seront complétées.</string>
+    <string name="inventory_document_view_pdf">Voir le PDF</string>
+    <string name="inventory_document_download">Télécharger</string>
+    <string name="inventory_document_download_title">EDL %1$s</string>
+    <string name="inventory_document_download_description">Téléchargement du document d\'état des lieux</string>
+    <string name="inventory_document_filename">EDL_%1$s.pdf</string>
+    <string name="inventory_document_overlay_close">Fermer le document</string>
+    <string name="inventory_document_load_error">Impossible de charger le PDF.</string>
+    <string name="inventory_rooms_title">Pièces inspectées</string>
+    <string name="inventory_room_status_todo">A faire</string>
+    <string name="inventory_room_status_in_progress">En cours</string>
+    <string name="inventory_room_status_completed">Terminée</string>
+    <string name="inventory_sign_button">Signer</string>
+    <string name="inventory_sign_modal_landlord_title">Confirmer l\'inspection</string>
+    <string name="inventory_sign_modal_landlord_message">Confirmez-vous avoir terminé l\'inspection de toutes les pièces et que les informations saisies sont exactes ?</string>
+    <string name="inventory_sign_modal_tenant_title">Confirmer la vérification</string>
+    <string name="inventory_sign_modal_tenant_message">Confirmez-vous avoir vérifié l\'inspection réalisée par le propriétaire avant de signer l\'état des lieux ?</string>
+    <string name="inventory_sign_modal_confirm">Confirmer</string>
+    <string name="inventory_sign_modal_cancel">Annuler</string>
 </resources>
