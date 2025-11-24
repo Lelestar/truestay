@@ -481,7 +481,8 @@ private fun PastRentalCard(
             Column(
                 modifier = Modifier
                     .fillMaxWidth()
-                    .padding(horizontal = AppSpacing.large),
+                    .padding(horizontal = AppSpacing.large)
+                    .padding(bottom = AppSpacing.large),
                 verticalArrangement = Arrangement.spacedBy(AppSpacing.medium)
             ) {
                 // Rental details card with tenant info
