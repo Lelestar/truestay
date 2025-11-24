@@ -87,6 +87,11 @@ fun PropertyCard(
     onDeleteClick: (() -> Unit)? = null,
     onToggleStatusClick: (() -> Unit)? = null,
     showLandlordMenu: Boolean = false,
+    // Custom badge
+    customBadgeText: String? = null,
+    customBadgeVariant: BadgeVariant? = null,
+    // Custom bottom content
+    bottomContent: (@Composable () -> Unit)? = null,
 ) {
     when (variant) {
         PropertyCardVariant.COMPACT -> PropertyCardCompact(
@@ -106,7 +111,10 @@ fun PropertyCard(
             onEditClick = onEditClick,
             onDeleteClick = onDeleteClick,
             onToggleStatusClick = onToggleStatusClick,
-            showLandlordMenu = showLandlordMenu
+            showLandlordMenu = showLandlordMenu,
+            customBadgeText = customBadgeText,
+            customBadgeVariant = customBadgeVariant,
+            bottomContent = bottomContent
         )
         PropertyCardVariant.INTERACTIVE -> PropertyCardInteractive(
             property = property,
@@ -242,7 +250,10 @@ private fun PropertyCardDetailed(
     onEditClick: (() -> Unit)? = null,
     onDeleteClick: (() -> Unit)? = null,
     onToggleStatusClick: (() -> Unit)? = null,
-    showLandlordMenu: Boolean = false
+    showLandlordMenu: Boolean = false,
+    customBadgeText: String? = null,
+    customBadgeVariant: BadgeVariant? = null,
+    bottomContent: (@Composable () -> Unit)? = null,
 ) {
     val bedroomCount = property.rooms.count { it.type == RoomType.BEDROOM }
     val bathroomCount = property.rooms.count { it.type == RoomType.BATHROOM }
@@ -285,8 +296,8 @@ private fun PropertyCardDetailed(
                     )
                 }
 
-                // Availability badge
-                val availabilityText = when {
+                // Availability badge or custom badge
+                val badgeText = customBadgeText ?: when {
                     property.status == PropertyStatus.PAUSED ->
                         stringResource(R.string.property_paused)
                     !property.isAvailable && isLandlord ->
@@ -296,7 +307,7 @@ private fun PropertyCardDetailed(
                     else ->
                         stringResource(R.string.property_unavailable)
                 }
-                val availabilityVariant = when {
+                val badgeVariant = customBadgeVariant ?: when {
                     property.status == PropertyStatus.PAUSED ->
                         BadgeVariant.WARNING  // Orange badge for paused properties
                     property.isAvailable ->
@@ -306,8 +317,8 @@ private fun PropertyCardDetailed(
                 }
 
                 TrueStayBadge(
-                    text = availabilityText,
-                    variant = availabilityVariant,
+                    text = badgeText,
+                    variant = badgeVariant,
                     modifier = Modifier
                         .align(Alignment.TopStart)
                         .padding(AppSpacing.medium)
@@ -585,6 +596,9 @@ private fun PropertyCardDetailed(
                     )
                 }
             }
+
+            // Custom bottom content
+            bottomContent?.invoke()
         }
     }
 }

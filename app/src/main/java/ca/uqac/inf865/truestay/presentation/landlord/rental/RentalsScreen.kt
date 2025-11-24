@@ -33,6 +33,7 @@ import androidx.compose.ui.unit.dp
 import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import ca.uqac.inf865.truestay.R
+import ca.uqac.inf865.truestay.presentation.common.components.BadgeVariant
 import ca.uqac.inf865.truestay.presentation.common.components.ButtonVariant
 import ca.uqac.inf865.truestay.presentation.common.components.PropertyCard
 import ca.uqac.inf865.truestay.presentation.common.components.PropertyCardVariant
@@ -468,36 +469,28 @@ private fun PastRentalCard(
     val property = item.property
     val tenant = item.tenant
 
-    Column(
-        modifier = Modifier.fillMaxWidth(),
-        verticalArrangement = Arrangement.spacedBy(AppSpacing.medium)
-    ) {
-        // Property card
-        PropertyCard(
-            property = property,
-            onClick = onClick,
-            variant = PropertyCardVariant.DETAILED
-        )
-
-        // Rental details card
-        Column(
-            modifier = Modifier
-                .fillMaxWidth()
-                .clip(AppShapes.large)
-                .background(LocalAppColors.current.graySurface)
-                .padding(AppSpacing.large),
-            verticalArrangement = Arrangement.spacedBy(AppSpacing.medium)
-        ) {
+    // Property card with "Terminé" badge and integrated content
+    PropertyCard(
+        property = property,
+        onClick = onClick,
+        variant = PropertyCardVariant.DETAILED,
+        customBadgeText = stringResource(R.string.property_rental_completed),
+        customBadgeVariant = BadgeVariant.NEUTRAL,
+        bottomContent = {
             Column(
                 modifier = Modifier.fillMaxWidth(),
                 verticalArrangement = Arrangement.spacedBy(AppSpacing.medium)
             ) {
-                // Tenant info
-                Row(
-                    modifier = Modifier.fillMaxWidth(),
-                    horizontalArrangement = Arrangement.SpaceBetween,
-                    verticalAlignment = Alignment.CenterVertically
+                // Rental details card with tenant info
+                Column(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .clip(AppShapes.large)
+                        .background(LocalAppColors.current.graySurface)
+                        .padding(AppSpacing.large),
+                    verticalArrangement = Arrangement.spacedBy(AppSpacing.small)
                 ) {
+                    // Tenant info with icon and name
                     Row(
                         horizontalArrangement = Arrangement.spacedBy(AppSpacing.xsmall),
                         verticalAlignment = Alignment.CenterVertically
@@ -506,73 +499,44 @@ private fun PastRentalCard(
                             ca.uqac.inf865.truestay.presentation.common.components.TrueStayIcon(
                                 iconRes = iconRes,
                                 contentDescriptionRes = null,
-                                tint = LocalAppColors.current.grayDark,
+                                tint = LocalAppColors.current.black,
                                 size = 16.dp
                             )
                         }
                         Text(
-                            text = stringResource(R.string.landlord_rentals_tenant_label),
-                            style = MaterialTheme.typography.bodyMedium,
-                            color = LocalAppColors.current.grayDark
+                            text = "${tenant.firstName} ${tenant.lastName}",
+                            style = MaterialTheme.typography.titleMedium,
+                            color = LocalAppColors.current.black
                         )
                     }
+
+                    // Rental period dates below
                     Text(
-                        text = "${tenant.firstName} ${tenant.lastName}",
-                        style = MaterialTheme.typography.titleMedium,
-                        color = LocalAppColors.current.black
+                        text = "${DateUtils.formatLocalDate(rental.startDate)} - ${DateUtils.formatLocalDate(rental.endDate)}",
+                        style = MaterialTheme.typography.bodySmall,
+                        color = LocalAppColors.current.grayDark
                     )
                 }
 
-                // Rental period
-                Row(
+                // Action buttons
+                Column(
                     modifier = Modifier.fillMaxWidth(),
-                    horizontalArrangement = Arrangement.SpaceBetween,
-                    verticalAlignment = Alignment.CenterVertically
+                    verticalArrangement = Arrangement.spacedBy(AppSpacing.small)
                 ) {
-                    Row(
-                        horizontalArrangement = Arrangement.spacedBy(AppSpacing.xsmall),
-                        verticalAlignment = Alignment.CenterVertically
-                    ) {
-                        TrueStayIcons.Calendar.let { iconRes ->
-                            ca.uqac.inf865.truestay.presentation.common.components.TrueStayIcon(
-                                iconRes = iconRes,
-                                contentDescriptionRes = null,
-                                tint = LocalAppColors.current.grayDark,
-                                size = 16.dp
-                            )
-                        }
-                        Text(
-                            text = stringResource(R.string.landlord_rentals_rental_period),
-                            style = MaterialTheme.typography.bodyMedium,
-                            color = LocalAppColors.current.grayDark
-                        )
-                    }
-                    Text(
-                        text = "${DateUtils.formatLocalDate(rental.startDate)} - ${DateUtils.formatLocalDate(rental.endDate)}",
-                        style = MaterialTheme.typography.titleMedium,
-                        color = LocalAppColors.current.black
+                    TrueStayButton(
+                        text = stringResource(R.string.landlord_rentals_inventory_button),
+                        onClick = onInventoryClick,
+                        variant = ButtonVariant.SECONDARY,
+                        leadingIcon = TrueStayIcons.FileText
+                    )
+                    TrueStayButton(
+                        text = stringResource(R.string.landlord_rentals_reviews_button),
+                        onClick = onReviewClick,
+                        variant = ButtonVariant.SECONDARY,
+                        leadingIcon = TrueStayIcons.MessageSquare
                     )
                 }
             }
         }
-
-        // Action buttons
-        Column(
-            modifier = Modifier.fillMaxWidth(),
-            verticalArrangement = Arrangement.spacedBy(AppSpacing.small)
-        ) {
-            TrueStayButton(
-                text = stringResource(R.string.landlord_rentals_inventory_button),
-                onClick = onInventoryClick,
-                variant = ButtonVariant.SECONDARY,
-                leadingIcon = TrueStayIcons.FileText
-            )
-            TrueStayButton(
-                text = stringResource(R.string.landlord_rentals_reviews_button),
-                onClick = onReviewClick,
-                variant = ButtonVariant.SECONDARY,
-                leadingIcon = TrueStayIcons.MessageSquare
-            )
-        }
-    }
+    )
 }
