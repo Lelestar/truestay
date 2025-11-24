@@ -92,6 +92,8 @@ fun PropertyCard(
     customBadgeVariant: BadgeVariant? = null,
     // Custom bottom content
     bottomContent: (@Composable () -> Unit)? = null,
+    // Hide details (features and ratings)
+    hideDetails: Boolean = false,
 ) {
     when (variant) {
         PropertyCardVariant.COMPACT -> PropertyCardCompact(
@@ -114,7 +116,8 @@ fun PropertyCard(
             showLandlordMenu = showLandlordMenu,
             customBadgeText = customBadgeText,
             customBadgeVariant = customBadgeVariant,
-            bottomContent = bottomContent
+            bottomContent = bottomContent,
+            hideDetails = hideDetails
         )
         PropertyCardVariant.INTERACTIVE -> PropertyCardInteractive(
             property = property,
@@ -254,6 +257,7 @@ private fun PropertyCardDetailed(
     customBadgeText: String? = null,
     customBadgeVariant: BadgeVariant? = null,
     bottomContent: (@Composable () -> Unit)? = null,
+    hideDetails: Boolean = false,
 ) {
     val bedroomCount = property.rooms.count { it.type == RoomType.BEDROOM }
     val bathroomCount = property.rooms.count { it.type == RoomType.BATHROOM }
@@ -492,14 +496,15 @@ private fun PropertyCardDetailed(
                     )
                 }
 
-                Spacer(modifier = Modifier.height(AppSpacing.medium))
+                if (!hideDetails) {
+                    Spacer(modifier = Modifier.height(AppSpacing.medium))
 
-                if (bedroomCount > 0 || bathroomCount > 0 || property.surface > 0) {
-                    Row(
-                        modifier = Modifier.fillMaxWidth(),
-                        horizontalArrangement = Arrangement.spacedBy(AppSpacing.large),
-                        verticalAlignment = Alignment.CenterVertically
-                    ) {
+                    if (bedroomCount > 0 || bathroomCount > 0 || property.surface > 0) {
+                        Row(
+                            modifier = Modifier.fillMaxWidth(),
+                            horizontalArrangement = Arrangement.spacedBy(AppSpacing.large),
+                            verticalAlignment = Alignment.CenterVertically
+                        ) {
                         if (bedroomCount > 0) {
                             val bedroomsLabel = stringResource(
                                 id = R.string.property_feature_bedrooms,
@@ -533,20 +538,20 @@ private fun PropertyCardDetailed(
                     }
                 }
 
-                Spacer(modifier = Modifier.height(AppSpacing.large))
+                    Spacer(modifier = Modifier.height(AppSpacing.large))
 
-                val additionalRatingsSummary = buildAdditionalRatingsSummary(
-                    buildingLabel = stringResource(id = R.string.property_rating_building_label),
-                    buildingRating = property.ratings.buildingAverageRating,
-                    neighborhoodLabel = stringResource(id = R.string.property_rating_neighborhood_label),
-                    neighborhoodRating = property.ratings.neighborhoodAverageRating
-                )
+                    val additionalRatingsSummary = buildAdditionalRatingsSummary(
+                        buildingLabel = stringResource(id = R.string.property_rating_building_label),
+                        buildingRating = property.ratings.buildingAverageRating,
+                        neighborhoodLabel = stringResource(id = R.string.property_rating_neighborhood_label),
+                        neighborhoodRating = property.ratings.neighborhoodAverageRating
+                    )
 
-                Row(
-                    modifier = Modifier.fillMaxWidth(),
-                    horizontalArrangement = Arrangement.spacedBy(AppSpacing.large),
-                    verticalAlignment = Alignment.CenterVertically
-                ) {
+                    Row(
+                        modifier = Modifier.fillMaxWidth(),
+                        horizontalArrangement = Arrangement.spacedBy(AppSpacing.large),
+                        verticalAlignment = Alignment.CenterVertically
+                    ) {
                     if (property.ratings.propertyAverageRating > 0f) {
                         Row(
                             horizontalArrangement = Arrangement.spacedBy(AppSpacing.xsmall),
@@ -585,6 +590,7 @@ private fun PropertyCardDetailed(
                             textAlign = TextAlign.End
                         )
                     }
+                }
                 }
 
                 metadataText?.let {
