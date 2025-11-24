@@ -277,17 +277,28 @@ private fun RentalDetailsContent(
                 onAddOrEditReviewClick = onAddOrEditReviewClick
             )
         }
+
+        // Empty spacer at the end to allow full scrolling to reviews section
+        item {
+            Spacer(modifier = Modifier.height(1.dp))
+        }
     }
 
     LaunchedEffect(initialSection, hasInventories) {
         if (!hasScrolledToInitial && initialSection != null) {
+            // Calculate the total number of items (including the final spacer)
+            val totalItems = 4 + (if (hasInventories) 1 else 0) + 1 + 1 // base items + inventories section + reviews section + final spacer
+
             val targetIndex = when (initialSection) {
                 RentalDetailsSection.INFO -> 1 // main info block
                 RentalDetailsSection.PROGRESS -> 3
                 RentalDetailsSection.INVENTORIES -> if (hasInventories) 4 else 3
-                RentalDetailsSection.REVIEWS -> if (hasInventories) 5 else 4
+                RentalDetailsSection.REVIEWS -> totalItems - 1 // Last item (final spacer after reviews) to show reviews fully
             }
-            listState.animateScrollToItem(targetIndex)
+
+            // Wait a bit for the list to be laid out
+            kotlinx.coroutines.delay(100)
+            listState.animateScrollToItem(targetIndex, scrollOffset = 0)
             hasScrolledToInitial = true
         }
     }
@@ -906,6 +917,7 @@ private fun RentalReviewsSection(
     Column(
         modifier = Modifier
             .fillMaxWidth()
+            .padding(top = AppSpacing.large)
             .padding(horizontal = AppSpacing.large),
         verticalArrangement = Arrangement.spacedBy(AppSpacing.medium)
     ) {
