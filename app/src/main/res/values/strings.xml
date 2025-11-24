@@ -232,6 +232,20 @@
     <string name="rentals_action_inventory">État des lieux</string>
     <string name="rentals_action_review">Laisser un avis</string>
 
+    <!-- Landlord Rentals -->
+    <string name="landlord_rentals_subtitle">Gérez vos baux et états des lieux</string>
+    <string name="landlord_rentals_tab_in_progress">En cours</string>
+    <string name="landlord_rentals_tab_history">Historique</string>
+    <string name="landlord_rentals_no_in_progress">Aucune location en cours</string>
+    <string name="landlord_rentals_no_history">Aucune location terminée</string>
+    <string name="landlord_rentals_tenant_label">Locataire</string>
+    <string name="landlord_rentals_rental_period">Période de bail</string>
+    <string name="landlord_rentals_time_remaining">Temps restant</string>
+    <string name="landlord_rentals_entry_inventory_button">État des lieux d\'entrée</string>
+    <string name="landlord_rentals_exit_inventory_button">État des lieux de sortie</string>
+    <string name="landlord_rentals_inventory_button">État des lieux</string>
+    <string name="landlord_rentals_reviews_button">Voir les avis</string>
+
     <!-- Rental details -->
     <string name="rental_details_error_loading">Impossible de charger la location.</string>
     <string name="rental_status_pending">En attente</string>
