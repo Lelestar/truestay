@@ -313,36 +313,32 @@ private fun ActiveRentalCard(
     val now = System.currentTimeMillis()
     val daysRemaining = ((rental.endDate - now) / (24 * 60 * 60 * 1000)).toInt().coerceAtLeast(0)
 
-    Column(
-        modifier = Modifier.fillMaxWidth(),
-        verticalArrangement = Arrangement.spacedBy(AppSpacing.medium)
-    ) {
-        // Property card with rental dates
-        PropertyCard(
-            property = property,
-            onClick = onClick,
-            variant = PropertyCardVariant.DETAILED
-        )
-
-        // Rental details card
-        Column(
-            modifier = Modifier
-                .fillMaxWidth()
-                .clip(AppShapes.large)
-                .background(LocalAppColors.current.graySurface)
-                .padding(AppSpacing.large),
-            verticalArrangement = Arrangement.spacedBy(AppSpacing.medium)
-        ) {
+    // Property card with "En cours" badge and integrated content
+    PropertyCard(
+        property = property,
+        onClick = onClick,
+        variant = PropertyCardVariant.DETAILED,
+        customBadgeText = stringResource(R.string.property_rental_in_progress),
+        customBadgeVariant = BadgeVariant.SUCCESS,
+        hideDetails = true,
+        bottomContent = {
             Column(
-                modifier = Modifier.fillMaxWidth(),
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(horizontal = AppSpacing.large)
+                    .padding(bottom = AppSpacing.large),
                 verticalArrangement = Arrangement.spacedBy(AppSpacing.medium)
             ) {
-                // Tenant info
-                Row(
-                    modifier = Modifier.fillMaxWidth(),
-                    horizontalArrangement = Arrangement.SpaceBetween,
-                    verticalAlignment = Alignment.CenterVertically
+                // Rental details card with tenant info
+                Column(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .clip(AppShapes.large)
+                        .background(LocalAppColors.current.graySurface)
+                        .padding(AppSpacing.large),
+                    verticalArrangement = Arrangement.spacedBy(AppSpacing.medium)
                 ) {
+                    // Tenant info with icon and name
                     Row(
                         horizontalArrangement = Arrangement.spacedBy(AppSpacing.xsmall),
                         verticalAlignment = Alignment.CenterVertically
@@ -351,108 +347,122 @@ private fun ActiveRentalCard(
                             ca.uqac.inf865.truestay.presentation.common.components.TrueStayIcon(
                                 iconRes = iconRes,
                                 contentDescriptionRes = null,
-                                tint = LocalAppColors.current.grayDark,
+                                tint = LocalAppColors.current.black,
                                 size = 16.dp
                             )
                         }
                         Text(
-                            text = stringResource(R.string.landlord_rentals_tenant_label),
-                            style = MaterialTheme.typography.bodyMedium,
-                            color = LocalAppColors.current.grayDark
+                            text = "${tenant.firstName} ${tenant.lastName}",
+                            style = MaterialTheme.typography.titleMedium,
+                            color = LocalAppColors.current.black
                         )
                     }
-                    Text(
-                        text = "${tenant.firstName} ${tenant.lastName}",
-                        style = MaterialTheme.typography.titleMedium,
-                        color = LocalAppColors.current.black
-                    )
-                }
 
-                // Rental period
-                Row(
-                    modifier = Modifier.fillMaxWidth(),
-                    horizontalArrangement = Arrangement.SpaceBetween,
-                    verticalAlignment = Alignment.CenterVertically
-                ) {
+                    // Rental period in YYYY/MM - YYYY/MM format
                     Row(
+                        modifier = Modifier.fillMaxWidth(),
+                        horizontalArrangement = Arrangement.SpaceBetween,
+                        verticalAlignment = Alignment.CenterVertically
+                    ) {
+                        Row(
+                            horizontalArrangement = Arrangement.spacedBy(AppSpacing.xsmall),
+                            verticalAlignment = Alignment.CenterVertically
+                        ) {
+                            TrueStayIcons.Calendar.let { iconRes ->
+                                ca.uqac.inf865.truestay.presentation.common.components.TrueStayIcon(
+                                    iconRes = iconRes,
+                                    contentDescriptionRes = null,
+                                    tint = LocalAppColors.current.grayDark,
+                                    size = 16.dp
+                                )
+                            }
+                            Text(
+                                text = stringResource(R.string.landlord_rentals_rental_period),
+                                style = MaterialTheme.typography.bodyMedium,
+                                color = LocalAppColors.current.grayDark
+                            )
+                        }
+                        Text(
+                            text = formatRentalPeriod(rental.startDate, rental.endDate),
+                            style = MaterialTheme.typography.titleMedium,
+                            color = LocalAppColors.current.black
+                        )
+                    }
+
+                    // Time remaining
+                    Row(
+                        modifier = Modifier.fillMaxWidth(),
                         horizontalArrangement = Arrangement.spacedBy(AppSpacing.xsmall),
                         verticalAlignment = Alignment.CenterVertically
                     ) {
-                        TrueStayIcons.Calendar.let { iconRes ->
-                            ca.uqac.inf865.truestay.presentation.common.components.TrueStayIcon(
-                                iconRes = iconRes,
-                                contentDescriptionRes = null,
-                                tint = LocalAppColors.current.grayDark,
-                                size = 16.dp
+                        Row(
+                            horizontalArrangement = Arrangement.spacedBy(AppSpacing.xsmall),
+                            verticalAlignment = Alignment.CenterVertically
+                        ) {
+                            TrueStayIcons.History.let { iconRes ->
+                                ca.uqac.inf865.truestay.presentation.common.components.TrueStayIcon(
+                                    iconRes = iconRes,
+                                    contentDescriptionRes = null,
+                                    tint = LocalAppColors.current.grayDark,
+                                    size = 16.dp
+                                )
+                            }
+                            Text(
+                                text = stringResource(R.string.landlord_rentals_time_remaining),
+                                style = MaterialTheme.typography.bodyMedium,
+                                color = LocalAppColors.current.grayDark
                             )
                         }
                         Text(
-                            text = stringResource(R.string.landlord_rentals_rental_period),
-                            style = MaterialTheme.typography.bodyMedium,
-                            color = LocalAppColors.current.grayDark
+                            text = stringResource(R.string.property_rental_days_left, daysRemaining),
+                            style = MaterialTheme.typography.titleMedium,
+                            color = LocalAppColors.current.primary
                         )
                     }
-                    Text(
-                        text = "${DateUtils.formatLocalDate(rental.startDate)} - ${DateUtils.formatLocalDate(rental.endDate)}",
-                        style = MaterialTheme.typography.titleMedium,
-                        color = LocalAppColors.current.black
-                    )
                 }
 
-                // Time remaining
-                Row(
+                // Action buttons
+                Column(
                     modifier = Modifier.fillMaxWidth(),
-                    horizontalArrangement = Arrangement.SpaceBetween,
-                    verticalAlignment = Alignment.CenterVertically
+                    verticalArrangement = Arrangement.spacedBy(AppSpacing.small)
                 ) {
-                    Row(
-                        horizontalArrangement = Arrangement.spacedBy(AppSpacing.xsmall),
-                        verticalAlignment = Alignment.CenterVertically
-                    ) {
-                        TrueStayIcons.History.let { iconRes ->
-                            ca.uqac.inf865.truestay.presentation.common.components.TrueStayIcon(
-                                iconRes = iconRes,
-                                contentDescriptionRes = null,
-                                tint = LocalAppColors.current.grayDark,
-                                size = 16.dp
-                            )
-                        }
-                        Text(
-                            text = stringResource(R.string.landlord_rentals_time_remaining),
-                            style = MaterialTheme.typography.bodyMedium,
-                            color = LocalAppColors.current.grayDark
-                        )
-                    }
-                    Text(
-                        text = stringResource(R.string.property_rental_days_left, daysRemaining),
-                        style = MaterialTheme.typography.titleMedium,
-                        color = LocalAppColors.current.primary
+                    TrueStayButton(
+                        text = stringResource(R.string.landlord_rentals_entry_inventory_button),
+                        onClick = onEntryInventoryClick,
+                        variant = ButtonVariant.SECONDARY,
+                        leadingIcon = TrueStayIcons.FileText,
+                        enabled = rental.entryInventoryId != null
+                    )
+                    TrueStayButton(
+                        text = stringResource(R.string.landlord_rentals_exit_inventory_button),
+                        onClick = onExitInventoryClick,
+                        variant = ButtonVariant.SECONDARY,
+                        leadingIcon = TrueStayIcons.FileText,
+                        enabled = rental.exitInventoryId != null
                     )
                 }
             }
         }
+    )
+}
 
-        // Action buttons
-        Column(
-            modifier = Modifier.fillMaxWidth(),
-            verticalArrangement = Arrangement.spacedBy(AppSpacing.small)
-        ) {
-            TrueStayButton(
-                text = stringResource(R.string.landlord_rentals_entry_inventory_button),
-                onClick = onEntryInventoryClick,
-                variant = ButtonVariant.SECONDARY,
-                leadingIcon = TrueStayIcons.FileText,
-                enabled = rental.entryInventoryId != null
-            )
-            TrueStayButton(
-                text = stringResource(R.string.landlord_rentals_exit_inventory_button),
-                onClick = onExitInventoryClick,
-                variant = ButtonVariant.SECONDARY,
-                leadingIcon = TrueStayIcons.FileText,
-                enabled = rental.exitInventoryId != null
-            )
-        }
+/**
+ * Format rental period as YYYY/MM - YYYY/MM
+ */
+private fun formatRentalPeriod(startDate: Long, endDate: Long): String {
+    val startCalendar = java.util.Calendar.getInstance().apply {
+        timeInMillis = startDate
     }
+    val endCalendar = java.util.Calendar.getInstance().apply {
+        timeInMillis = endDate
+    }
+
+    val startYear = startCalendar.get(java.util.Calendar.YEAR)
+    val startMonth = String.format(java.util.Locale.getDefault(), "%02d", startCalendar.get(java.util.Calendar.MONTH) + 1)
+    val endYear = endCalendar.get(java.util.Calendar.YEAR)
+    val endMonth = String.format(java.util.Locale.getDefault(), "%02d", endCalendar.get(java.util.Calendar.MONTH) + 1)
+
+    return "$startYear/$startMonth - $endYear/$endMonth"
 }
 
 /**
