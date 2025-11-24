@@ -288,7 +288,12 @@ private fun HistoryRentalsTab(
                 PastRentalCard(
                     item = rentalItem,
                     onClick = { onRentalClick(rentalItem.rental.id) },
-                    onInventoryClick = { onInventoryClick(rentalItem.rental.id) },
+                    onInventoryClick = {
+                        // Try exit inventory first, then entry inventory
+                        val inventoryId = rentalItem.rental.exitInventoryId
+                            ?: rentalItem.rental.entryInventoryId
+                        inventoryId?.let { onInventoryClick(it) }
+                    },
                     onReviewClick = { onReviewClick(rentalItem.rental.id) }
                 )
             }
@@ -534,7 +539,8 @@ private fun PastRentalCard(
                         text = stringResource(R.string.landlord_rentals_inventory_button),
                         onClick = onInventoryClick,
                         variant = ButtonVariant.SECONDARY,
-                        leadingIcon = TrueStayIcons.FileText
+                        leadingIcon = TrueStayIcons.FileText,
+                        enabled = rental.exitInventoryId != null || rental.entryInventoryId != null
                     )
                     TrueStayButton(
                         text = stringResource(R.string.landlord_rentals_reviews_button),
