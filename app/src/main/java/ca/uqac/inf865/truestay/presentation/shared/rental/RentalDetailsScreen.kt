@@ -800,7 +800,8 @@ private fun RentalInventoriesSection(
     Column(
         modifier = Modifier
             .fillMaxWidth()
-            .padding(AppSpacing.large),
+            .padding(top = AppSpacing.large)
+            .padding(horizontal = AppSpacing.large),
         verticalArrangement = Arrangement.spacedBy(AppSpacing.medium)
     ) {
         Text(
