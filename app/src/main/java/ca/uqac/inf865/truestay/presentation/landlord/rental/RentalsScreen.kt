@@ -38,6 +38,7 @@ import ca.uqac.inf865.truestay.presentation.common.components.ButtonVariant
 import ca.uqac.inf865.truestay.presentation.common.components.PropertyCard
 import ca.uqac.inf865.truestay.presentation.common.components.PropertyCardVariant
 import ca.uqac.inf865.truestay.presentation.common.components.TrueStayButton
+import ca.uqac.inf865.truestay.presentation.common.components.TrueStayIcon
 import ca.uqac.inf865.truestay.presentation.common.icons.TrueStayIcons
 import ca.uqac.inf865.truestay.presentation.common.utils.DateUtils
 import ca.uqac.inf865.truestay.presentation.theme.AppShapes
@@ -343,14 +344,12 @@ private fun ActiveRentalCard(
                         horizontalArrangement = Arrangement.spacedBy(AppSpacing.xsmall),
                         verticalAlignment = Alignment.CenterVertically
                     ) {
-                        TrueStayIcons.User.let { iconRes ->
-                            ca.uqac.inf865.truestay.presentation.common.components.TrueStayIcon(
-                                iconRes = iconRes,
-                                contentDescriptionRes = null,
-                                tint = LocalAppColors.current.black,
-                                size = 16.dp
-                            )
-                        }
+                        TrueStayIcon(
+                            iconRes = TrueStayIcons.User,
+                            contentDescriptionRes = null,
+                            tint = LocalAppColors.current.black,
+                            size = 16.dp
+                        )
                         Text(
                             text = "${tenant.firstName} ${tenant.lastName}",
                             style = MaterialTheme.typography.titleMedium,
@@ -368,14 +367,12 @@ private fun ActiveRentalCard(
                             horizontalArrangement = Arrangement.spacedBy(AppSpacing.xsmall),
                             verticalAlignment = Alignment.CenterVertically
                         ) {
-                            TrueStayIcons.Calendar.let { iconRes ->
-                                ca.uqac.inf865.truestay.presentation.common.components.TrueStayIcon(
-                                    iconRes = iconRes,
-                                    contentDescriptionRes = null,
-                                    tint = LocalAppColors.current.grayDark,
-                                    size = 16.dp
-                                )
-                            }
+                            TrueStayIcon(
+                                iconRes = TrueStayIcons.Calendar,
+                                contentDescriptionRes = null,
+                                tint = LocalAppColors.current.grayDark,
+                                size = 16.dp
+                            )
                             Text(
                                 text = stringResource(R.string.landlord_rentals_rental_period),
                                 style = MaterialTheme.typography.bodyMedium,
@@ -399,14 +396,12 @@ private fun ActiveRentalCard(
                             horizontalArrangement = Arrangement.spacedBy(AppSpacing.xsmall),
                             verticalAlignment = Alignment.CenterVertically
                         ) {
-                            TrueStayIcons.History.let { iconRes ->
-                                ca.uqac.inf865.truestay.presentation.common.components.TrueStayIcon(
-                                    iconRes = iconRes,
-                                    contentDescriptionRes = null,
-                                    tint = LocalAppColors.current.grayDark,
-                                    size = 16.dp
-                                )
-                            }
+                            TrueStayIcon(
+                                iconRes = TrueStayIcons.History,
+                                contentDescriptionRes = null,
+                                tint = LocalAppColors.current.grayDark,
+                                size = 16.dp
+                            )
                             Text(
                                 text = stringResource(R.string.landlord_rentals_time_remaining),
                                 style = MaterialTheme.typography.bodyMedium,
@@ -509,14 +504,12 @@ private fun PastRentalCard(
                         horizontalArrangement = Arrangement.spacedBy(AppSpacing.xsmall),
                         verticalAlignment = Alignment.CenterVertically
                     ) {
-                        TrueStayIcons.User.let { iconRes ->
-                            ca.uqac.inf865.truestay.presentation.common.components.TrueStayIcon(
-                                iconRes = iconRes,
-                                contentDescriptionRes = null,
-                                tint = LocalAppColors.current.black,
-                                size = 16.dp
-                            )
-                        }
+                        TrueStayIcon(
+                            iconRes = TrueStayIcons.User,
+                            contentDescriptionRes = null,
+                            tint = LocalAppColors.current.black,
+                            size = 16.dp
+                        )
                         Text(
                             text = "${tenant.firstName} ${tenant.lastName}",
                             style = MaterialTheme.typography.titleMedium,
