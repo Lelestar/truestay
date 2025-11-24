@@ -475,10 +475,13 @@ private fun PastRentalCard(
         onClick = onClick,
         variant = PropertyCardVariant.DETAILED,
         customBadgeText = stringResource(R.string.property_rental_completed),
-        customBadgeVariant = BadgeVariant.NEUTRAL,
+        customBadgeVariant = BadgeVariant.INFO,
+        hideDetails = true,
         bottomContent = {
             Column(
-                modifier = Modifier.fillMaxWidth(),
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(horizontal = AppSpacing.large),
                 verticalArrangement = Arrangement.spacedBy(AppSpacing.medium)
             ) {
                 // Rental details card with tenant info
