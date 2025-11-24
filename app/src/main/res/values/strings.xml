@@ -165,6 +165,7 @@
     <string name="property_rental_days_left_label">Temps restant</string>
     <string name="property_rental_days_left">%1$d jours</string>
     <string name="property_rental_in_progress">En cours</string>
+    <string name="property_rental_completed">Terminé</string>
 
     <!-- Property Details -->
     <string name="property_details_no_review">Aucun avis pour l\'instant</string>
