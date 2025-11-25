@@ -1,11 +1,9 @@
 package ca.uqac.inf865.truestay.presentation.landlord.rental
 
-import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
-import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
@@ -26,24 +24,31 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.draw.clip
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.style.TextAlign
-import androidx.compose.ui.unit.dp
 import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import androidx.compose.ui.tooling.preview.Preview
 import ca.uqac.inf865.truestay.R
+import ca.uqac.inf865.truestay.domain.model.Address
+import ca.uqac.inf865.truestay.domain.model.Property
+import ca.uqac.inf865.truestay.domain.model.PropertyRatings
+import ca.uqac.inf865.truestay.domain.model.Rental
+import ca.uqac.inf865.truestay.domain.model.RentalStatus
+import ca.uqac.inf865.truestay.domain.model.Room
+import ca.uqac.inf865.truestay.domain.model.RoomType
+import ca.uqac.inf865.truestay.domain.model.User
+import ca.uqac.inf865.truestay.domain.model.UserRole
 import ca.uqac.inf865.truestay.presentation.common.components.BadgeVariant
 import ca.uqac.inf865.truestay.presentation.common.components.ButtonVariant
+import ca.uqac.inf865.truestay.presentation.common.components.PropertyAction
 import ca.uqac.inf865.truestay.presentation.common.components.PropertyCard
 import ca.uqac.inf865.truestay.presentation.common.components.PropertyCardVariant
 import ca.uqac.inf865.truestay.presentation.common.components.TrueStayButton
-import ca.uqac.inf865.truestay.presentation.common.components.TrueStayIcon
 import ca.uqac.inf865.truestay.presentation.common.icons.TrueStayIcons
-import ca.uqac.inf865.truestay.presentation.common.utils.DateUtils
-import ca.uqac.inf865.truestay.presentation.theme.AppShapes
 import ca.uqac.inf865.truestay.presentation.theme.AppSpacing
 import ca.uqac.inf865.truestay.presentation.theme.LocalAppColors
+import ca.uqac.inf865.truestay.presentation.theme.TrueStayTheme
 
 /**
  * Screen displaying landlord's rentals with tabs for active and past rentals
@@ -52,6 +57,7 @@ import ca.uqac.inf865.truestay.presentation.theme.LocalAppColors
 fun RentalsScreen(
     onRentalClick: (String) -> Unit,
     onInventoryClick: (String) -> Unit,
+    onInventoriesClick: (String) -> Unit,
     onReviewClick: (String) -> Unit,
     viewModel: RentalsViewModel = hiltViewModel()
 ) {
@@ -61,6 +67,7 @@ fun RentalsScreen(
         uiState = uiState,
         onRentalClick = onRentalClick,
         onInventoryClick = onInventoryClick,
+        onInventoriesClick = onInventoriesClick,
         onReviewClick = onReviewClick,
         onRetry = { viewModel.refreshRentals() }
     )
@@ -71,6 +78,7 @@ private fun RentalsScreenContent(
     uiState: LandlordRentalsUiState,
     onRentalClick: (String) -> Unit,
     onInventoryClick: (String) -> Unit,
+    onInventoriesClick: (String) -> Unit,
     onReviewClick: (String) -> Unit,
     onRetry: () -> Unit
 ) {
@@ -171,7 +179,7 @@ private fun RentalsScreenContent(
                     1 -> HistoryRentalsTab(
                         pastRentals = uiState.pastRentals,
                         onRentalClick = onRentalClick,
-                        onInventoryClick = onInventoryClick,
+                        onInventoriesClick = onInventoriesClick,
                         onReviewClick = onReviewClick
                     )
                 }
@@ -261,7 +269,7 @@ private fun ActiveRentalsTab(
 private fun HistoryRentalsTab(
     pastRentals: List<LandlordRentalItem>,
     onRentalClick: (String) -> Unit,
-    onInventoryClick: (String) -> Unit,
+    onInventoriesClick: (String) -> Unit,
     onReviewClick: (String) -> Unit
 ) {
     if (pastRentals.isEmpty()) {
@@ -288,12 +296,7 @@ private fun HistoryRentalsTab(
                 PastRentalCard(
                     item = rentalItem,
                     onClick = { onRentalClick(rentalItem.rental.id) },
-                    onInventoryClick = {
-                        // Try exit inventory first, then entry inventory
-                        val inventoryId = rentalItem.rental.exitInventoryId
-                            ?: rentalItem.rental.entryInventoryId
-                        inventoryId?.let { onInventoryClick(it) }
-                    },
+                    onInventoriesClick = { onInventoriesClick(rentalItem.rental.id) },
                     onReviewClick = { onReviewClick(rentalItem.rental.id) }
                 )
             }
@@ -312,157 +315,42 @@ private fun ActiveRentalCard(
     onExitInventoryClick: () -> Unit
 ) {
     val rental = item.rental
-    val property = item.property
     val tenant = item.tenant
+    val property = item.property
+    val actions = buildList {
+        if (rental.entryInventoryId != null) {
+            add(
+                PropertyAction(
+                    iconRes = TrueStayIcons.FileText,
+                    label = stringResource(R.string.landlord_rentals_entry_inventory_button),
+                    onClick = onEntryInventoryClick,
+                    variant = ButtonVariant.SECONDARY
+                )
+            )
+        }
+        if (rental.exitInventoryId != null) {
+            add(
+                PropertyAction(
+                    iconRes = TrueStayIcons.FileText,
+                    label = stringResource(R.string.landlord_rentals_exit_inventory_button),
+                    onClick = onExitInventoryClick,
+                    variant = ButtonVariant.SECONDARY
+                )
+            )
+        }
+    }
 
-    // Calculate days remaining
-    val now = System.currentTimeMillis()
-    val daysRemaining = ((rental.endDate - now) / (24 * 60 * 60 * 1000)).toInt().coerceAtLeast(0)
-
-    // Property card with "En cours" badge and integrated content
     PropertyCard(
         property = property,
         onClick = onClick,
-        variant = PropertyCardVariant.DETAILED,
+        variant = PropertyCardVariant.INTERACTIVE,
+        actions = actions,
+        startDate = rental.startDate,
+        endDate = rental.endDate,
+        tenantName = "${tenant.firstName} ${tenant.lastName}",
         customBadgeText = stringResource(R.string.property_rental_in_progress),
-        customBadgeVariant = BadgeVariant.SUCCESS,
-        hideDetails = true,
-        bottomContent = {
-            Column(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(horizontal = AppSpacing.large)
-                    .padding(bottom = AppSpacing.large),
-                verticalArrangement = Arrangement.spacedBy(AppSpacing.medium)
-            ) {
-                // Rental details card with tenant info
-                Column(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .clip(AppShapes.large)
-                        .background(LocalAppColors.current.graySurface)
-                        .padding(AppSpacing.large),
-                    verticalArrangement = Arrangement.spacedBy(AppSpacing.medium)
-                ) {
-                    // Tenant info with icon and name
-                    Row(
-                        horizontalArrangement = Arrangement.spacedBy(AppSpacing.xsmall),
-                        verticalAlignment = Alignment.CenterVertically
-                    ) {
-                        TrueStayIcon(
-                            iconRes = TrueStayIcons.User,
-                            contentDescriptionRes = null,
-                            tint = LocalAppColors.current.black,
-                            size = 16.dp
-                        )
-                        Text(
-                            text = "${tenant.firstName} ${tenant.lastName}",
-                            style = MaterialTheme.typography.titleMedium,
-                            color = LocalAppColors.current.black
-                        )
-                    }
-
-                    // Rental period in YYYY/MM - YYYY/MM format
-                    Row(
-                        modifier = Modifier.fillMaxWidth(),
-                        horizontalArrangement = Arrangement.SpaceBetween,
-                        verticalAlignment = Alignment.CenterVertically
-                    ) {
-                        Row(
-                            horizontalArrangement = Arrangement.spacedBy(AppSpacing.xsmall),
-                            verticalAlignment = Alignment.CenterVertically
-                        ) {
-                            TrueStayIcon(
-                                iconRes = TrueStayIcons.Calendar,
-                                contentDescriptionRes = null,
-                                tint = LocalAppColors.current.grayDark,
-                                size = 16.dp
-                            )
-                            Text(
-                                text = stringResource(R.string.landlord_rentals_rental_period),
-                                style = MaterialTheme.typography.bodyMedium,
-                                color = LocalAppColors.current.grayDark
-                            )
-                        }
-                        Text(
-                            text = formatRentalPeriod(rental.startDate, rental.endDate),
-                            style = MaterialTheme.typography.titleMedium,
-                            color = LocalAppColors.current.black
-                        )
-                    }
-
-                    // Time remaining
-                    Row(
-                        modifier = Modifier.fillMaxWidth(),
-                        horizontalArrangement = Arrangement.spacedBy(AppSpacing.xsmall),
-                        verticalAlignment = Alignment.CenterVertically
-                    ) {
-                        Row(
-                            horizontalArrangement = Arrangement.spacedBy(AppSpacing.xsmall),
-                            verticalAlignment = Alignment.CenterVertically
-                        ) {
-                            TrueStayIcon(
-                                iconRes = TrueStayIcons.History,
-                                contentDescriptionRes = null,
-                                tint = LocalAppColors.current.grayDark,
-                                size = 16.dp
-                            )
-                            Text(
-                                text = stringResource(R.string.landlord_rentals_time_remaining),
-                                style = MaterialTheme.typography.bodyMedium,
-                                color = LocalAppColors.current.grayDark
-                            )
-                        }
-                        Text(
-                            text = stringResource(R.string.property_rental_days_left, daysRemaining),
-                            style = MaterialTheme.typography.titleMedium,
-                            color = LocalAppColors.current.primary
-                        )
-                    }
-                }
-
-                // Action buttons
-                Column(
-                    modifier = Modifier.fillMaxWidth(),
-                    verticalArrangement = Arrangement.spacedBy(AppSpacing.small)
-                ) {
-                    TrueStayButton(
-                        text = stringResource(R.string.landlord_rentals_entry_inventory_button),
-                        onClick = onEntryInventoryClick,
-                        variant = ButtonVariant.SECONDARY,
-                        leadingIcon = TrueStayIcons.FileText,
-                        enabled = rental.entryInventoryId != null
-                    )
-                    TrueStayButton(
-                        text = stringResource(R.string.landlord_rentals_exit_inventory_button),
-                        onClick = onExitInventoryClick,
-                        variant = ButtonVariant.SECONDARY,
-                        leadingIcon = TrueStayIcons.FileText,
-                        enabled = rental.exitInventoryId != null
-                    )
-                }
-            }
-        }
+        customBadgeVariant = BadgeVariant.SUCCESS
     )
-}
-
-/**
- * Format rental period as YYYY/MM - YYYY/MM
- */
-private fun formatRentalPeriod(startDate: Long, endDate: Long): String {
-    val startCalendar = java.util.Calendar.getInstance().apply {
-        timeInMillis = startDate
-    }
-    val endCalendar = java.util.Calendar.getInstance().apply {
-        timeInMillis = endDate
-    }
-
-    val startYear = startCalendar.get(java.util.Calendar.YEAR)
-    val startMonth = String.format(java.util.Locale.getDefault(), "%02d", startCalendar.get(java.util.Calendar.MONTH) + 1)
-    val endYear = endCalendar.get(java.util.Calendar.YEAR)
-    val endMonth = String.format(java.util.Locale.getDefault(), "%02d", endCalendar.get(java.util.Calendar.MONTH) + 1)
-
-    return "$startYear/$startMonth - $endYear/$endMonth"
 }
 
 /**
@@ -472,84 +360,211 @@ private fun formatRentalPeriod(startDate: Long, endDate: Long): String {
 private fun PastRentalCard(
     item: LandlordRentalItem,
     onClick: () -> Unit,
-    onInventoryClick: () -> Unit,
+    onInventoriesClick: () -> Unit,
     onReviewClick: () -> Unit
 ) {
     val rental = item.rental
     val property = item.property
     val tenant = item.tenant
+    val actions = buildList {
+        if (rental.entryInventoryId != null || rental.exitInventoryId != null) {
+            add(
+                PropertyAction(
+                    iconRes = TrueStayIcons.FileText,
+                    label = stringResource(R.string.landlord_rentals_inventory_button),
+                    onClick = onInventoriesClick,
+                    variant = ButtonVariant.SECONDARY
+                )
+            )
+        }
+        add(
+            PropertyAction(
+                iconRes = TrueStayIcons.Star,
+                label = stringResource(R.string.landlord_rentals_reviews_button),
+                onClick = onReviewClick,
+                variant = ButtonVariant.SECONDARY
+            )
+        )
+    }
 
-    // Property card with "Terminé" badge and integrated content
     PropertyCard(
         property = property,
         onClick = onClick,
-        variant = PropertyCardVariant.DETAILED,
-        customBadgeText = stringResource(R.string.property_rental_completed),
-        customBadgeVariant = BadgeVariant.INFO,
-        hideDetails = true,
-        bottomContent = {
-            Column(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(horizontal = AppSpacing.large)
-                    .padding(bottom = AppSpacing.large),
-                verticalArrangement = Arrangement.spacedBy(AppSpacing.medium)
-            ) {
-                // Rental details card with tenant info
-                Column(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .clip(AppShapes.large)
-                        .background(LocalAppColors.current.graySurface)
-                        .padding(AppSpacing.large),
-                    verticalArrangement = Arrangement.spacedBy(AppSpacing.small)
-                ) {
-                    // Tenant info with icon and name
-                    Row(
-                        horizontalArrangement = Arrangement.spacedBy(AppSpacing.xsmall),
-                        verticalAlignment = Alignment.CenterVertically
-                    ) {
-                        TrueStayIcon(
-                            iconRes = TrueStayIcons.User,
-                            contentDescriptionRes = null,
-                            tint = LocalAppColors.current.black,
-                            size = 16.dp
-                        )
-                        Text(
-                            text = "${tenant.firstName} ${tenant.lastName}",
-                            style = MaterialTheme.typography.titleMedium,
-                            color = LocalAppColors.current.black
-                        )
-                    }
-
-                    // Rental period dates below
-                    Text(
-                        text = "${DateUtils.formatLocalDate(rental.startDate)} - ${DateUtils.formatLocalDate(rental.endDate)}",
-                        style = MaterialTheme.typography.bodySmall,
-                        color = LocalAppColors.current.grayDark
-                    )
-                }
-
-                // Action buttons
-                Column(
-                    modifier = Modifier.fillMaxWidth(),
-                    verticalArrangement = Arrangement.spacedBy(AppSpacing.small)
-                ) {
-                    TrueStayButton(
-                        text = stringResource(R.string.landlord_rentals_inventory_button),
-                        onClick = onInventoryClick,
-                        variant = ButtonVariant.SECONDARY,
-                        leadingIcon = TrueStayIcons.FileText,
-                        enabled = rental.exitInventoryId != null || rental.entryInventoryId != null
-                    )
-                    TrueStayButton(
-                        text = stringResource(R.string.landlord_rentals_reviews_button),
-                        onClick = onReviewClick,
-                        variant = ButtonVariant.SECONDARY,
-                        leadingIcon = TrueStayIcons.MessageSquare
-                    )
-                }
-            }
-        }
+        variant = PropertyCardVariant.INTERACTIVE,
+        actions = actions,
+        startDate = rental.startDate,
+        endDate = rental.endDate,
+        tenantName = "${tenant.firstName} ${tenant.lastName}",
+        customBadgeText = if (rental.status == RentalStatus.ENDED)
+            stringResource(R.string.property_rental_completed) else stringResource(R.string.property_rental_cancelled),
+        customBadgeVariant = if (rental.status == RentalStatus.ENDED) BadgeVariant.INFO else BadgeVariant.ERROR
     )
+}
+
+// ==========================================
+// Previews
+// ==========================================
+@Preview(showBackground = true)
+@Composable
+private fun LandlordRentalsLoadingPreview() {
+    TrueStayTheme {
+        RentalsScreenContent(
+            uiState = LandlordRentalsUiState(isLoading = true),
+            onRentalClick = {},
+            onInventoryClick = {},
+            onInventoriesClick = {},
+            onReviewClick = {},
+            onRetry = {}
+        )
+    }
+}
+
+@Preview(showBackground = true)
+@Composable
+private fun LandlordRentalsErrorPreview() {
+    TrueStayTheme {
+        RentalsScreenContent(
+            uiState = LandlordRentalsUiState(
+                isLoading = false,
+                error = LandlordRentalsError.LOAD_FAILED
+            ),
+            onRentalClick = {},
+            onInventoryClick = {},
+            onInventoriesClick = {},
+            onReviewClick = {},
+            onRetry = {}
+        )
+    }
+}
+
+@Preview(showBackground = true)
+@Composable
+private fun LandlordRentalsActivePreview() {
+    val (active, _) = sampleLandlordRentalItems()
+    TrueStayTheme {
+        RentalsScreenContent(
+            uiState = LandlordRentalsUiState(
+                activeRentals = active,
+                pastRentals = emptyList()
+            ),
+            onRentalClick = {},
+            onInventoryClick = {},
+            onInventoriesClick = {},
+            onReviewClick = {},
+            onRetry = {}
+        )
+    }
+}
+
+@Preview(showBackground = true)
+@Composable
+private fun LandlordRentalsHistoryPreview() {
+    val (_, past) = sampleLandlordRentalItems()
+    TrueStayTheme {
+        RentalsScreenContent(
+            uiState = LandlordRentalsUiState(
+                activeRentals = emptyList(),
+                pastRentals = past
+            ),
+            onRentalClick = {},
+            onInventoryClick = {},
+            onInventoriesClick = {},
+            onReviewClick = {},
+            onRetry = {}
+        )
+    }
+}
+
+@Preview(showBackground = true)
+@Composable
+private fun LandlordRentalsMixedPreview() {
+    val (active, past) = sampleLandlordRentalItems()
+    TrueStayTheme {
+        RentalsScreenContent(
+            uiState = LandlordRentalsUiState(
+                activeRentals = active,
+                pastRentals = past
+            ),
+            onRentalClick = {},
+            onInventoryClick = {},
+            onInventoriesClick = {},
+            onReviewClick = {},
+            onRetry = {}
+        )
+    }
+}
+
+private fun sampleLandlordRentalItems(): Pair<List<LandlordRentalItem>, List<LandlordRentalItem>> {
+    val now = System.currentTimeMillis()
+    val property1 = Property(
+        id = "p1",
+        name = "Condo lumineux",
+        address = Address(
+            street = "123 Rue des Pins",
+            city = "Saguenay",
+            province = "QC",
+            postalCode = "G7X 1A1",
+            country = "Canada"
+        ),
+        monthlyRent = 1200,
+        rooms = listOf(
+            Room(name = "Chambre", type = RoomType.BEDROOM),
+            Room(name = "Salon", type = RoomType.LIVING_ROOM)
+        ),
+        photos = listOf("https://picsum.photos/400/300"),
+        landlordId = "landlord1",
+        isAvailable = false,
+        ratings = PropertyRatings(propertyAverageRating = 4.5f, propertyReviewCount = 8)
+    )
+
+    val property2 = property1.copy(
+        id = "p2",
+        name = "Maison familiale",
+        address = property1.address.copy(street = "456 Rue du Parc"),
+        monthlyRent = 1800,
+        photos = listOf("https://picsum.photos/400/301")
+    )
+
+    val tenant1 = User(
+        id = "tenant1",
+        firstName = "Alice",
+        lastName = "Martin",
+        role = UserRole.TENANT,
+        email = "alice@example.com"
+    )
+
+    val tenant2 = tenant1.copy(
+        id = "tenant2",
+        firstName = "Marc",
+        lastName = "Dubois",
+        email = "marc@example.com"
+    )
+
+    val activeRental = Rental(
+        id = "r1",
+        propertyId = property1.id,
+        tenantId = tenant1.id,
+        landlordId = property1.landlordId,
+        startDate = now - 5 * 24 * 60 * 60 * 1000L,
+        endDate = now + 30 * 24 * 60 * 60 * 1000L,
+        status = RentalStatus.ACTIVE,
+        entryInventoryId = "inv_entry_r1",
+        exitInventoryId = "inv_exit_r1"
+    )
+
+    val pastRental = Rental(
+        id = "r2",
+        propertyId = property2.id,
+        tenantId = tenant2.id,
+        landlordId = property2.landlordId,
+        startDate = now - 400 * 24 * 60 * 60 * 1000L,
+        endDate = now - 30 * 24 * 60 * 60 * 1000L,
+        status = RentalStatus.ENDED,
+        entryInventoryId = "inv_entry_r2",
+        exitInventoryId = "inv_exit_r2"
+    )
+
+    val active = listOf(LandlordRentalItem(activeRental, property1, tenant1))
+    val past = listOf(LandlordRentalItem(pastRental, property2, tenant2))
+    return active to past
 }
