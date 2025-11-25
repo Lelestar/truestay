@@ -47,6 +47,8 @@ data class ReviewFormUiState(
 @HiltViewModel
 class ReviewFormViewModel @Inject constructor(
     private val reviewRepository: ReviewRepository,
+    private val rentalRepository: ca.uqac.inf865.truestay.domain.repository.RentalRepository,
+    private val authRepository: ca.uqac.inf865.truestay.domain.repository.AuthRepository,
     private val submitReviewUseCase: SubmitReviewUseCase,
     savedStateHandle: SavedStateHandle
 ) : ViewModel() {
@@ -69,7 +71,70 @@ class ReviewFormViewModel @Inject constructor(
     private fun loadExistingReview() {
         viewModelScope.launch {
             uiState = uiState.copy(isLoading = true)
-            // TODO: Load existing review if available
+
+            try {
+                // Get current user
+                val currentUserResult = authRepository.getCurrentUser()
+                val currentUser = currentUserResult.getOrNull()
+
+                if (currentUser != null && rentalId.isNotEmpty()) {
+                    // First, get the rental to obtain the propertyId
+                    val rentalResult = rentalRepository.getRentalById(rentalId)
+                    rentalResult.onSuccess { rental ->
+                        // Then get reviews for this property
+                        val reviewsResult = reviewRepository.getReviewsByProperty(rental.propertyId)
+
+                        reviewsResult.onSuccess { reviews ->
+                            // Find existing review for this tenant and rental
+                            val existingReview = reviews.firstOrNull { review ->
+                                review.tenantId == currentUser.id && review.rentalId == rentalId
+                            }
+
+                            existingReview?.let { review ->
+                                when (reviewType) {
+                                    ReviewType.PROPERTY -> {
+                                        review.propertyReview?.let { propReview ->
+                                            uiState = uiState.copy(
+                                                generalCondition = propReview.generalCondition,
+                                                comfort = propReview.comfort,
+                                                compliance = propReview.compliance,
+                                                valueForMoney = propReview.valueForMoney,
+                                                comment = propReview.comment
+                                            )
+                                        }
+                                    }
+                                    ReviewType.BUILDING -> {
+                                        review.buildingReview?.let { buildReview ->
+                                            uiState = uiState.copy(
+                                                maintenance = buildReview.maintenance,
+                                                neighborhood = buildReview.neighborhood,
+                                                security = buildReview.security,
+                                                services = buildReview.services,
+                                                comment = buildReview.comment
+                                            )
+                                        }
+                                    }
+                                    ReviewType.NEIGHBORHOOD -> {
+                                        review.neighborhoodReview?.let { neighReview ->
+                                            uiState = uiState.copy(
+                                                transport = neighReview.transport,
+                                                amenities = neighReview.amenities,
+                                                calm = neighReview.calm,
+                                                safety = neighReview.safety,
+                                                atmosphere = neighReview.atmosphere,
+                                                comment = neighReview.comment
+                                            )
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
+            } catch (e: Exception) {
+                // En cas d'erreur, on laisse le formulaire vide
+            }
+
             uiState = uiState.copy(isLoading = false)
         }
     }
