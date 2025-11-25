@@ -195,7 +195,7 @@ fun ReviewFormScreen(
                         }
                     }
 
-                    Spacer(modifier = Modifier.height(AppSpacing.large))
+                    Spacer(modifier = Modifier.height(AppSpacing.small))
 
                     // Comment section
                     Column(
@@ -315,17 +315,29 @@ fun ReviewFormScreen(
             ) {
                 Column(
                     modifier = Modifier.padding(AppSpacing.large),
-                    verticalArrangement = Arrangement.spacedBy(AppSpacing.medium)
+                    verticalArrangement = Arrangement.spacedBy(AppSpacing.small)
                 ) {
-                    Text(
-                        text = stringResource(R.string.review_form_disclaimer_title),
-                        style = MaterialTheme.typography.titleMedium,
-                        color = colors.info
-                    )
+                    Row(
+                        horizontalArrangement = Arrangement.spacedBy(AppSpacing.small),
+                        verticalAlignment = Alignment.CenterVertically
+                    ) {
+                        TrueStayIcon(
+                            iconRes = TrueStayIcons.CircleAlert,
+                            contentDescriptionRes = null,
+                            tint = colors.info,
+                            size = 20.dp
+                        )
+
+                        Text(
+                            text = stringResource(R.string.review_form_disclaimer_title),
+                            style = MaterialTheme.typography.titleMedium,
+                            color = colors.info
+                        )
+                    }
 
                     Text(
                         text = stringResource(R.string.review_form_disclaimer_message),
-                        style = MaterialTheme.typography.bodySmall,
+                        style = MaterialTheme.typography.bodyMedium,
                         color = colors.info
                     )
 
