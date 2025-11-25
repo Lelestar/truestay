@@ -87,13 +87,11 @@ fun PropertyCard(
     onDeleteClick: (() -> Unit)? = null,
     onToggleStatusClick: (() -> Unit)? = null,
     showLandlordMenu: Boolean = false,
+    // Rental tenant name
+    tenantName: String? = null,
     // Custom badge
     customBadgeText: String? = null,
     customBadgeVariant: BadgeVariant? = null,
-    // Custom bottom content
-    bottomContent: (@Composable () -> Unit)? = null,
-    // Hide details (features and ratings)
-    hideDetails: Boolean = false,
 ) {
     when (variant) {
         PropertyCardVariant.COMPACT -> PropertyCardCompact(
@@ -115,9 +113,7 @@ fun PropertyCard(
             onToggleStatusClick = onToggleStatusClick,
             showLandlordMenu = showLandlordMenu,
             customBadgeText = customBadgeText,
-            customBadgeVariant = customBadgeVariant,
-            bottomContent = bottomContent,
-            hideDetails = hideDetails
+            customBadgeVariant = customBadgeVariant
         )
         PropertyCardVariant.INTERACTIVE -> PropertyCardInteractive(
             property = property,
@@ -125,7 +121,10 @@ fun PropertyCard(
             actions = actions ?: emptyList(),
             startDate = startDate,
             endDate = endDate,
-            onClick = onClick
+            onClick = onClick,
+            tenantName = tenantName,
+            customBadgeText = customBadgeText,
+            customBadgeVariant = customBadgeVariant
         )
     }
 }
@@ -255,9 +254,7 @@ private fun PropertyCardDetailed(
     onToggleStatusClick: (() -> Unit)? = null,
     showLandlordMenu: Boolean = false,
     customBadgeText: String? = null,
-    customBadgeVariant: BadgeVariant? = null,
-    bottomContent: (@Composable () -> Unit)? = null,
-    hideDetails: Boolean = false,
+    customBadgeVariant: BadgeVariant? = null
 ) {
     val bedroomCount = property.rooms.count { it.type == RoomType.BEDROOM }
     val bathroomCount = property.rooms.count { it.type == RoomType.BATHROOM }
@@ -496,45 +493,43 @@ private fun PropertyCardDetailed(
                     )
                 }
 
-                if (!hideDetails) {
-                    Spacer(modifier = Modifier.height(AppSpacing.medium))
+                Spacer(modifier = Modifier.height(AppSpacing.medium))
 
-                    if (bedroomCount > 0 || bathroomCount > 0 || property.surface > 0) {
-                        Row(
-                            modifier = Modifier.fillMaxWidth(),
-                            horizontalArrangement = Arrangement.spacedBy(AppSpacing.large),
-                            verticalAlignment = Alignment.CenterVertically
-                        ) {
-                        if (bedroomCount > 0) {
-                            val bedroomsLabel = stringResource(
-                                id = R.string.property_feature_bedrooms,
-                                bedroomCount
-                            )
-                            FeatureItem(
-                                iconRes = TrueStayIcons.Bed,
-                                text = bedroomsLabel
-                            )
-                        }
-                        if (bathroomCount > 0) {
-                            val bathroomsLabel = stringResource(
-                                id = R.string.property_feature_bathrooms,
-                                bathroomCount
-                            )
-                            FeatureItem(
-                                iconRes = TrueStayIcons.Bath,
-                                text = bathroomsLabel
-                            )
-                        }
-                        if (property.surface > 0) {
-                            val surfaceLabel = stringResource(
-                                id = R.string.property_feature_surface,
-                                property.surface
-                            )
-                            FeatureItem(
-                                iconRes = TrueStayIcons.Square,
-                                text = surfaceLabel
-                            )
-                        }
+                if (bedroomCount > 0 || bathroomCount > 0 || property.surface > 0) {
+                    Row(
+                        modifier = Modifier.fillMaxWidth(),
+                        horizontalArrangement = Arrangement.spacedBy(AppSpacing.large),
+                        verticalAlignment = Alignment.CenterVertically
+                    ) {
+                    if (bedroomCount > 0) {
+                        val bedroomsLabel = stringResource(
+                            id = R.string.property_feature_bedrooms,
+                            bedroomCount
+                        )
+                        FeatureItem(
+                            iconRes = TrueStayIcons.Bed,
+                            text = bedroomsLabel
+                        )
+                    }
+                    if (bathroomCount > 0) {
+                        val bathroomsLabel = stringResource(
+                            id = R.string.property_feature_bathrooms,
+                            bathroomCount
+                        )
+                        FeatureItem(
+                            iconRes = TrueStayIcons.Bath,
+                            text = bathroomsLabel
+                        )
+                    }
+                    if (property.surface > 0) {
+                        val surfaceLabel = stringResource(
+                            id = R.string.property_feature_surface,
+                            property.surface
+                        )
+                        FeatureItem(
+                            iconRes = TrueStayIcons.Square,
+                            text = surfaceLabel
+                        )
                     }
                 }
 
@@ -602,9 +597,6 @@ private fun PropertyCardDetailed(
                     )
                 }
             }
-
-            // Custom bottom content
-            bottomContent?.invoke()
         }
     }
 }
@@ -676,7 +668,10 @@ private fun PropertyCardInteractive(
     modifier: Modifier = Modifier,
     actions: List<PropertyAction> = emptyList(),
     startDate: Long? = null,
-    endDate: Long? = null
+    endDate: Long? = null,
+    tenantName: String? = null,
+    customBadgeText: String? = null,
+    customBadgeVariant: BadgeVariant? = null
 ) {
     TrueStayCard(
         modifier = modifier
@@ -712,8 +707,8 @@ private fun PropertyCardInteractive(
 
                 // Availability badge
                 TrueStayBadge(
-                    text = stringResource(R.string.property_rental_in_progress),
-                    variant = BadgeVariant.SUCCESS,
+                    text = customBadgeText ?: stringResource(R.string.property_rental_in_progress),
+                    variant = customBadgeVariant ?: BadgeVariant.SUCCESS,
                     modifier = Modifier
                         .align(Alignment.TopStart)
                         .padding(AppSpacing.medium)
@@ -780,6 +775,24 @@ private fun PropertyCardInteractive(
                             .padding(AppSpacing.large)
                             .clip(AppShapes.medium)
                     ) {
+                        if (tenantName != null && tenantName.isNotBlank()) {
+                            Row(
+                                horizontalArrangement = Arrangement.spacedBy(AppSpacing.xsmall),
+                                verticalAlignment = Alignment.CenterVertically
+                            ) {
+                                TrueStayIcon(
+                                    iconRes = TrueStayIcons.User,
+                                    contentDescriptionRes = null,
+                                    tint = LocalAppColors.current.black,
+                                    size = 16.dp
+                                )
+                                Text(
+                                    text = tenantName,
+                                    style = MaterialTheme.typography.titleMedium,
+                                    color = LocalAppColors.current.black
+                                )
+                            }
+                        }
                         if (startText != null) {
                             Row(
                                 modifier = Modifier.fillMaxWidth(),

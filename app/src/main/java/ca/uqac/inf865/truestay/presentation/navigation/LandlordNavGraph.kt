@@ -34,6 +34,9 @@ fun NavGraphBuilder.landlordNavGraph(navController: NavHostController) {
             onInventoryClick = { inventoryId ->
                 navController.navigate(Screen.Inventory.createRoute(inventoryId))
             },
+            onInventoriesClick = { rentalId ->
+                navController.navigate(Screen.RentalDetails.createRoute(rentalId, "inventories"))
+            },
             onReviewClick = { rentalId ->
                 navController.navigate(Screen.RentalDetails.createRoute(rentalId, "reviews"))
             }

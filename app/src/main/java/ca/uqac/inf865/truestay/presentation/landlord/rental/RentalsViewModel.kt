@@ -49,7 +49,7 @@ data class LandlordRentalsUiState(
  * ViewModel for managing the landlord's rentals screen
  *
  * Manages the loading and display of active and past rentals for properties owned by the landlord.
- * Separates active rentals (ACTIVE status) from past rentals (ENDED status).
+ * Separates active rentals (ACTIVE status) from past rentals (ENDED or CANCELLED status).
  */
 @HiltViewModel
 class RentalsViewModel @Inject constructor(
@@ -158,7 +158,7 @@ class RentalsViewModel @Inject constructor(
                             .sortedByDescending { it.rental.startDate }
 
                         val past = items
-                            .filter { it.rental.status == RentalStatus.ENDED }
+                            .filter { it.rental.status == RentalStatus.ENDED || it.rental.status == RentalStatus.CANCELLED }
                             .sortedByDescending { it.rental.endDate }
 
                         _uiState.update {
