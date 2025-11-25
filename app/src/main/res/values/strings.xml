@@ -395,4 +395,31 @@
     <string name="inventory_sign_modal_tenant_message">Confirmez-vous avoir vérifié l\'inspection réalisée par le propriétaire avant de signer l\'état des lieux ?</string>
     <string name="inventory_sign_modal_confirm">Confirmer</string>
     <string name="inventory_sign_modal_cancel">Annuler</string>
+
+    <!-- Review Form -->
+    <string name="review_form_title_property">Votre avis - Logement</string>
+    <string name="review_form_title_building">Votre avis - Immeuble</string>
+    <string name="review_form_title_neighborhood">Votre avis - Quartier</string>
+    <string name="review_form_property_general_condition">État général</string>
+    <string name="review_form_property_comfort">Confort</string>
+    <string name="review_form_property_compliance">Conformité annonce</string>
+    <string name="review_form_property_value_for_money">Rapport qualité/prix</string>
+    <string name="review_form_building_maintenance">Entretien</string>
+    <string name="review_form_building_neighborhood">Voisinage</string>
+    <string name="review_form_building_security">Sécurité</string>
+    <string name="review_form_building_services">Services (ascenseur, …)</string>
+    <string name="review_form_neighborhood_transport">Transports</string>
+    <string name="review_form_neighborhood_amenities">Commodités</string>
+    <string name="review_form_neighborhood_calm">Calme</string>
+    <string name="review_form_neighborhood_safety">Sécurité</string>
+    <string name="review_form_neighborhood_atmosphere">Vie de quartier</string>
+    <string name="review_form_comment_label">Commentaire</string>
+    <string name="review_form_comment_placeholder">Partagez votre expérience en détail…</string>
+    <string name="review_form_photos_label">Photos (optionnel)</string>
+    <string name="review_form_add_photos">Ajouter des photos</string>
+    <string name="review_form_disclaimer_title">Soyez juste et factuel.</string>
+    <string name="review_form_disclaimer_message">Partagez votre expérience de manière objective et constructive.</string>
+    <string name="review_form_disclaimer_warning">⚠️ Ne partagez aucune donnée personnelle. Les insultes et contenus inappropriés sont interdits.</string>
+    <string name="review_form_submit_button">Publier l\'avis</string>
+    <string name="review_form_back_button">Retour</string>
 </resources>
