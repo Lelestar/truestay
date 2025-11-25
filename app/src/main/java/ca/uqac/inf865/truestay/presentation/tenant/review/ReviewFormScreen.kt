@@ -23,6 +23,7 @@ import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
+import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
@@ -194,6 +195,8 @@ fun ReviewFormScreen(
                         }
                     }
 
+                    Spacer(modifier = Modifier.height(AppSpacing.large))
+
                     // Comment section
                     Column(
                         verticalArrangement = Arrangement.spacedBy(AppSpacing.small)
@@ -301,42 +304,30 @@ fun ReviewFormScreen(
             }
 
             // Disclaimer card
-            TrueStayCard(
-                modifier = Modifier.fillMaxWidth()
+            Surface(
+                modifier = Modifier.fillMaxWidth(),
+                shape = MaterialTheme.shapes.medium,
+                color = colors.infoSurface,
+                border = androidx.compose.foundation.BorderStroke(
+                    width = 1.dp,
+                    color = colors.info
+                )
             ) {
                 Column(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .clip(AppShapes.small)
-                        .background(colors.infoSurface)
-                        .padding(AppSpacing.medium),
-                    verticalArrangement = Arrangement.spacedBy(AppSpacing.small)
+                    modifier = Modifier.padding(AppSpacing.large),
+                    verticalArrangement = Arrangement.spacedBy(AppSpacing.medium)
                 ) {
-                    Row(
-                        horizontalArrangement = Arrangement.spacedBy(AppSpacing.small),
-                        verticalAlignment = Alignment.Top
-                    ) {
-                        TrueStayIcon(
-                            iconRes = TrueStayIcons.CircleAlert,
-                            contentDescriptionRes = null,
-                            tint = colors.info,
-                            size = 20.dp
-                        )
-                        Column(
-                            verticalArrangement = Arrangement.spacedBy(AppSpacing.xsmall)
-                        ) {
-                            Text(
-                                text = stringResource(R.string.review_form_disclaimer_title),
-                                style = MaterialTheme.typography.titleMedium,
-                                color = colors.info
-                            )
-                            Text(
-                                text = stringResource(R.string.review_form_disclaimer_message),
-                                style = MaterialTheme.typography.bodySmall,
-                                color = colors.info
-                            )
-                        }
-                    }
+                    Text(
+                        text = stringResource(R.string.review_form_disclaimer_title),
+                        style = MaterialTheme.typography.titleMedium,
+                        color = colors.info
+                    )
+
+                    Text(
+                        text = stringResource(R.string.review_form_disclaimer_message),
+                        style = MaterialTheme.typography.bodySmall,
+                        color = colors.info
+                    )
 
                     Text(
                         text = stringResource(R.string.review_form_disclaimer_warning),
