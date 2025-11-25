@@ -4,8 +4,6 @@ import android.net.Uri
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.PickVisualMediaRequest
 import androidx.activity.result.contract.ActivityResultContracts
-import androidx.compose.foundation.background
-import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -16,9 +14,7 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.rememberScrollState
-import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.ExperimentalMaterial3Api
@@ -29,23 +25,23 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.draw.clip
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
 import ca.uqac.inf865.truestay.R
 import ca.uqac.inf865.truestay.domain.model.ReviewType
 import ca.uqac.inf865.truestay.presentation.common.components.ButtonVariant
+import ca.uqac.inf865.truestay.presentation.common.components.PhotoGrid
 import ca.uqac.inf865.truestay.presentation.common.components.TrueStayButton
 import ca.uqac.inf865.truestay.presentation.common.components.TrueStayCard
 import ca.uqac.inf865.truestay.presentation.common.components.TrueStayIcon
 import ca.uqac.inf865.truestay.presentation.common.components.TrueStayRatingInput
+import ca.uqac.inf865.truestay.presentation.common.components.TrueStayTextField
 import ca.uqac.inf865.truestay.presentation.common.icons.TrueStayIcons
+import ca.uqac.inf865.truestay.presentation.common.utils.rememberOptimizedCameraLauncher
 import ca.uqac.inf865.truestay.presentation.navigation.TrueStayTopAppBar
-import ca.uqac.inf865.truestay.presentation.theme.AppShapes
 import ca.uqac.inf865.truestay.presentation.theme.AppSpacing
 import ca.uqac.inf865.truestay.presentation.theme.LocalAppColors
-import coil3.compose.AsyncImage
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -58,6 +54,11 @@ fun ReviewFormScreen(
 ) {
     val uiState = viewModel.uiState
     val colors = LocalAppColors.current
+
+    // Camera launcher for taking photos
+    val cameraLauncher = rememberOptimizedCameraLauncher { optimizedUri ->
+        viewModel.addPhotos(listOf(optimizedUri))
+    }
 
     // Multi-photo picker
     val photoPickerLauncher = rememberLauncherForActivityResult(
@@ -210,45 +211,15 @@ fun ReviewFormScreen(
                     Spacer(modifier = Modifier.height(AppSpacing.small))
 
                     // Comment section
-                    Column(
-                        verticalArrangement = Arrangement.spacedBy(AppSpacing.small)
-                    ) {
-                        Text(
-                            text = stringResource(R.string.review_form_comment_label),
-                            style = MaterialTheme.typography.titleMedium,
-                            color = colors.black
-                        )
-
-                        Box(
-                            modifier = Modifier
-                                .fillMaxWidth()
-                                .height(120.dp)
-                                .clip(AppShapes.medium)
-                                .background(colors.grayLight)
-                                .padding(AppSpacing.medium)
-                        ) {
-                            androidx.compose.foundation.text.BasicTextField(
-                                value = uiState.comment,
-                                onValueChange = viewModel::setComment,
-                                modifier = Modifier.fillMaxSize(),
-                                textStyle = MaterialTheme.typography.bodyMedium.copy(
-                                    color = colors.black
-                                ),
-                                decorationBox = { innerTextField ->
-                                    Box {
-                                        if (uiState.comment.isEmpty()) {
-                                            Text(
-                                                text = stringResource(R.string.review_form_comment_placeholder),
-                                                style = MaterialTheme.typography.bodyMedium,
-                                                color = colors.grayMedium
-                                            )
-                                        }
-                                        innerTextField()
-                                    }
-                                }
-                            )
-                        }
-                    }
+                    TrueStayTextField(
+                        value = uiState.comment,
+                        onValueChange = viewModel::setComment,
+                        label = stringResource(R.string.review_form_comment_label),
+                        placeholder = stringResource(R.string.review_form_comment_placeholder),
+                        minLines = 5,
+                        maxLines = 10,
+                        modifier = Modifier.fillMaxWidth()
+                    )
 
                     // Photos section
                     Column(
@@ -260,54 +231,89 @@ fun ReviewFormScreen(
                             color = colors.black
                         )
 
-                        TrueStayButton(
-                            text = stringResource(R.string.review_form_add_photos),
-                            onClick = {
-                                photoPickerLauncher.launch(
-                                    PickVisualMediaRequest(ActivityResultContracts.PickVisualMedia.ImageOnly)
-                                )
-                            },
-                            variant = ButtonVariant.SECONDARY,
-                            leadingIcon = TrueStayIcons.Camera,
-                            iconTint = colors.black,
-                            modifier = Modifier.fillMaxWidth()
-                        )
+                        // Display uploaded photos
+                        if (uiState.uploadedPhotoUrls.isNotEmpty()) {
+                            PhotoGrid(
+                                photos = uiState.uploadedPhotoUrls,
+                                onPhotoClick = { /* Optionnel: afficher en plein écran */ },
+                                onDeletePhoto = { photoUrl -> viewModel.removePhoto(photoUrl) }
+                            )
+                        }
 
-                        // Display selected photos
-                        if (uiState.photoUris.isNotEmpty()) {
-                            Row(
-                                modifier = Modifier.fillMaxWidth(),
-                                horizontalArrangement = Arrangement.spacedBy(AppSpacing.small)
-                            ) {
-                                uiState.photoUris.take(3).forEach { uri ->
-                                    Box(
-                                        modifier = Modifier
-                                            .size(80.dp)
-                                            .clip(AppShapes.small)
-                                    ) {
-                                        AsyncImage(
-                                            model = uri,
-                                            contentDescription = null,
-                                            modifier = Modifier.fillMaxSize()
-                                        )
-                                        Box(
-                                            modifier = Modifier
-                                                .align(Alignment.TopEnd)
-                                                .padding(4.dp)
-                                                .size(20.dp)
-                                                .clip(CircleShape)
-                                                .background(colors.error)
-                                                .clickable { viewModel.removePhoto(uri) },
-                                            contentAlignment = Alignment.Center
-                                        ) {
-                                            TrueStayIcon(
-                                                iconRes = TrueStayIcons.X,
-                                                contentDescriptionRes = null,
-                                                tint = colors.white,
-                                                size = 12.dp
-                                            )
-                                        }
-                                    }
+                        // Photo upload error
+                        if (uiState.photoUploadError != null) {
+                            Text(
+                                text = stringResource(R.string.review_form_photo_upload_error),
+                                style = MaterialTheme.typography.bodySmall,
+                                color = colors.error,
+                                modifier = Modifier.fillMaxWidth()
+                            )
+                        }
+
+                        // Buttons row for adding photos
+                        val canAddMorePhotos = uiState.uploadedPhotoUrls.size < 5
+                        Row(
+                            modifier = Modifier.fillMaxWidth(),
+                            horizontalArrangement = Arrangement.spacedBy(AppSpacing.small)
+                        ) {
+                            // Take photo button
+                            TrueStayButton(
+                                text = stringResource(R.string.review_form_take_photo),
+                                onClick = { cameraLauncher.launch() },
+                                variant = ButtonVariant.SECONDARY,
+                                leadingIcon = TrueStayIcons.Camera,
+                                iconTint = colors.black,
+                                modifier = Modifier.weight(1f),
+                                enabled = canAddMorePhotos && !uiState.isUploadingPhoto
+                            )
+
+                            // Pick from gallery button
+                            TrueStayButton(
+                                text = stringResource(R.string.review_form_pick_photo),
+                                onClick = {
+                                    photoPickerLauncher.launch(
+                                        PickVisualMediaRequest(ActivityResultContracts.PickVisualMedia.ImageOnly)
+                                    )
+                                },
+                                variant = ButtonVariant.SECONDARY,
+                                leadingIcon = TrueStayIcons.Image,
+                                iconTint = colors.black,
+                                modifier = Modifier.weight(1f),
+                                enabled = canAddMorePhotos && !uiState.isUploadingPhoto
+                            )
+                        }
+
+                        // Photo count and loading indicator
+                        Row(
+                            modifier = Modifier.fillMaxWidth(),
+                            horizontalArrangement = Arrangement.SpaceBetween,
+                            verticalAlignment = Alignment.CenterVertically
+                        ) {
+                            if (uiState.uploadedPhotoUrls.isNotEmpty()) {
+                                Text(
+                                    text = stringResource(R.string.review_form_photos_count, uiState.uploadedPhotoUrls.size, 5),
+                                    style = MaterialTheme.typography.bodySmall,
+                                    color = colors.grayDark
+                                )
+                            } else {
+                                Spacer(modifier = Modifier.weight(1f))
+                            }
+
+                            if (uiState.isUploadingPhoto) {
+                                Row(
+                                    horizontalArrangement = Arrangement.spacedBy(AppSpacing.xsmall),
+                                    verticalAlignment = Alignment.CenterVertically
+                                ) {
+                                    CircularProgressIndicator(
+                                        modifier = Modifier.padding(4.dp),
+                                        color = colors.primary,
+                                        strokeWidth = 2.dp
+                                    )
+                                    Text(
+                                        text = stringResource(R.string.review_form_uploading_photo),
+                                        style = MaterialTheme.typography.bodySmall,
+                                        color = colors.grayDark
+                                    )
                                 }
                             }
                         }

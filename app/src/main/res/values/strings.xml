@@ -291,7 +291,7 @@
     <string name="profile_picture_choose_source_title">Photo de profil</string>
     <string name="profile_picture_choose_source_message">Choisissez une source pour votre nouvelle photo de profil.</string>
     <string name="profile_picture_gallery">Depuis la galerie</string>
-    <string name="profile_picture_camera">Prendre une photo</string>
+    <string name="profile_picture_camera">Photo</string>
     <string name="profile_member_since">Membre depuis</string>
     <string name="profile_update_error">Erreur lors de la mise à jour du profil</string>
     <string name="profile_account_title">Compte</string>
@@ -417,6 +417,12 @@
     <string name="review_form_comment_placeholder">Partagez votre expérience en détail…</string>
     <string name="review_form_photos_label">Photos (optionnel)</string>
     <string name="review_form_add_photos">Ajouter des photos</string>
+    <string name="review_form_add_more_photos">Ajouter d\'autres photos</string>
+    <string name="review_form_take_photo">Prendre une photo</string>
+    <string name="review_form_pick_photo">Galerie</string>
+    <string name="review_form_photos_count">%1$d sur %2$d photos</string>
+    <string name="review_form_uploading_photo">Envoi en cours…</string>
+    <string name="review_form_photo_upload_error">Erreur lors de l\'envoi de la photo</string>
     <string name="review_form_disclaimer_title">Soyez juste et factuel.</string>
     <string name="review_form_disclaimer_message">Partagez votre expérience de manière objective et constructive.</string>
     <string name="review_form_disclaimer_warning">⚠️ Ne partagez aucune donnée personnelle. Les insultes et contenus inappropriés sont interdits.</string>
