@@ -9,6 +9,7 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import ca.uqac.inf865.truestay.domain.model.ReviewType
 import ca.uqac.inf865.truestay.domain.repository.ReviewRepository
+import ca.uqac.inf865.truestay.domain.repository.StorageRepository
 import ca.uqac.inf865.truestay.domain.usecase.review.SubmitReviewUseCase
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.launch
@@ -37,16 +38,20 @@ data class ReviewFormUiState(
     // Common fields
     val comment: String = "",
     val photoUris: List<Uri> = emptyList(),
+    val uploadedPhotoUrls: List<String> = emptyList(), // Photos déjà uploadées sur le serveur
 
     // UI State
     val isLoading: Boolean = false,
     val isSubmitting: Boolean = false,
-    val errorMessage: String? = null
+    val isUploadingPhoto: Boolean = false,
+    val errorMessage: String? = null,
+    val photoUploadError: String? = null
 )
 
 @HiltViewModel
 class ReviewFormViewModel @Inject constructor(
     private val reviewRepository: ReviewRepository,
+    private val storageRepository: StorageRepository,
     private val rentalRepository: ca.uqac.inf865.truestay.domain.repository.RentalRepository,
     private val authRepository: ca.uqac.inf865.truestay.domain.repository.AuthRepository,
     private val submitReviewUseCase: SubmitReviewUseCase,
@@ -200,11 +205,61 @@ class ReviewFormViewModel @Inject constructor(
     }
 
     fun addPhotos(uris: List<Uri>) {
-        uiState = uiState.copy(photoUris = uiState.photoUris + uris)
+        val currentCount = uiState.uploadedPhotoUrls.size
+        val maxPhotos = 5
+        val availableSlots = maxPhotos - currentCount
+        val photosToAdd = uris.take(availableSlots)
+
+        photosToAdd.forEach { uri ->
+            uploadPhoto(uri)
+        }
     }
 
-    fun removePhoto(uri: Uri) {
-        uiState = uiState.copy(photoUris = uiState.photoUris.filter { it != uri })
+    private fun uploadPhoto(uri: Uri) {
+        viewModelScope.launch {
+            uiState = uiState.copy(isUploadingPhoto = true, photoUploadError = null)
+
+            try {
+                // Upload image to storage
+                val path = "reviews/$rentalId/${System.currentTimeMillis()}"
+                val result = storageRepository.uploadImage(uri, path)
+
+                result.onSuccess { url ->
+                    val newPhotoUrls = uiState.uploadedPhotoUrls + url
+                    uiState = uiState.copy(
+                        uploadedPhotoUrls = newPhotoUrls,
+                        isUploadingPhoto = false,
+                        photoUploadError = null
+                    )
+                }.onFailure { exception ->
+                    uiState = uiState.copy(
+                        isUploadingPhoto = false,
+                        photoUploadError = exception.message
+                    )
+                }
+            } catch (e: Exception) {
+                uiState = uiState.copy(
+                    isUploadingPhoto = false,
+                    photoUploadError = e.message
+                )
+            }
+        }
+    }
+
+    fun removePhoto(photoUrl: String) {
+        viewModelScope.launch {
+            try {
+                // Delete from storage
+                storageRepository.deleteImage(photoUrl)
+
+                // Remove from UI state
+                uiState = uiState.copy(
+                    uploadedPhotoUrls = uiState.uploadedPhotoUrls.filter { it != photoUrl }
+                )
+            } catch (e: Exception) {
+                // Silently fail or show error
+            }
+        }
     }
 
     fun submitReview(onSuccess: () -> Unit) {
