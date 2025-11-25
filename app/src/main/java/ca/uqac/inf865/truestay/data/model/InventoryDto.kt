@@ -27,11 +27,13 @@ data class InventoryRoomDto(
     val roomId: String = "",
     val roomName: String = "",
     val elements: List<InventoryElementDto> = emptyList(),
-    val status: String = "todo"
+    val status: String = "todo",
+    val photoUrls: List<String> = emptyList()
 )
 
 data class InventoryElementDto(
     val elementId: String = "",
+    val elementName: String = "",
     val condition: String = "good",
     val comment: String = "",
     val photoUrls: List<String> = emptyList()
@@ -78,13 +80,15 @@ fun InventoryRoomDto.toDomain(): InventoryRoom {
             "in_progress" -> RoomInventoryStatus.IN_PROGRESS
             "completed" -> RoomInventoryStatus.COMPLETED
             else -> RoomInventoryStatus.TODO
-        }
+        },
+        photoUrls = photoUrls
     )
 }
 
 fun InventoryElementDto.toDomain(): InventoryElement {
     return InventoryElement(
         elementId = elementId,
+        elementName = elementName,
         condition = when (condition) {
             "good" -> ElementCondition.GOOD
             "damaged" -> ElementCondition.DAMAGED
@@ -138,13 +142,15 @@ fun InventoryRoom.toDto(): InventoryRoomDto {
             RoomInventoryStatus.TODO -> "todo"
             RoomInventoryStatus.IN_PROGRESS -> "in_progress"
             RoomInventoryStatus.COMPLETED -> "completed"
-        }
+        },
+        photoUrls = photoUrls
     )
 }
 
 fun InventoryElement.toDto(): InventoryElementDto {
     return InventoryElementDto(
         elementId = elementId,
+        elementName = elementName,
         condition = when (condition) {
             ElementCondition.GOOD -> "good"
             ElementCondition.TO_CHECK -> "to_check"

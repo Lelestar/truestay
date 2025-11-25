@@ -33,6 +33,7 @@ export type SeedAddress = {
 export type SeedRoomElement = {
   id: string;
   type: 'floor' | 'wall' | 'ceiling' | 'window' | 'door' | 'furniture' | 'equipment';
+  elementName?: string;
 };
 
 export type SeedRoom = {
@@ -154,11 +155,13 @@ export type SeedInventory = {
     roomName: string;
     elements: Array<{
       elementId: string;
+      elementName: string;
       condition: 'good' | 'to_check' | 'damaged' | 'not_applicable';
       comment: string;
       photoUrls: string[];
     }>;
     status: 'todo' | 'in_progress' | 'completed';
+    photoUrls: string[];
   }>;
   landlordSignature?: {
     userId: string;

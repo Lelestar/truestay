@@ -29,7 +29,8 @@ import ca.uqac.inf865.truestay.presentation.theme.TrueStayTheme
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun TrueStayTopAppBar(
-    @StringRes titleRes: Int,
+    title: String? = null,
+    @StringRes titleRes: Int? = null,
     onNavigateBack: () -> Unit,
     hasActions: Boolean = false,
     actions: @Composable RowScope.() -> Unit = {},
@@ -40,7 +41,7 @@ fun TrueStayTopAppBar(
     TopAppBar(
         title = {
             Text(
-                text = stringResource(id = titleRes),
+                text = title ?: stringResource(id = titleRes!!),
                 style = MaterialTheme.typography.headlineSmall,
                 color = colors.black,
                 modifier = Modifier.fillMaxWidth(),

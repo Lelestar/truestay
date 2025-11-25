@@ -17,11 +17,13 @@ data class InventoryRoom(
     val roomId: String = "",
     val roomName: String = "", // Denormalized for easier display
     val elements: List<InventoryElement> = emptyList(),
-    val status: RoomInventoryStatus = RoomInventoryStatus.TODO
+    val status: RoomInventoryStatus = RoomInventoryStatus.TODO,
+    val photoUrls: List<String> = emptyList()
 )
 
 data class InventoryElement(
     val elementId: String = "",
+    val elementName: String = "", // Denormalized for easier display
     val condition: ElementCondition = ElementCondition.TO_CHECK,
     val comment: String = "",
     val photoUrls: List<String> = emptyList()
