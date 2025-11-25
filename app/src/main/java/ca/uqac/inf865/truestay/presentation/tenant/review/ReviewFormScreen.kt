@@ -363,6 +363,31 @@ fun ReviewFormScreen(
                     modifier = Modifier.weight(1f)
                 )
 
+                val isFormValid = when (viewModel.reviewType) {
+                    ReviewType.PROPERTY -> {
+                        uiState.generalCondition > 0 &&
+                        uiState.comfort > 0 &&
+                        uiState.compliance > 0 &&
+                        uiState.valueForMoney > 0 &&
+                        uiState.comment.isNotBlank()
+                    }
+                    ReviewType.BUILDING -> {
+                        uiState.maintenance > 0 &&
+                        uiState.neighborhood > 0 &&
+                        uiState.security > 0 &&
+                        uiState.services > 0 &&
+                        uiState.comment.isNotBlank()
+                    }
+                    ReviewType.NEIGHBORHOOD -> {
+                        uiState.transport > 0 &&
+                        uiState.amenities > 0 &&
+                        uiState.calm > 0 &&
+                        uiState.safety > 0 &&
+                        uiState.atmosphere > 0 &&
+                        uiState.comment.isNotBlank()
+                    }
+                }
+
                 TrueStayButton(
                     text = stringResource(R.string.review_form_submit_button),
                     onClick = {
@@ -370,7 +395,7 @@ fun ReviewFormScreen(
                     },
                     variant = ButtonVariant.PRIMARY,
                     modifier = Modifier.weight(1f),
-                    enabled = uiState.comment.isNotBlank(),
+                    enabled = isFormValid,
                     isLoading = uiState.isSubmitting
                 )
             }
