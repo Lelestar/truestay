@@ -1,4 +1,5 @@
 import { SeedContext, CreatedUsers, SeedProperty, SeedRental, SeedInventory } from './types';
+import { getElementName } from './properties';
 
 function idFrom(db: SeedContext['db'], col: string) { return db.collection(col).doc().id; }
 function now() { return Date.now(); }
@@ -48,8 +49,15 @@ export async function seedRentals(
       rooms: (p1.rooms || []).slice(0, 2).map((room) => ({
         roomId: room.id,
         roomName: room.name,
-        elements: (room.elements || []).slice(0, 2).map((e) => ({ elementId: e.id, condition: 'to_check', comment: '', photoUrls: [] })),
-        status: 'todo'
+        elements: (room.elements || []).map((e) => ({
+          elementId: e.id,
+          elementName: e.elementName || getElementName(e.type),
+          condition: 'to_check',
+          comment: '',
+          photoUrls: []
+        })),
+        status: 'todo',
+        photoUrls: []
       })),
       landlordSignature: null,
       tenantSignature: null,
@@ -96,9 +104,17 @@ export async function seedRentals(
       rentalId: id,
       type: 'entry',
       rooms: (p3.rooms || []).slice(0, 2).map((room) => ({
-        roomId: room.id, roomName: room.name,
-        elements: (room.elements || []).slice(0, 2).map((e) => ({ elementId: e.id, condition: 'good', comment: '', photoUrls: [] })),
-        status: 'completed'
+        roomId: room.id,
+        roomName: room.name,
+        elements: (room.elements || []).map((e) => ({
+          elementId: e.id,
+          elementName: e.elementName || getElementName(e.type),
+          condition: 'good',
+          comment: '',
+          photoUrls: []
+        })),
+        status: 'completed',
+        photoUrls: []
       })),
       landlordSignature: { userId: r.landlordId, signatureImageUrl: '', signedAt: start },
       tenantSignature: { userId: r.tenantId, signatureImageUrl: '', signedAt: start },
@@ -109,9 +125,17 @@ export async function seedRentals(
       rentalId: id,
       type: 'exit',
       rooms: (p3.rooms || []).slice(0, 2).map((room) => ({
-        roomId: room.id, roomName: room.name,
-        elements: (room.elements || []).slice(0, 2).map((e) => ({ elementId: e.id, condition: 'good', comment: '', photoUrls: [] })),
-        status: 'completed'
+        roomId: room.id,
+        roomName: room.name,
+        elements: (room.elements || []).map((e) => ({
+          elementId: e.id,
+          elementName: e.elementName || getElementName(e.type),
+          condition: 'good',
+          comment: '',
+          photoUrls: []
+        })),
+        status: 'completed',
+        photoUrls: []
       })),
       landlordSignature: { userId: r.landlordId, signatureImageUrl: '', signedAt: end },
       tenantSignature: { userId: r.tenantId, signatureImageUrl: '', signedAt: end },

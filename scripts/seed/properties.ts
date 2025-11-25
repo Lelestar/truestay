@@ -6,8 +6,26 @@ function idFrom(db: SeedContext['db'], col: string) {
 
 function now() { return Date.now(); }
 
+// Map element type to French display name
+export function getElementName(type: SeedRoomElement['type']): string {
+  const names: Record<SeedRoomElement['type'], string> = {
+    floor: 'Sol',
+    wall: 'Murs',
+    ceiling: 'Plafond',
+    window: 'Fenêtre',
+    door: 'Porte',
+    furniture: 'Mobilier',
+    equipment: 'Équipements'
+  };
+  return names[type] || type;
+}
+
 function el(type: SeedRoomElement['type']): SeedRoomElement {
-  return { id: Math.random().toString(36).slice(2, 9), type };
+  return {
+    id: Math.random().toString(36).slice(2, 9),
+    type,
+    elementName: getElementName(type)
+  };
 }
 
 function baseRooms(): SeedRoom[] {

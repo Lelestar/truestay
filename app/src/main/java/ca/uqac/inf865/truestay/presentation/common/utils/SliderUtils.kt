@@ -1,4 +1,9 @@
-package ca.uqac.inf865.truestay.utils
+package ca.uqac.inf865.truestay.presentation.common.utils
+
+import kotlin.math.ceil
+import kotlin.math.floor
+import kotlin.math.log10
+import kotlin.math.max
 
 /**
  * Utilities to compute dynamic slider bounds and step count
@@ -43,11 +48,11 @@ fun computeSliderConfig(
         return SliderConfig(min = rawMin.toFloat(), max = (rawMin + 1).toFloat(), steps = 0)
     }
 
-    val roughStep = kotlin.math.max(1, range / targetIntervals)
+    val roughStep = max(1, range / targetIntervals)
     val stepSize = niceStep(roughStep)
-    val minBound = kotlin.math.floor(rawMin / stepSize.toDouble()).toInt() * stepSize
-    val maxBound = kotlin.math.ceil(rawMax / stepSize.toDouble()).toInt() * stepSize
-    val intervals = kotlin.math.max(1, (maxBound - minBound) / stepSize)
+    val minBound = floor(rawMin / stepSize.toDouble()).toInt() * stepSize
+    val maxBound = ceil(rawMax / stepSize.toDouble()).toInt() * stepSize
+    val intervals = max(1, (maxBound - minBound) / stepSize)
     val steps = (intervals - 1).coerceAtLeast(0)
 
     return SliderConfig(min = minBound.toFloat(), max = maxBound.toFloat(), steps = steps)
@@ -58,7 +63,7 @@ fun computeSliderConfig(
  */
 private fun niceStep(n: Int): Int {
     if (n <= 0) return 1
-    val exp = kotlin.math.floor(kotlin.math.log10(n.toDouble())).toInt()
+    val exp = floor(log10(n.toDouble())).toInt()
     var base = 1
     repeat(exp) { base *= 10 }
     val candidates = intArrayOf(1, 2, 5).map { it * base }

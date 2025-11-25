@@ -59,7 +59,9 @@ fun TrueStayTextField(
     imeAction: ImeAction = ImeAction.Done,
     onImeAction: (() -> Unit)? = null,
     keyboardActions: KeyboardActions = KeyboardActions.Default,
-    size: TextFieldSize = TextFieldSize.Default
+    size: TextFieldSize = TextFieldSize.Default,
+    minLines: Int = 1,
+    maxLines: Int = 1
 ) {
     var passwordVisible by remember { mutableStateOf(false) }
     val interactionSource = remember { MutableInteractionSource() }
@@ -117,7 +119,9 @@ fun TrueStayTextField(
                 )
             },
             enabled = enabled,
-            singleLine = true,
+            singleLine = minLines == 1 && maxLines == 1,
+            minLines = minLines,
+            maxLines = maxLines,
             visualTransformation = if (isPassword && !passwordVisible) {
                 PasswordVisualTransformation()
             } else {
@@ -131,14 +135,14 @@ fun TrueStayTextField(
                 Row(
                     modifier = Modifier
                         .fillMaxWidth()
-                        .height(height)
+                        .let { if (minLines == 1 && maxLines == 1) it.height(height) else it }
                         .clip(MaterialTheme.shapes.medium)
                         .background(
                             if (enabled) LocalAppColors.current.grayLight
                             else LocalAppColors.current.grayLight.copy(alpha = 0.5f)
                         )
                         .padding(horizontal = AppSpacing.medium, vertical = AppSpacing.small),
-                    verticalAlignment = Alignment.CenterVertically,
+                    verticalAlignment = if (minLines == 1 && maxLines == 1) Alignment.CenterVertically else Alignment.Top,
                     horizontalArrangement = Arrangement.spacedBy(8.dp)
                 ) {
                     // Leading icon
@@ -227,9 +231,6 @@ fun TrueStayTextField(
     }
 }
 
-// ==========================================
-// Previews
-// ==========================================
 @Preview(showBackground = true)
 @Composable
 fun TrueStayTextFieldBasicPreview() {
