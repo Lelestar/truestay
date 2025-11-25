@@ -20,6 +20,7 @@ import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.verticalScroll
+import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
@@ -81,14 +82,25 @@ fun ReviewFormScreen(
             )
         }
     ) { paddingValues ->
-        Column(
-            modifier = Modifier
-                .fillMaxSize()
-                .padding(paddingValues)
-                .verticalScroll(rememberScrollState())
-                .padding(AppSpacing.large),
-            verticalArrangement = Arrangement.spacedBy(AppSpacing.large)
-        ) {
+        if (uiState.isLoading) {
+            // Show loading indicator while loading existing review
+            Box(
+                modifier = Modifier
+                    .fillMaxSize()
+                    .padding(paddingValues),
+                contentAlignment = Alignment.Center
+            ) {
+                CircularProgressIndicator(color = colors.primary)
+            }
+        } else {
+            Column(
+                modifier = Modifier
+                    .fillMaxSize()
+                    .padding(paddingValues)
+                    .verticalScroll(rememberScrollState())
+                    .padding(AppSpacing.large),
+                verticalArrangement = Arrangement.spacedBy(AppSpacing.large)
+            ) {
             // Main card containing title, ratings, comment and photos
             TrueStayCard(
                 modifier = Modifier.fillMaxWidth()
@@ -401,6 +413,7 @@ fun ReviewFormScreen(
             }
 
             Spacer(modifier = Modifier.height(AppSpacing.large))
+            }
         }
     }
 }
