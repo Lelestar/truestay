@@ -1,7 +1,6 @@
 package ca.uqac.inf865.truestay.presentation.common.components
 
 import androidx.compose.foundation.layout.Arrangement
-import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxWidth
@@ -41,6 +40,7 @@ enum class ButtonVariant {
  * @param variant Button type (primary, secondary, danger)
  * @param enabled If false, the button is disabled
  * @param leadingIcon Icon displayed to the left of the text (optional)
+ * @param iconTint Custom color for the icon (optional, defaults to contentColor)
  * @param isLoading If true, shows a loader and disables the button
  */
 @Composable
@@ -51,6 +51,7 @@ fun TrueStayButton(
     variant: ButtonVariant = ButtonVariant.PRIMARY,
     enabled: Boolean = true,
     leadingIcon: Int? = null,
+    iconTint: androidx.compose.ui.graphics.Color? = null,
     isLoading: Boolean = false
 ) {
     val backgroundColor = when {
@@ -99,7 +100,7 @@ fun TrueStayButton(
                     TrueStayIcon(
                         iconRes = leadingIcon,
                         contentDescriptionRes = null,
-                        tint = contentColor,
+                        tint = iconTint ?: contentColor,
                         size = 16.dp
                     )
                 }

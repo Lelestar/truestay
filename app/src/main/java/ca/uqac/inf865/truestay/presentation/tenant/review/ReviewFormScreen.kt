@@ -88,201 +88,211 @@ fun ReviewFormScreen(
                 .padding(AppSpacing.large),
             verticalArrangement = Arrangement.spacedBy(AppSpacing.large)
         ) {
-            // Title based on review type
-            Text(
-                text = when (viewModel.reviewType) {
-                    ReviewType.PROPERTY -> stringResource(R.string.review_form_title_property)
-                    ReviewType.BUILDING -> stringResource(R.string.review_form_title_building)
-                    ReviewType.NEIGHBORHOOD -> stringResource(R.string.review_form_title_neighborhood)
-                },
-                style = MaterialTheme.typography.headlineMedium,
-                color = colors.black
-            )
-
-            // Rating criteria based on review type
-            when (viewModel.reviewType) {
-                ReviewType.PROPERTY -> {
-                    TrueStayRatingInput(
-                        label = stringResource(R.string.review_form_property_general_condition),
-                        rating = uiState.generalCondition,
-                        onRatingChange = viewModel::setGeneralCondition
-                    )
-                    TrueStayRatingInput(
-                        label = stringResource(R.string.review_form_property_comfort),
-                        rating = uiState.comfort,
-                        onRatingChange = viewModel::setComfort
-                    )
-                    TrueStayRatingInput(
-                        label = stringResource(R.string.review_form_property_compliance),
-                        rating = uiState.compliance,
-                        onRatingChange = viewModel::setCompliance
-                    )
-                    TrueStayRatingInput(
-                        label = stringResource(R.string.review_form_property_value_for_money),
-                        rating = uiState.valueForMoney,
-                        onRatingChange = viewModel::setValueForMoney
-                    )
-                }
-                ReviewType.BUILDING -> {
-                    TrueStayRatingInput(
-                        label = stringResource(R.string.review_form_building_maintenance),
-                        rating = uiState.maintenance,
-                        onRatingChange = viewModel::setMaintenance
-                    )
-                    TrueStayRatingInput(
-                        label = stringResource(R.string.review_form_building_neighborhood),
-                        rating = uiState.neighborhood,
-                        onRatingChange = viewModel::setNeighborhood
-                    )
-                    TrueStayRatingInput(
-                        label = stringResource(R.string.review_form_building_security),
-                        rating = uiState.security,
-                        onRatingChange = viewModel::setSecurity
-                    )
-                    TrueStayRatingInput(
-                        label = stringResource(R.string.review_form_building_services),
-                        rating = uiState.services,
-                        onRatingChange = viewModel::setServices
-                    )
-                }
-                ReviewType.NEIGHBORHOOD -> {
-                    TrueStayRatingInput(
-                        label = stringResource(R.string.review_form_neighborhood_transport),
-                        rating = uiState.transport,
-                        onRatingChange = viewModel::setTransport
-                    )
-                    TrueStayRatingInput(
-                        label = stringResource(R.string.review_form_neighborhood_amenities),
-                        rating = uiState.amenities,
-                        onRatingChange = viewModel::setAmenities
-                    )
-                    TrueStayRatingInput(
-                        label = stringResource(R.string.review_form_neighborhood_calm),
-                        rating = uiState.calm,
-                        onRatingChange = viewModel::setCalm
-                    )
-                    TrueStayRatingInput(
-                        label = stringResource(R.string.review_form_neighborhood_safety),
-                        rating = uiState.safety,
-                        onRatingChange = viewModel::setSafety
-                    )
-                    TrueStayRatingInput(
-                        label = stringResource(R.string.review_form_neighborhood_atmosphere),
-                        rating = uiState.atmosphere,
-                        onRatingChange = viewModel::setAtmosphere
-                    )
-                }
-            }
-
-            // Comment section
-            Column(
-                verticalArrangement = Arrangement.spacedBy(AppSpacing.small)
+            // Main card containing title, ratings, comment and photos
+            TrueStayCard(
+                modifier = Modifier.fillMaxWidth()
             ) {
-                Text(
-                    text = stringResource(R.string.review_form_comment_label),
-                    style = MaterialTheme.typography.titleMedium,
-                    color = colors.black
-                )
-
-                Box(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .height(120.dp)
-                        .clip(AppShapes.medium)
-                        .background(colors.grayLight)
-                        .padding(AppSpacing.medium)
+                Column(
+                    verticalArrangement = Arrangement.spacedBy(AppSpacing.large)
                 ) {
-                    androidx.compose.foundation.text.BasicTextField(
-                        value = uiState.comment,
-                        onValueChange = viewModel::setComment,
-                        modifier = Modifier.fillMaxSize(),
-                        textStyle = MaterialTheme.typography.bodyMedium.copy(
-                            color = colors.black
-                        ),
-                        decorationBox = { innerTextField ->
-                            Box {
-                                if (uiState.comment.isEmpty()) {
-                                    Text(
-                                        text = stringResource(R.string.review_form_comment_placeholder),
-                                        style = MaterialTheme.typography.bodyMedium,
-                                        color = colors.grayMedium
-                                    )
-                                }
-                                innerTextField()
-                            }
-                        }
+                    // Title based on review type
+                    Text(
+                        text = when (viewModel.reviewType) {
+                            ReviewType.PROPERTY -> stringResource(R.string.review_form_title_property)
+                            ReviewType.BUILDING -> stringResource(R.string.review_form_title_building)
+                            ReviewType.NEIGHBORHOOD -> stringResource(R.string.review_form_title_neighborhood)
+                        },
+                        style = MaterialTheme.typography.headlineMedium,
+                        color = colors.black
                     )
-                }
-            }
 
-            // Photos section
-            Column(
-                verticalArrangement = Arrangement.spacedBy(AppSpacing.small)
-            ) {
-                Text(
-                    text = stringResource(R.string.review_form_photos_label),
-                    style = MaterialTheme.typography.titleMedium,
-                    color = colors.black
-                )
-
-                Row(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .clickable {
-                            photoPickerLauncher.launch(
-                                PickVisualMediaRequest(ActivityResultContracts.PickVisualMedia.ImageOnly)
+                    // Rating criteria based on review type
+                    when (viewModel.reviewType) {
+                        ReviewType.PROPERTY -> {
+                            TrueStayRatingInput(
+                                label = stringResource(R.string.review_form_property_general_condition),
+                                rating = uiState.generalCondition,
+                                onRatingChange = viewModel::setGeneralCondition,
+                                modifier = Modifier.fillMaxWidth()
+                            )
+                            TrueStayRatingInput(
+                                label = stringResource(R.string.review_form_property_comfort),
+                                rating = uiState.comfort,
+                                onRatingChange = viewModel::setComfort,
+                                modifier = Modifier.fillMaxWidth()
+                            )
+                            TrueStayRatingInput(
+                                label = stringResource(R.string.review_form_property_compliance),
+                                rating = uiState.compliance,
+                                onRatingChange = viewModel::setCompliance,
+                                modifier = Modifier.fillMaxWidth()
+                            )
+                            TrueStayRatingInput(
+                                label = stringResource(R.string.review_form_property_value_for_money),
+                                rating = uiState.valueForMoney,
+                                onRatingChange = viewModel::setValueForMoney,
+                                modifier = Modifier.fillMaxWidth()
                             )
                         }
-                        .padding(vertical = AppSpacing.small),
-                    horizontalArrangement = Arrangement.spacedBy(AppSpacing.small),
-                    verticalAlignment = Alignment.CenterVertically
-                ) {
-                    TrueStayIcon(
-                        iconRes = TrueStayIcons.Camera,
-                        contentDescriptionRes = null,
-                        tint = colors.primary,
-                        size = 20.dp
-                    )
-                    Text(
-                        text = stringResource(R.string.review_form_add_photos),
-                        style = MaterialTheme.typography.bodyMedium,
-                        color = colors.primary
-                    )
-                }
+                        ReviewType.BUILDING -> {
+                            TrueStayRatingInput(
+                                label = stringResource(R.string.review_form_building_maintenance),
+                                rating = uiState.maintenance,
+                                onRatingChange = viewModel::setMaintenance,
+                                modifier = Modifier.fillMaxWidth()
+                            )
+                            TrueStayRatingInput(
+                                label = stringResource(R.string.review_form_building_neighborhood),
+                                rating = uiState.neighborhood,
+                                onRatingChange = viewModel::setNeighborhood,
+                                modifier = Modifier.fillMaxWidth()
+                            )
+                            TrueStayRatingInput(
+                                label = stringResource(R.string.review_form_building_security),
+                                rating = uiState.security,
+                                onRatingChange = viewModel::setSecurity,
+                                modifier = Modifier.fillMaxWidth()
+                            )
+                            TrueStayRatingInput(
+                                label = stringResource(R.string.review_form_building_services),
+                                rating = uiState.services,
+                                onRatingChange = viewModel::setServices,
+                                modifier = Modifier.fillMaxWidth()
+                            )
+                        }
+                        ReviewType.NEIGHBORHOOD -> {
+                            TrueStayRatingInput(
+                                label = stringResource(R.string.review_form_neighborhood_transport),
+                                rating = uiState.transport,
+                                onRatingChange = viewModel::setTransport,
+                                modifier = Modifier.fillMaxWidth()
+                            )
+                            TrueStayRatingInput(
+                                label = stringResource(R.string.review_form_neighborhood_amenities),
+                                rating = uiState.amenities,
+                                onRatingChange = viewModel::setAmenities,
+                                modifier = Modifier.fillMaxWidth()
+                            )
+                            TrueStayRatingInput(
+                                label = stringResource(R.string.review_form_neighborhood_calm),
+                                rating = uiState.calm,
+                                onRatingChange = viewModel::setCalm,
+                                modifier = Modifier.fillMaxWidth()
+                            )
+                            TrueStayRatingInput(
+                                label = stringResource(R.string.review_form_neighborhood_safety),
+                                rating = uiState.safety,
+                                onRatingChange = viewModel::setSafety,
+                                modifier = Modifier.fillMaxWidth()
+                            )
+                            TrueStayRatingInput(
+                                label = stringResource(R.string.review_form_neighborhood_atmosphere),
+                                rating = uiState.atmosphere,
+                                onRatingChange = viewModel::setAtmosphere,
+                                modifier = Modifier.fillMaxWidth()
+                            )
+                        }
+                    }
 
-                // Display selected photos
-                if (uiState.photoUris.isNotEmpty()) {
-                    Row(
-                        modifier = Modifier.fillMaxWidth(),
-                        horizontalArrangement = Arrangement.spacedBy(AppSpacing.small)
+                    // Comment section
+                    Column(
+                        verticalArrangement = Arrangement.spacedBy(AppSpacing.small)
                     ) {
-                        uiState.photoUris.take(3).forEach { uri ->
-                            Box(
-                                modifier = Modifier
-                                    .size(80.dp)
-                                    .clip(AppShapes.small)
-                            ) {
-                                AsyncImage(
-                                    model = uri,
-                                    contentDescription = null,
-                                    modifier = Modifier.fillMaxSize()
+                        Text(
+                            text = stringResource(R.string.review_form_comment_label),
+                            style = MaterialTheme.typography.titleMedium,
+                            color = colors.black
+                        )
+
+                        Box(
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .height(120.dp)
+                                .clip(AppShapes.medium)
+                                .background(colors.grayLight)
+                                .padding(AppSpacing.medium)
+                        ) {
+                            androidx.compose.foundation.text.BasicTextField(
+                                value = uiState.comment,
+                                onValueChange = viewModel::setComment,
+                                modifier = Modifier.fillMaxSize(),
+                                textStyle = MaterialTheme.typography.bodyMedium.copy(
+                                    color = colors.black
+                                ),
+                                decorationBox = { innerTextField ->
+                                    Box {
+                                        if (uiState.comment.isEmpty()) {
+                                            Text(
+                                                text = stringResource(R.string.review_form_comment_placeholder),
+                                                style = MaterialTheme.typography.bodyMedium,
+                                                color = colors.grayMedium
+                                            )
+                                        }
+                                        innerTextField()
+                                    }
+                                }
+                            )
+                        }
+                    }
+
+                    // Photos section
+                    Column(
+                        verticalArrangement = Arrangement.spacedBy(AppSpacing.small)
+                    ) {
+                        Text(
+                            text = stringResource(R.string.review_form_photos_label),
+                            style = MaterialTheme.typography.titleMedium,
+                            color = colors.black
+                        )
+
+                        TrueStayButton(
+                            text = stringResource(R.string.review_form_add_photos),
+                            onClick = {
+                                photoPickerLauncher.launch(
+                                    PickVisualMediaRequest(ActivityResultContracts.PickVisualMedia.ImageOnly)
                                 )
-                                Box(
-                                    modifier = Modifier
-                                        .align(Alignment.TopEnd)
-                                        .padding(4.dp)
-                                        .size(20.dp)
-                                        .clip(CircleShape)
-                                        .background(colors.error)
-                                        .clickable { viewModel.removePhoto(uri) },
-                                    contentAlignment = Alignment.Center
-                                ) {
-                                    TrueStayIcon(
-                                        iconRes = TrueStayIcons.X,
-                                        contentDescriptionRes = null,
-                                        tint = colors.white,
-                                        size = 12.dp
-                                    )
+                            },
+                            variant = ButtonVariant.SECONDARY,
+                            leadingIcon = TrueStayIcons.Camera,
+                            iconTint = colors.black,
+                            modifier = Modifier.fillMaxWidth()
+                        )
+
+                        // Display selected photos
+                        if (uiState.photoUris.isNotEmpty()) {
+                            Row(
+                                modifier = Modifier.fillMaxWidth(),
+                                horizontalArrangement = Arrangement.spacedBy(AppSpacing.small)
+                            ) {
+                                uiState.photoUris.take(3).forEach { uri ->
+                                    Box(
+                                        modifier = Modifier
+                                            .size(80.dp)
+                                            .clip(AppShapes.small)
+                                    ) {
+                                        AsyncImage(
+                                            model = uri,
+                                            contentDescription = null,
+                                            modifier = Modifier.fillMaxSize()
+                                        )
+                                        Box(
+                                            modifier = Modifier
+                                                .align(Alignment.TopEnd)
+                                                .padding(4.dp)
+                                                .size(20.dp)
+                                                .clip(CircleShape)
+                                                .background(colors.error)
+                                                .clickable { viewModel.removePhoto(uri) },
+                                            contentAlignment = Alignment.Center
+                                        ) {
+                                            TrueStayIcon(
+                                                iconRes = TrueStayIcons.X,
+                                                contentDescriptionRes = null,
+                                                tint = colors.white,
+                                                size = 12.dp
+                                            )
+                                        }
+                                    }
                                 }
                             }
                         }
@@ -295,7 +305,11 @@ fun ReviewFormScreen(
                 modifier = Modifier.fillMaxWidth()
             ) {
                 Column(
-                    modifier = Modifier.padding(AppSpacing.medium),
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .clip(AppShapes.small)
+                        .background(colors.infoSurface)
+                        .padding(AppSpacing.medium),
                     verticalArrangement = Arrangement.spacedBy(AppSpacing.small)
                 ) {
                     Row(
@@ -314,12 +328,12 @@ fun ReviewFormScreen(
                             Text(
                                 text = stringResource(R.string.review_form_disclaimer_title),
                                 style = MaterialTheme.typography.titleMedium,
-                                color = colors.black
+                                color = colors.info
                             )
                             Text(
                                 text = stringResource(R.string.review_form_disclaimer_message),
                                 style = MaterialTheme.typography.bodySmall,
-                                color = colors.grayDark
+                                color = colors.info
                             )
                         }
                     }
@@ -327,12 +341,7 @@ fun ReviewFormScreen(
                     Text(
                         text = stringResource(R.string.review_form_disclaimer_warning),
                         style = MaterialTheme.typography.bodySmall,
-                        color = colors.onWarningSurface,
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .clip(AppShapes.small)
-                            .background(colors.warningSurface)
-                            .padding(AppSpacing.small)
+                        color = colors.info
                     )
                 }
             }
@@ -358,6 +367,7 @@ fun ReviewFormScreen(
                     },
                     variant = ButtonVariant.PRIMARY,
                     modifier = Modifier.weight(1f),
+                    enabled = uiState.comment.isNotBlank(),
                     isLoading = uiState.isSubmitting
                 )
             }

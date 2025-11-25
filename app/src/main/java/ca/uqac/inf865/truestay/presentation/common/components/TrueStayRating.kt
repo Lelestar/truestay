@@ -93,18 +93,22 @@ fun TrueStayRatingInput(
 ) {
     val colors = LocalAppColors.current
 
-    Column(modifier = modifier) {
+    Row(
+        modifier = modifier,
+        horizontalArrangement = Arrangement.SpaceBetween,
+        verticalAlignment = androidx.compose.ui.Alignment.CenterVertically
+    ) {
         Text(
             text = label,
             style = MaterialTheme.typography.titleMedium,
             color = if (enabled) colors.black else colors.grayDark,
-            modifier = Modifier.padding(bottom = AppSpacing.small)
+            modifier = Modifier.weight(1f)
         )
 
         StarRatingBar(
             rating = rating.coerceIn(0, maxStars),
             maxStars = maxStars,
-            starSize = 32.dp,
+            starSize = 20.dp,
             starColor = if (enabled) colors.warning else colors.grayBorder,
             onStarClick = if (enabled) onRatingChange else null
         )
