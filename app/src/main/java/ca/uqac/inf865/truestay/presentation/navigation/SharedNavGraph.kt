@@ -124,6 +124,9 @@ fun NavGraphBuilder.sharedNavGraph(
         RoomDetailsScreen(
             inventoryId = inventoryId,
             roomId = roomId,
+            onNavigateBack = {
+                navController.navigateUp()
+            }
         )
     }
 

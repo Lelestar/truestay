@@ -25,7 +25,6 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.draw.clip
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
@@ -771,9 +770,8 @@ private fun PropertyCardInteractive(
                         verticalArrangement = Arrangement.spacedBy(AppSpacing.small),
                         modifier = Modifier
                             .fillMaxWidth()
-                            .background(LocalAppColors.current.graySurface)
+                            .background(LocalAppColors.current.graySurface, AppShapes.medium)
                             .padding(AppSpacing.large)
-                            .clip(AppShapes.medium)
                     ) {
                         if (tenantName != null && tenantName.isNotBlank()) {
                             Row(

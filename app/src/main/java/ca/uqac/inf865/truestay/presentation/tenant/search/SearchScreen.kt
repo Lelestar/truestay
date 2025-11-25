@@ -69,7 +69,7 @@ import ca.uqac.inf865.truestay.presentation.common.components.TextFieldSize
 import ca.uqac.inf865.truestay.presentation.common.components.TextSelectableButton
 import ca.uqac.inf865.truestay.presentation.common.components.TrueStayButton
 import ca.uqac.inf865.truestay.presentation.common.components.TrueStayRatingInput
-import ca.uqac.inf865.truestay.utils.computeSliderConfig
+import ca.uqac.inf865.truestay.presentation.common.utils.computeSliderConfig
 import ca.uqac.inf865.truestay.presentation.common.components.TrueStaySlider
 import ca.uqac.inf865.truestay.presentation.common.components.TrueStaySwitch
 
