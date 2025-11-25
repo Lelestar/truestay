@@ -395,4 +395,28 @@
     <string name="inventory_sign_modal_tenant_message">Confirmez-vous avoir vérifié l\'inspection réalisée par le propriétaire avant de signer l\'état des lieux ?</string>
     <string name="inventory_sign_modal_confirm">Confirmer</string>
     <string name="inventory_sign_modal_cancel">Annuler</string>
+
+    <!-- Room Details Screen -->
+    <string name="room_details_error_loading">Impossible de charger les détails de la pièce</string>
+    <string name="room_details_photos_title">Photos de la pièce</string>
+    <string name="room_details_photos_title_optional">Photos de la pièce (optionnel)</string>
+    <string name="room_details_photos_subtitle">Vue d\'ensemble</string>
+    <string name="room_details_add_photo">Ajouter une photo</string>
+    <string name="room_details_photo_limit_reached">Limite de photos atteinte</string>
+    <string name="room_details_delete_photo">Supprimer la photo</string>
+    <string name="room_details_photo_count_more">+%1$d</string>
+    <string name="room_details_photo_upload_error">Erreur lors de l\'ajout de la photo</string>
+    <string name="room_details_photo_delete_error">Erreur lors de la suppression de la photo</string>
+    <string name="room_details_elements_title">Éléments à vérifier</string>
+    <string name="room_details_condition_good">Bon</string>
+    <string name="room_details_condition_to_check">À vérifier</string>
+    <string name="room_details_condition_damaged">Dégradé</string>
+    <string name="room_details_condition_damaged_incomplete">Dégradé - Justification requise</string>
+    <string name="room_details_condition_not_applicable">N/A</string>
+    <string name="room_details_comment_label">Commentaire</string>
+    <string name="room_details_element_photos_title">Photos</string>
+    <string name="room_details_element_update_error">Erreur lors de la mise à jour</string>
+    <string name="room_details_expand_element">Développer l\'élément</string>
+    <string name="room_details_damaged_requirement">Pour un élément dégradé, au moins un commentaire et une photo sont requis.</string>
+    <string name="room_details_collapse_element">Réduire l\'élément</string>
 </resources>

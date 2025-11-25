@@ -72,15 +72,11 @@ fun TrueStayNavigation(
             // Auth screens
             authNavGraph(navController)
 
-            // Tenant screens
-            if (userRole == UserRole.TENANT || userRole == null) {
-                tenantNavGraph(navController)
-            }
+            // Tenant screens - always load to avoid navigation issues
+            tenantNavGraph(navController)
 
-            // Landlord screens
-            if (userRole == UserRole.LANDLORD || userRole == null) {
-                landlordNavGraph(navController)
-            }
+            // Landlord screens - always load to avoid navigation issues
+            landlordNavGraph(navController)
 
             // Shared screens
             sharedNavGraph(navController)
@@ -120,7 +116,8 @@ private fun getCustomTopBarScreenRoutes(): List<String> {
     return listOf(
         Screen.PropertyDetails.route,
         Screen.RentalDetails.route,
-        Screen.Inventory.route
+        Screen.Inventory.route,
+        Screen.RoomDetails.route
     )
 }
 

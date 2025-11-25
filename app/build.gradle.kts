@@ -101,6 +101,9 @@ dependencies {
     // Maps & Places
     implementation(libs.maps.compose)
     implementation(libs.places)
+
+    // ExifInterface for image rotation correction
+    implementation(libs.androidx.exifinterface)
 }
 
 secrets {

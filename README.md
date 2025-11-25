@@ -289,8 +289,9 @@ truestay/
 │   ├── theme/                 # Thème, couleurs, typographie, espacements
 │   ├── navigation/            # Configuration de la navigation
 │   ├── common/                # Composants UI réutilisables (boutons, cartes, etc.)
-│   │   ├── components/
-│   │   └── icons/
+│   │   ├── components/        # PhotoGrid, TrueStayButton, TrueStayCard, etc.
+│   │   ├── icons/
+│   │   └── utils/             # CameraUtils, ImageUtils, DateUtils
 │   ├── shared/                # Écrans partagés locataires/propriétaires
 │   │   ├── auth/              # Login, Register, ForgotPassword
 │   │   ├── profile/           # Profil utilisateur
@@ -1109,9 +1110,23 @@ TrueStayIcon(
 )
 ```
 
-#### 5. **Autres Composants**
+#### 5. **PhotoGrid**
 
-Actuellement, seulement une partie des composants necessaires ont été créés. D'autres composants réutilisables peuvent être ajoutés au fur et à mesure des besoins.
+Grille de photos avec indicateur "+n" et boutons de suppression optionnels :
+
+```kotlin
+PhotoGrid(
+    photos = photoUrls,
+    onPhotoClick = { index -> /* Ouvrir carousel */ },
+    onDeletePhoto = { url -> /* Supprimer photo */ }  // null pour mode lecture seule
+)
+```
+
+Affiche jusqu'à 3 photos dans une rangée. Si plus de 3 photos, affiche un overlay "+n" sur la troisième photo.
+
+#### 6. **Autres Composants**
+
+D'autres composants sont disponibles : `TrueStayDropdown`, `TrueStaySlider`, `TrueStayRating`, `PropertyCard`, `ImageCarousel`, etc. Consultez `presentation/common/components/` pour la liste complète.
 
 ### Système de Design
 
