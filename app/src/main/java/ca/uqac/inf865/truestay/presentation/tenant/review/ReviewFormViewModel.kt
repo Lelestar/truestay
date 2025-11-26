@@ -7,6 +7,10 @@ import androidx.compose.runtime.setValue
 import androidx.lifecycle.SavedStateHandle
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import ca.uqac.inf865.truestay.domain.model.BuildingReview
+import ca.uqac.inf865.truestay.domain.model.NeighborhoodReview
+import ca.uqac.inf865.truestay.domain.model.PropertyReview
+import ca.uqac.inf865.truestay.domain.model.Review
 import ca.uqac.inf865.truestay.domain.model.ReviewType
 import ca.uqac.inf865.truestay.domain.repository.ReviewRepository
 import ca.uqac.inf865.truestay.domain.repository.StorageRepository
@@ -104,7 +108,8 @@ class ReviewFormViewModel @Inject constructor(
                                                 comfort = propReview.comfort,
                                                 compliance = propReview.compliance,
                                                 valueForMoney = propReview.valueForMoney,
-                                                comment = propReview.comment
+                                                comment = propReview.comment,
+                                                uploadedPhotoUrls = propReview.photos
                                             )
                                         }
                                     }
@@ -115,7 +120,8 @@ class ReviewFormViewModel @Inject constructor(
                                                 neighborhood = buildReview.neighborhood,
                                                 security = buildReview.security,
                                                 services = buildReview.services,
-                                                comment = buildReview.comment
+                                                comment = buildReview.comment,
+                                                uploadedPhotoUrls = buildReview.photos
                                             )
                                         }
                                     }
@@ -127,7 +133,8 @@ class ReviewFormViewModel @Inject constructor(
                                                 calm = neighReview.calm,
                                                 safety = neighReview.safety,
                                                 atmosphere = neighReview.atmosphere,
-                                                comment = neighReview.comment
+                                                comment = neighReview.comment,
+                                                uploadedPhotoUrls = neighReview.photos
                                             )
                                         }
                                     }
@@ -274,11 +281,88 @@ class ReviewFormViewModel @Inject constructor(
     fun submitReview(onSuccess: () -> Unit) {
         viewModelScope.launch {
             uiState = uiState.copy(isSubmitting = true, errorMessage = null)
-            // TODO: Implement actual review submission
-            // For now, just simulate success
-            kotlinx.coroutines.delay(500)
-            uiState = uiState.copy(isSubmitting = false)
-            onSuccess()
+
+            try {
+                // Get current user
+                val currentUser = authRepository.getCurrentUser().getOrThrow()
+                    ?: throw IllegalStateException("Utilisateur non connecté")
+
+                // Get rental to obtain propertyId
+                val rental = rentalRepository.getRentalById(rentalId).getOrThrow()
+
+                // Create the appropriate review object based on type
+                val review = when (reviewType) {
+                    ReviewType.PROPERTY -> {
+                        val propertyReview = PropertyReview(
+                            generalCondition = uiState.generalCondition,
+                            comfort = uiState.comfort,
+                            compliance = uiState.compliance,
+                            valueForMoney = uiState.valueForMoney,
+                            overallRating = (uiState.generalCondition + uiState.comfort +
+                                           uiState.compliance + uiState.valueForMoney) / 4f,
+                            comment = uiState.comment,
+                            photos = uiState.uploadedPhotoUrls
+                        )
+                        Review(
+                            rentalId = rentalId,
+                            propertyId = rental.propertyId,
+                            tenantId = currentUser.id,
+                            propertyReview = propertyReview,
+                            createdAt = System.currentTimeMillis()
+                        )
+                    }
+                    ReviewType.BUILDING -> {
+                        val buildingReview = BuildingReview(
+                            maintenance = uiState.maintenance,
+                            neighborhood = uiState.neighborhood,
+                            security = uiState.security,
+                            services = uiState.services,
+                            overallRating = (uiState.maintenance + uiState.neighborhood +
+                                           uiState.security + uiState.services) / 4f,
+                            comment = uiState.comment,
+                            photos = uiState.uploadedPhotoUrls
+                        )
+                        Review(
+                            rentalId = rentalId,
+                            propertyId = rental.propertyId,
+                            tenantId = currentUser.id,
+                            buildingReview = buildingReview,
+                            createdAt = System.currentTimeMillis()
+                        )
+                    }
+                    ReviewType.NEIGHBORHOOD -> {
+                        val neighborhoodReview = NeighborhoodReview(
+                            transport = uiState.transport,
+                            amenities = uiState.amenities,
+                            calm = uiState.calm,
+                            safety = uiState.safety,
+                            atmosphere = uiState.atmosphere,
+                            overallRating = (uiState.transport + uiState.amenities + uiState.calm +
+                                           uiState.safety + uiState.atmosphere) / 5f,
+                            comment = uiState.comment,
+                            photos = uiState.uploadedPhotoUrls
+                        )
+                        Review(
+                            rentalId = rentalId,
+                            propertyId = rental.propertyId,
+                            tenantId = currentUser.id,
+                            neighborhoodReview = neighborhoodReview,
+                            createdAt = System.currentTimeMillis()
+                        )
+                    }
+                }
+
+                // Submit the review using the use case
+                submitReviewUseCase(review, reviewType).getOrThrow()
+
+                uiState = uiState.copy(isSubmitting = false, errorMessage = null)
+                onSuccess()
+            } catch (e: Exception) {
+                uiState = uiState.copy(
+                    isSubmitting = false,
+                    errorMessage = e.message ?: "Une erreur est survenue lors de la soumission de l'avis"
+                )
+            }
         }
     }
 }

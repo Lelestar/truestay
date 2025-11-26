@@ -42,9 +42,14 @@ class SubmitReviewUseCase @Inject constructor(
                 reviewRepository.addReview(reviewToSubmit).getOrThrow()
             }
 
-            // 4. Recalculate and update property ratings
-            updatePropertyRatings(review.propertyId)
-            // TODO: Use a Cloud Function for scalability instead, triggered on review creation/update
+            // 4. Recalculate and update property ratings (non-blocking)
+            // If this fails, the review is still saved successfully
+            try {
+                updatePropertyRatings(review.propertyId)
+            } catch (e: Exception) {
+                // Silently ignore property rating update failures
+                // Ratings will be calculated on-the-fly when loading properties
+            }
 
             Result.success(Unit)
         } catch (e: Exception) {
