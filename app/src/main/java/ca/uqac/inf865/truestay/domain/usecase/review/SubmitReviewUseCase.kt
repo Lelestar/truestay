@@ -75,14 +75,17 @@ class SubmitReviewUseCase @Inject constructor(
     private fun mergeReviews(existing: Review, new: Review, reviewType: ReviewType): Review {
         return when (reviewType) {
             ReviewType.PROPERTY -> existing.copy(
+                id = existing.id, // Keep existing ID
                 propertyReview = new.propertyReview,
                 createdAt = existing.createdAt // Keep original creation date
             )
             ReviewType.BUILDING -> existing.copy(
+                id = existing.id, // Keep existing ID
                 buildingReview = new.buildingReview,
                 createdAt = existing.createdAt
             )
             ReviewType.NEIGHBORHOOD -> existing.copy(
+                id = existing.id, // Keep existing ID
                 neighborhoodReview = new.neighborhoodReview,
                 createdAt = existing.createdAt
             )

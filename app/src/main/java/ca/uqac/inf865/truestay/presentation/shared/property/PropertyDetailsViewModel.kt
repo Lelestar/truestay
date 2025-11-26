@@ -132,11 +132,47 @@ class PropertyDetailsViewModel @Inject constructor(
                         val user = userRepository.getUserById(review.tenantId).getOrNull()
                         ReviewWithUser(review, user)
                     }
+
+                    // Calculate ratings from reviews
+                    val calculatedRatings = calculateRatingsFromReviews(reviews)
+
+                    // Update property with calculated ratings
+                    val updatedProperty = uiState.property?.copy(ratings = calculatedRatings)
+
                     uiState = uiState.copy(
-                        reviews = reviewsWithUsers
+                        reviews = reviewsWithUsers,
+                        property = updatedProperty ?: uiState.property
                     )
                 }
         }
+    }
+
+    private fun calculateRatingsFromReviews(reviews: List<ca.uqac.inf865.truestay.domain.model.Review>): ca.uqac.inf865.truestay.domain.model.PropertyRatings {
+        if (reviews.isEmpty()) return ca.uqac.inf865.truestay.domain.model.PropertyRatings()
+
+        val propertyReviews = reviews.mapNotNull { it.propertyReview }
+        val buildingReviews = reviews.mapNotNull { it.buildingReview }
+        val neighborhoodReviews = reviews.mapNotNull { it.neighborhoodReview }
+
+        return ca.uqac.inf865.truestay.domain.model.PropertyRatings(
+            // Property ratings
+            propertyAverageRating = if (propertyReviews.isNotEmpty()) {
+                propertyReviews.map { it.overallRating }.average().toFloat()
+            } else 0f,
+            propertyReviewCount = propertyReviews.size,
+
+            // Building ratings
+            buildingAverageRating = if (buildingReviews.isNotEmpty()) {
+                buildingReviews.map { it.overallRating }.average().toFloat()
+            } else 0f,
+            buildingReviewCount = buildingReviews.size,
+
+            // Neighborhood ratings
+            neighborhoodAverageRating = if (neighborhoodReviews.isNotEmpty()) {
+                neighborhoodReviews.map { it.overallRating }.average().toFloat()
+            } else 0f,
+            neighborhoodReviewCount = neighborhoodReviews.size
+        )
     }
 
     private fun checkIfFavorite() {
