@@ -42,6 +42,7 @@ import ca.uqac.inf865.truestay.domain.model.Rental
 import ca.uqac.inf865.truestay.domain.model.User
 import ca.uqac.inf865.truestay.presentation.common.components.BadgeVariant
 import ca.uqac.inf865.truestay.presentation.common.components.FullscreenImageCarouselOverlay
+import ca.uqac.inf865.truestay.presentation.common.components.PhotoGrid
 import ca.uqac.inf865.truestay.presentation.common.components.TrueStayBadge
 import ca.uqac.inf865.truestay.presentation.common.components.TrueStayButton
 import ca.uqac.inf865.truestay.presentation.common.components.TrueStayIcon
@@ -936,6 +937,7 @@ private fun RentalReviewsSection(
                 categoryLabel = stringResource(R.string.rental_reviews_category_property),
                 rating = review?.propertyReview?.overallRating,
                 comment = review?.propertyReview?.comment,
+                photos = review?.propertyReview?.photos ?: emptyList(),
                 createdAt = review?.createdAt,
                 hasReview = review?.propertyReview != null,
                 isLandlord = isLandlord,
@@ -950,6 +952,7 @@ private fun RentalReviewsSection(
                     categoryLabel = stringResource(R.string.rental_reviews_category_building),
                     rating = review?.buildingReview?.overallRating,
                     comment = review?.buildingReview?.comment,
+                    photos = review?.buildingReview?.photos ?: emptyList(),
                     createdAt = review?.createdAt,
                     hasReview = review?.buildingReview != null,
                     isLandlord = isLandlord,
@@ -964,6 +967,7 @@ private fun RentalReviewsSection(
                 categoryLabel = stringResource(R.string.rental_reviews_category_neighborhood),
                 rating = review?.neighborhoodReview?.overallRating,
                 comment = review?.neighborhoodReview?.comment,
+                photos = review?.neighborhoodReview?.photos ?: emptyList(),
                 createdAt = review?.createdAt,
                 hasReview = review?.neighborhoodReview != null,
                 isLandlord = isLandlord,
@@ -981,6 +985,7 @@ private fun ReviewCategoryCard(
     categoryLabel: String,
     rating: Float?,
     comment: String?,
+    photos: List<String>,
     createdAt: Long?,
     hasReview: Boolean,
     isLandlord: Boolean,
@@ -1046,9 +1051,9 @@ private fun ReviewCategoryCard(
 
             val dateText = createdAt?.let { DateUtils.formatLocalDate(it) }
 
-            if (hasReview && (dateText != null || !comment.isNullOrBlank())) {
+            if (hasReview && (dateText != null || !comment.isNullOrBlank() || photos.isNotEmpty())) {
                 Column(
-                    verticalArrangement = Arrangement.spacedBy(AppSpacing.xsmall)
+                    verticalArrangement = Arrangement.spacedBy(AppSpacing.small)
                 ) {
                     if (!comment.isNullOrBlank()) {
                         Text(
@@ -1057,6 +1062,16 @@ private fun ReviewCategoryCard(
                             color = LocalAppColors.current.grayDark
                         )
                     }
+
+                    // Display photos if any
+                    if (photos.isNotEmpty()) {
+                        PhotoGrid(
+                            photos = photos,
+                            onPhotoClick = { /* TODO: Add fullscreen view */ },
+                            onDeletePhoto = null // Read-only in this view
+                        )
+                    }
+
                     if (dateText != null) {
                         Text(
                             text = dateText,
