@@ -406,6 +406,16 @@ fun ReviewFormScreen(
                     }
                 }
 
+                // Error message
+                if (uiState.errorMessage != null) {
+                    Text(
+                        text = uiState.errorMessage,
+                        style = MaterialTheme.typography.bodySmall,
+                        color = colors.error,
+                        modifier = Modifier.fillMaxWidth()
+                    )
+                }
+
                 TrueStayButton(
                     text = stringResource(R.string.review_form_submit_button),
                     onClick = {
