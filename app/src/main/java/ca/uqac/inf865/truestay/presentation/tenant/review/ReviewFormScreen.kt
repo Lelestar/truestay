@@ -57,7 +57,7 @@ fun ReviewFormScreen(
 
     // Camera launcher for taking photos
     val cameraLauncher = rememberOptimizedCameraLauncher { optimizedUri ->
-        viewModel.addPhotos(listOf(optimizedUri))
+        viewModel.addPhoto(optimizedUri)
     }
 
     // Multi-photo picker

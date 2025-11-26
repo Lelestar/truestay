@@ -40,15 +40,14 @@ fun rememberOptimizedCameraLauncher(
         if (success) {
             photoUri?.let { uri ->
                 // Optimize the photo before passing it to the callback
-                val optimizedUri = optimizePhoto(context, uri)
-                optimizedUri?.let { validUri ->
-                    onPhotoTaken(validUri)
-                }
+                // If optimization fails, use the original URI
+                val optimizedUri = optimizePhoto(context, uri) ?: uri
+                onPhotoTaken(optimizedUri)
             }
         }
     }
 
-    return remember {
+    return remember(launcher, context) {
         CameraLauncher {
             photoUri = createImageFileUri(context)
             launcher.launch(photoUri)

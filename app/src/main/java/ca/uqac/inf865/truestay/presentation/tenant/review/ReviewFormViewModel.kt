@@ -204,6 +204,15 @@ class ReviewFormViewModel @Inject constructor(
         uiState = uiState.copy(comment = comment)
     }
 
+    fun addPhoto(uri: Uri) {
+        val currentCount = uiState.uploadedPhotoUrls.size
+        val maxPhotos = 5
+
+        if (currentCount < maxPhotos) {
+            uploadPhoto(uri)
+        }
+    }
+
     fun addPhotos(uris: List<Uri>) {
         val currentCount = uiState.uploadedPhotoUrls.size
         val maxPhotos = 5
