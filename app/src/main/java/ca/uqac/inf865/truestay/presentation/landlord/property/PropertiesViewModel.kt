@@ -40,7 +40,8 @@ data class PropertiesUiState(
 @HiltViewModel
 class PropertiesViewModel @Inject constructor(
     private val propertyRepository: PropertyRepository,
-    private val authRepository: AuthRepository
+    private val authRepository: AuthRepository,
+    private val reviewRepository: ca.uqac.inf865.truestay.domain.repository.ReviewRepository
 ) : ViewModel() {
 
     private val _uiState = MutableStateFlow(PropertiesUiState(isLoading = true))
@@ -91,9 +92,12 @@ class PropertiesViewModel @Inject constructor(
     private suspend fun fetchPropertiesForLandlord(landlordId: String) {
         propertyRepository.getPropertiesByLandlord(landlordId)
             .onSuccess { properties ->
+                // Enrich properties with calculated ratings
+                val enrichedProperties = enrichPropertiesWithRatings(properties)
+
                 _uiState.update {
                     it.copy(
-                        properties = properties,
+                        properties = enrichedProperties,
                         isLoading = false,
                         error = null,
                         currentUserId = landlordId
@@ -108,6 +112,41 @@ class PropertiesViewModel @Inject constructor(
                     )
                 }
             }
+    }
+
+    private suspend fun enrichPropertiesWithRatings(properties: List<Property>): List<Property> {
+        return properties.map { property ->
+            try {
+                val reviews = reviewRepository.getReviewsByProperty(property.id).getOrNull() ?: emptyList()
+                val calculatedRatings = calculateRatingsFromReviews(reviews)
+                property.copy(ratings = calculatedRatings)
+            } catch (e: Exception) {
+                property
+            }
+        }
+    }
+
+    private fun calculateRatingsFromReviews(reviews: List<ca.uqac.inf865.truestay.domain.model.Review>): ca.uqac.inf865.truestay.domain.model.PropertyRatings {
+        if (reviews.isEmpty()) return ca.uqac.inf865.truestay.domain.model.PropertyRatings()
+
+        val propertyReviews = reviews.mapNotNull { it.propertyReview }
+        val buildingReviews = reviews.mapNotNull { it.buildingReview }
+        val neighborhoodReviews = reviews.mapNotNull { it.neighborhoodReview }
+
+        return ca.uqac.inf865.truestay.domain.model.PropertyRatings(
+            propertyAverageRating = if (propertyReviews.isNotEmpty()) {
+                propertyReviews.map { it.overallRating }.average().toFloat()
+            } else 0f,
+            propertyReviewCount = propertyReviews.size,
+            buildingAverageRating = if (buildingReviews.isNotEmpty()) {
+                buildingReviews.map { it.overallRating }.average().toFloat()
+            } else 0f,
+            buildingReviewCount = buildingReviews.size,
+            neighborhoodAverageRating = if (neighborhoodReviews.isNotEmpty()) {
+                neighborhoodReviews.map { it.overallRating }.average().toFloat()
+            } else 0f,
+            neighborhoodReviewCount = neighborhoodReviews.size
+        )
     }
 
     /**
