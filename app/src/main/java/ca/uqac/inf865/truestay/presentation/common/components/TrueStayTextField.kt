@@ -59,7 +59,9 @@ fun TrueStayTextField(
     imeAction: ImeAction = ImeAction.Done,
     onImeAction: (() -> Unit)? = null,
     keyboardActions: KeyboardActions = KeyboardActions.Default,
-    size: TextFieldSize = TextFieldSize.Default
+    size: TextFieldSize = TextFieldSize.Default,
+    trailingIcon: Int? = null,
+    onTrailingIconClick: (() -> Unit)? = null
 ) {
     var passwordVisible by remember { mutableStateOf(false) }
     val interactionSource = remember { MutableInteractionSource() }
@@ -208,6 +210,19 @@ fun TrueStayTextField(
                                 iconRes = TrueStayIcons.X,
                                 contentDescriptionRes = R.string.cd_clear_text,
                                 tint = LocalAppColors.current.grayDark,
+                                size = iconSize
+                            )
+                        }
+                    }
+                    if (trailingIcon != null) {
+                        IconButton(
+                            onClick = { onTrailingIconClick?.invoke() },
+                            modifier = Modifier.size(iconSize)
+                        ) {
+                            TrueStayIcon(
+                                iconRes = trailingIcon,
+                                tint = LocalAppColors.current.grayDark,
+                                contentDescriptionRes = null,
                                 size = iconSize
                             )
                         }
