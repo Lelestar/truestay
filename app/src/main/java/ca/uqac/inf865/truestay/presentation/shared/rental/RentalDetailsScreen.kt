@@ -70,6 +70,14 @@ import ca.uqac.inf865.truestay.domain.model.RoomType
 import ca.uqac.inf865.truestay.domain.model.InventoryType
 import ca.uqac.inf865.truestay.presentation.theme.TrueStayTheme
 
+import androidx.compose.animation.AnimatedVisibility
+import androidx.compose.material3.AlertDialog
+import androidx.compose.material3.Scaffold
+import androidx.compose.material3.SnackbarHost
+import androidx.compose.material3.SnackbarHostState
+import ca.uqac.inf865.truestay.domain.model.ReviewType
+import ca.uqac.inf865.truestay.presentation.common.components.TrueStayRatingDisplay
+
 enum class RentalDetailsSection {
     INFO,
     PROGRESS,
@@ -88,13 +96,25 @@ fun RentalDetailsScreen(
     viewModel: RentalDetailsViewModel = hiltViewModel()
 ) {
     val uiState by viewModel.uiState.collectAsStateWithLifecycle()
+    val snackbarHostState = remember { SnackbarHostState() }
     var showFullscreenCarousel by remember { mutableStateOf(false) }
     var fullscreenStartIndex by remember { mutableIntStateOf(0) }
     var fullscreenPhotos by remember { mutableStateOf<List<String>>(emptyList()) }
     var fullscreenTitle by remember { mutableStateOf("") }
+    var showDeleteReviewDialog by remember { mutableStateOf(false) }
+    var reviewTypeToDelete by remember { mutableStateOf<ReviewType?>(null) }
+    val context = LocalContext.current
 
     LaunchedEffect(rentalId) {
         viewModel.loadRental(rentalId)
+    }
+
+    LaunchedEffect(uiState.deletionErrorMessageRes) {
+        val msgRes = uiState.deletionErrorMessageRes
+        if (msgRes != null) {
+            snackbarHostState.showSnackbar(context.getString(msgRes))
+            viewModel.clearDeletionErrorMessage()
+        }
     }
 
     Column(
@@ -113,42 +133,65 @@ fun RentalDetailsScreen(
                 .fillMaxSize(),
             contentAlignment = Alignment.Center
         ) {
-            when {
-                uiState.isLoading && uiState.property == null -> {
-                    CircularProgressIndicator(color = LocalAppColors.current.primary)
-                }
+            Scaffold(
+                contentWindowInsets = WindowInsets(0.dp),
+                snackbarHost = { SnackbarHost(snackbarHostState) },
+                containerColor = LocalAppColors.current.white
+            ) { padding ->
+                Box(
+                    modifier = Modifier
+                        .fillMaxSize()
+                        .padding(padding),
+                    contentAlignment = Alignment.Center
+                ) {
+                    when {
+                        uiState.isLoading && uiState.property == null -> {
+                            CircularProgressIndicator(color = LocalAppColors.current.primary)
+                        }
 
-                uiState.errorRes != null && uiState.property == null -> {
-                    RentalDetailsErrorState(
-                        messageRes = uiState.errorRes!!,
-                        onRetry = { viewModel.loadRental(rentalId) }
-                    )
-                }
+                        uiState.errorRes != null && uiState.property == null -> {
+                            RentalDetailsErrorState(
+                                messageRes = uiState.errorRes!!,
+                                onRetry = { viewModel.loadRental(rentalId) }
+                            )
+                        }
 
-                uiState.property != null && uiState.rental != null -> {
-                    val isLandlord = uiState.currentUser?.id == uiState.rental!!.landlordId
-                    RentalDetailsContent(
-                        property = uiState.property!!,
-                        rental = uiState.rental!!,
-                        review = uiState.review,
-                        isLandlord = isLandlord,
-                        tenantFirstName = uiState.tenant?.firstName,
-                        tenant = uiState.tenant,
-                        landlord = uiState.landlord,
-                        entryInventory = uiState.entryInventory,
-                        exitInventory = uiState.exitInventory,
-                        initialSection = initialSection,
-                        onImageClick = { index ->
-                            fullscreenPhotos = uiState.property!!.photos
-                            fullscreenTitle = uiState.property!!.name
-                            fullscreenStartIndex = index
-                            showFullscreenCarousel = true
-                        },
-                        onInventoryClick = { inventoryId ->
-                            onInventoryClick(inventoryId)
-                        },
-                        onAddOrEditReviewClick = onAddOrEditReviewClick
-                    )
+                        uiState.property != null && uiState.rental != null -> {
+                            val isLandlord = uiState.currentUser?.id == uiState.rental!!.landlordId
+                            RentalDetailsContent(
+                                property = uiState.property!!,
+                                rental = uiState.rental!!,
+                                review = uiState.review,
+                                isLandlord = isLandlord,
+                                tenantFirstName = uiState.tenant?.firstName,
+                                tenant = uiState.tenant,
+                                landlord = uiState.landlord,
+                                entryInventory = uiState.entryInventory,
+                                exitInventory = uiState.exitInventory,
+                                initialSection = initialSection,
+                                onImageClick = { index -> // For property images
+                                    fullscreenPhotos = uiState.property!!.photos
+                                    fullscreenTitle = uiState.property!!.name
+                                    fullscreenStartIndex = index
+                                    showFullscreenCarousel = true
+                                },
+                                onReviewPhotoClick = { photos, index, title -> // For review images
+                                    fullscreenPhotos = photos
+                                    fullscreenTitle = title
+                                    fullscreenStartIndex = index
+                                    showFullscreenCarousel = true
+                                },
+                                onInventoryClick = { inventoryId ->
+                                    onInventoryClick(inventoryId)
+                                },
+                                onAddOrEditReviewClick = onAddOrEditReviewClick,
+                                onDeleteReviewClick = { type ->
+                                    reviewTypeToDelete = type
+                                    showDeleteReviewDialog = true
+                                }
+                            )
+                        }
+                    }
                 }
             }
 
@@ -158,6 +201,37 @@ fun RentalDetailsScreen(
                     title = fullscreenTitle,
                     initialPage = fullscreenStartIndex,
                     onClose = { showFullscreenCarousel = false }
+                )
+            }
+            
+            if (showDeleteReviewDialog) {
+                AlertDialog(
+                    onDismissRequest = { showDeleteReviewDialog = false },
+                    title = {
+                        Text(text = stringResource(R.string.review_delete_dialog_title))
+                    },
+                    text = {
+                        Text(text = stringResource(R.string.review_delete_dialog_message))
+                    },
+                    confirmButton = {
+                        TrueStayButton(
+                            text = stringResource(R.string.review_delete_dialog_confirm),
+                            onClick = {
+                                reviewTypeToDelete?.let { viewModel.deleteReview(it) }
+                                showDeleteReviewDialog = false
+                            },
+                            variant = ButtonVariant.DANGER
+                        )
+                    },
+                    dismissButton = {
+                        TrueStayButton(
+                            text = stringResource(R.string.review_delete_dialog_cancel),
+                            onClick = { showDeleteReviewDialog = false },
+                            variant = ButtonVariant.SECONDARY
+                        )
+                    },
+                    shape = AppShapes.large,
+                    containerColor = LocalAppColors.current.white
                 )
             }
         }
@@ -202,8 +276,10 @@ private fun RentalDetailsContent(
     exitInventory: Inventory?,
     initialSection: RentalDetailsSection?,
     onImageClick: ((Int) -> Unit)? = null,
+    onReviewPhotoClick: (List<String>, Int, String) -> Unit,
     onInventoryClick: (String) -> Unit,
-    onAddOrEditReviewClick: (String) -> Unit
+    onAddOrEditReviewClick: (String) -> Unit,
+    onDeleteReviewClick: (ReviewType) -> Unit
 ) {
     val hasInventories = entryInventory != null || exitInventory != null
     val listState = rememberLazyListState()
@@ -275,7 +351,9 @@ private fun RentalDetailsContent(
                 review = review,
                 isLandlord = isLandlord,
                 tenantFirstName = tenantFirstName,
-                onAddOrEditReviewClick = onAddOrEditReviewClick
+                onAddOrEditReviewClick = onAddOrEditReviewClick,
+                onReviewPhotoClick = onReviewPhotoClick,
+                onDeleteReviewClick = onDeleteReviewClick
             )
         }
 
@@ -914,7 +992,9 @@ private fun RentalReviewsSection(
     review: ca.uqac.inf865.truestay.domain.model.Review?,
     isLandlord: Boolean,
     tenantFirstName: String?,
-    onAddOrEditReviewClick: (String) -> Unit
+    onAddOrEditReviewClick: (String) -> Unit,
+    onReviewPhotoClick: (List<String>, Int, String) -> Unit,
+    onDeleteReviewClick: (ReviewType) -> Unit
 ) {
     Column(
         modifier = Modifier
@@ -933,48 +1013,85 @@ private fun RentalReviewsSection(
             modifier = Modifier.fillMaxWidth(),
             verticalArrangement = Arrangement.spacedBy(AppSpacing.small)
         ) {
+            val propertyDetails = review?.propertyReview?.let {
+                listOf(
+                    stringResource(R.string.review_form_property_general_condition) to it.generalCondition,
+                    stringResource(R.string.review_form_property_comfort) to it.comfort,
+                    stringResource(R.string.review_form_property_compliance) to it.compliance,
+                    stringResource(R.string.review_form_property_value_for_money) to it.valueForMoney
+                )
+            } ?: emptyList()
+
             ReviewCategoryCard(
                 categoryLabel = stringResource(R.string.rental_reviews_category_property),
                 rating = review?.propertyReview?.overallRating,
                 comment = review?.propertyReview?.comment,
                 photos = review?.propertyReview?.photos ?: emptyList(),
+                details = propertyDetails,
                 createdAt = review?.createdAt,
                 hasReview = review?.propertyReview != null,
                 isLandlord = isLandlord,
                 tenantFirstName = tenantFirstName,
                 emptyTextRes = R.string.rental_reviews_none_property,
                 emptyTenantTextRes = R.string.rental_reviews_none_property_tenant,
-                onEditClick = { onAddOrEditReviewClick("PROPERTY") }
+                onEditClick = { onAddOrEditReviewClick("PROPERTY") },
+                onPhotoClick = onReviewPhotoClick,
+                onDeleteClick = { onDeleteReviewClick(ReviewType.PROPERTY) }
             )
 
             if (property.isInBuilding) {
+                val buildingDetails = review?.buildingReview?.let {
+                    listOf(
+                        stringResource(R.string.review_form_building_maintenance) to it.maintenance,
+                        stringResource(R.string.review_form_building_neighborhood) to it.neighborhood,
+                        stringResource(R.string.review_form_building_security) to it.security,
+                        stringResource(R.string.review_form_building_services) to it.services
+                    )
+                } ?: emptyList()
+
                 ReviewCategoryCard(
                     categoryLabel = stringResource(R.string.rental_reviews_category_building),
                     rating = review?.buildingReview?.overallRating,
                     comment = review?.buildingReview?.comment,
                     photos = review?.buildingReview?.photos ?: emptyList(),
+                    details = buildingDetails,
                     createdAt = review?.createdAt,
                     hasReview = review?.buildingReview != null,
                     isLandlord = isLandlord,
                     tenantFirstName = tenantFirstName,
                     emptyTextRes = R.string.rental_reviews_none_building,
                     emptyTenantTextRes = R.string.rental_reviews_none_building_tenant,
-                    onEditClick = { onAddOrEditReviewClick("BUILDING") }
+                    onEditClick = { onAddOrEditReviewClick("BUILDING") },
+                    onPhotoClick = onReviewPhotoClick,
+                    onDeleteClick = { onDeleteReviewClick(ReviewType.BUILDING) }
                 )
             }
+
+            val neighborhoodDetails = review?.neighborhoodReview?.let {
+                listOf(
+                    stringResource(R.string.review_form_neighborhood_transport) to it.transport,
+                    stringResource(R.string.review_form_neighborhood_amenities) to it.amenities,
+                    stringResource(R.string.review_form_neighborhood_calm) to it.calm,
+                    stringResource(R.string.review_form_neighborhood_safety) to it.safety,
+                    stringResource(R.string.review_form_neighborhood_atmosphere) to it.atmosphere
+                )
+            } ?: emptyList()
 
             ReviewCategoryCard(
                 categoryLabel = stringResource(R.string.rental_reviews_category_neighborhood),
                 rating = review?.neighborhoodReview?.overallRating,
                 comment = review?.neighborhoodReview?.comment,
                 photos = review?.neighborhoodReview?.photos ?: emptyList(),
+                details = neighborhoodDetails,
                 createdAt = review?.createdAt,
                 hasReview = review?.neighborhoodReview != null,
                 isLandlord = isLandlord,
                 tenantFirstName = tenantFirstName,
                 emptyTextRes = R.string.rental_reviews_none_neighborhood,
                 emptyTenantTextRes = R.string.rental_reviews_none_neighborhood_tenant,
-                onEditClick = { onAddOrEditReviewClick("NEIGHBORHOOD") }
+                onEditClick = { onAddOrEditReviewClick("NEIGHBORHOOD") },
+                onPhotoClick = onReviewPhotoClick,
+                onDeleteClick = { onDeleteReviewClick(ReviewType.NEIGHBORHOOD) }
             )
         }
     }
@@ -986,14 +1103,20 @@ private fun ReviewCategoryCard(
     rating: Float?,
     comment: String?,
     photos: List<String>,
+    details: List<Pair<String, Int>> = emptyList(),
     createdAt: Long?,
     hasReview: Boolean,
     isLandlord: Boolean,
     tenantFirstName: String?,
     emptyTextRes: Int,
     emptyTenantTextRes: Int,
-    onEditClick: () -> Unit
+    onEditClick: () -> Unit,
+    onPhotoClick: (List<String>, Int, String) -> Unit,
+    onDeleteClick: () -> Unit
 ) {
+    var isExpanded by remember { mutableStateOf(false) }
+    val colors = LocalAppColors.current
+
     TrueStayCard(
         modifier = Modifier.fillMaxWidth()
     ) {
@@ -1036,16 +1159,57 @@ private fun ReviewCategoryCard(
                     }
                 }
 
-                if (!isLandlord && hasReview) {
-                    TrueStayIcon(
-                        iconRes = TrueStayIcons.PenLine,
-                        contentDescriptionRes = null,
-                        tint = LocalAppColors.current.black,
-                        size = 20.dp,
-                        modifier = Modifier
-                            .clip(AppShapes.small)
-                            .clickable(onClick = onEditClick)
-                    )
+                Row(
+                    verticalAlignment = Alignment.CenterVertically,
+                    horizontalArrangement = Arrangement.spacedBy(AppSpacing.medium)
+                ) {
+                    if (!isLandlord && hasReview) {
+                        TrueStayIcon(
+                            iconRes = TrueStayIcons.PenLine,
+                            contentDescriptionRes = R.string.common_edit,
+                            tint = LocalAppColors.current.primary,
+                            size = 20.dp,
+                            modifier = Modifier
+                                .clip(AppShapes.small)
+                                .clickable(onClick = onEditClick)
+                        )
+                        
+                        TrueStayIcon(
+                            iconRes = TrueStayIcons.Trash,
+                            contentDescriptionRes = R.string.common_delete,
+                            tint = LocalAppColors.current.error,
+                            size = 20.dp,
+                            modifier = Modifier
+                                .clip(AppShapes.small)
+                                .clickable(onClick = onDeleteClick)
+                        )
+                    }
+
+                    if (hasReview && details.isNotEmpty()) {
+                        TrueStayIcon(
+                            iconRes = if (isExpanded) TrueStayIcons.ChevronUp else TrueStayIcons.ChevronDown,
+                            contentDescriptionRes = if (isExpanded) R.string.property_details_collapse_review else R.string.property_details_expand_review,
+                            tint = colors.grayDark,
+                            modifier = Modifier
+                                .clip(AppShapes.small)
+                                .clickable { isExpanded = !isExpanded }
+                        )
+                    }
+                }
+            }
+
+            // Expanded details
+            AnimatedVisibility(visible = isExpanded && details.isNotEmpty()) {
+                Column(
+                    verticalArrangement = Arrangement.spacedBy(AppSpacing.xsmall),
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .background(colors.grayLight.copy(alpha = 0.3f), shape = AppShapes.small)
+                        .padding(AppSpacing.medium)
+                ) {
+                    details.forEach { (label, score) ->
+                        RatingRow(label, score)
+                    }
                 }
             }
 
@@ -1067,7 +1231,7 @@ private fun ReviewCategoryCard(
                     if (photos.isNotEmpty()) {
                         PhotoGrid(
                             photos = photos,
-                            onPhotoClick = { /* TODO: Add fullscreen view */ },
+                            onPhotoClick = { index -> onPhotoClick(photos, index, categoryLabel) },
                             onDeletePhoto = null // Read-only in this view
                         )
                     }
@@ -1075,7 +1239,7 @@ private fun ReviewCategoryCard(
                     if (dateText != null) {
                         Text(
                             text = dateText,
-                            style = MaterialTheme.typography.bodyMedium,
+                            style = MaterialTheme.typography.bodySmall,
                             color = LocalAppColors.current.grayMedium
                         )
                     }
@@ -1108,6 +1272,25 @@ private fun ReviewCategoryCard(
                 }
             }
         }
+    }
+}
+
+@Composable
+private fun RatingRow(label: String, rating: Int) {
+    Row(
+        modifier = Modifier.fillMaxWidth(),
+        horizontalArrangement = Arrangement.SpaceBetween,
+        verticalAlignment = Alignment.CenterVertically
+    ) {
+        Text(
+            text = label,
+            style = MaterialTheme.typography.bodySmall,
+            color = LocalAppColors.current.grayDark
+        )
+        TrueStayRatingDisplay(
+            rating = rating.toFloat(),
+            starSize = 14.dp
+        )
     }
 }
 
@@ -1232,7 +1415,9 @@ private fun RentalDetailsContentTenantPreview() {
                 initialSection = null,
                 onImageClick = {},
                 onInventoryClick = {},
-                onAddOrEditReviewClick = {}
+                onAddOrEditReviewClick = {},
+                onReviewPhotoClick = { _, _, _ -> },
+                onDeleteReviewClick = {}
             )
         }
     }
@@ -1308,7 +1493,9 @@ private fun RentalDetailsContentLandlordPreview() {
                 initialSection = null,
                 onImageClick = {},
                 onInventoryClick = {},
-                onAddOrEditReviewClick = {}
+                onAddOrEditReviewClick = {},
+                onReviewPhotoClick = { _, _, _ -> },
+                onDeleteReviewClick = {}
             )
         }
     }

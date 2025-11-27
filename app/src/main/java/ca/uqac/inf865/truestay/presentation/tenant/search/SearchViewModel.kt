@@ -52,8 +52,7 @@ data class SearchUiState(
 @HiltViewModel
 class SearchViewModel @Inject constructor(
     private val propertyRepository: PropertyRepository,
-    private val geocodingRepository: GeocodingRepository,
-    private val reviewRepository: ca.uqac.inf865.truestay.domain.repository.ReviewRepository
+    private val geocodingRepository: GeocodingRepository
 ) : ViewModel() {
 
     private val _uiState = MutableStateFlow(SearchUiState())
@@ -71,19 +70,15 @@ class SearchViewModel @Inject constructor(
 
             propertyRepository.getProperties().fold(
                 onSuccess = { properties ->
-                    // Enrich properties with calculated ratings
-                    val enrichedProperties = enrichPropertiesWithRatings(properties)
-
                     // Save all properties for initial camera fit and other needs
-                    _uiState.update { it.copy(allProperties = enrichedProperties) }
+                    _uiState.update { it.copy(allProperties = properties) }
                     // Immediately populate UI with filtered results (defaults apply)
                     val filters = _uiState.value.filters
                     propertyRepository.searchProperties(filters).fold(
                         onSuccess = { list ->
-                            val enrichedList = enrichPropertiesWithRatings(list)
                             _uiState.update {
                                 it.copy(
-                                    properties = enrichedList,
+                                    properties = list,
                                     isLoading = false,
                                     errorMessage = null
                                 )
@@ -92,7 +87,7 @@ class SearchViewModel @Inject constructor(
                         onFailure = { e ->
                             _uiState.update {
                                 it.copy(
-                                    properties = enrichedProperties, // fallback to all
+                                    properties = properties, // fallback to all
                                     isLoading = false,
                                     errorMessage = e.message
                                 )
@@ -295,47 +290,11 @@ class SearchViewModel @Inject constructor(
         val result = propertyRepository.searchProperties(filters)
         result.fold(
             onSuccess = { list ->
-                val enrichedList = enrichPropertiesWithRatings(list)
-                _uiState.update { it.copy(properties = enrichedList, isLoading = false) }
+                _uiState.update { it.copy(properties = list, isLoading = false) }
             },
             onFailure = { e ->
                 _uiState.update { it.copy(isLoading = false, errorMessage = e.message) }
             }
-        )
-    }
-
-    private suspend fun enrichPropertiesWithRatings(properties: List<Property>): List<Property> {
-        return properties.map { property ->
-            try {
-                val reviews = reviewRepository.getReviewsByProperty(property.id).getOrNull() ?: emptyList()
-                val calculatedRatings = calculateRatingsFromReviews(reviews)
-                property.copy(ratings = calculatedRatings)
-            } catch (e: Exception) {
-                property
-            }
-        }
-    }
-
-    private fun calculateRatingsFromReviews(reviews: List<ca.uqac.inf865.truestay.domain.model.Review>): ca.uqac.inf865.truestay.domain.model.PropertyRatings {
-        if (reviews.isEmpty()) return ca.uqac.inf865.truestay.domain.model.PropertyRatings()
-
-        val propertyReviews = reviews.mapNotNull { it.propertyReview }
-        val buildingReviews = reviews.mapNotNull { it.buildingReview }
-        val neighborhoodReviews = reviews.mapNotNull { it.neighborhoodReview }
-
-        return ca.uqac.inf865.truestay.domain.model.PropertyRatings(
-            propertyAverageRating = if (propertyReviews.isNotEmpty()) {
-                propertyReviews.map { it.overallRating }.average().toFloat()
-            } else 0f,
-            propertyReviewCount = propertyReviews.size,
-            buildingAverageRating = if (buildingReviews.isNotEmpty()) {
-                buildingReviews.map { it.overallRating }.average().toFloat()
-            } else 0f,
-            buildingReviewCount = buildingReviews.size,
-            neighborhoodAverageRating = if (neighborhoodReviews.isNotEmpty()) {
-                neighborhoodReviews.map { it.overallRating }.average().toFloat()
-            } else 0f,
-            neighborhoodReviewCount = neighborhoodReviews.size
         )
     }
 }

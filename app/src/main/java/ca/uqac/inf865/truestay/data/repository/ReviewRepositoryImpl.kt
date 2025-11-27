@@ -6,6 +6,7 @@ import ca.uqac.inf865.truestay.data.model.toDomain
 import ca.uqac.inf865.truestay.data.source.FirestoreDataSource
 import ca.uqac.inf865.truestay.domain.model.Review
 import ca.uqac.inf865.truestay.domain.repository.ReviewRepository
+import kotlinx.coroutines.tasks.await
 import javax.inject.Inject
 
 class ReviewRepositoryImpl @Inject constructor(
@@ -14,9 +15,20 @@ class ReviewRepositoryImpl @Inject constructor(
 
     override suspend fun addReview(review: Review): Result<String> {
         return try {
-            val reviewDto = review.toDto().copy(createdAt = System.currentTimeMillis())
-            val id = firestoreDataSource.addDocument("reviews", reviewDto)
-            Result.success(id)
+            // Generate a document reference to get the ID first
+            val docRef = firestoreDataSource.reviewsCollection().document()
+            val documentId = docRef.id
+
+            // Create DTO with the generated ID
+            val reviewDto = review.toDto().copy(
+                id = documentId,
+                createdAt = System.currentTimeMillis()
+            )
+
+            // Save to Firestore
+            docRef.set(reviewDto).await()
+
+            Result.success(documentId)
         } catch (e: Exception) {
             Result.failure(e)
         }
@@ -50,6 +62,30 @@ class ReviewRepositoryImpl @Inject constructor(
             val review = firestoreDataSource.getDocument("reviews", id, ReviewDto::class.java)
                 ?: return Result.failure(Exception("Review not found"))
             Result.success(review.toDomain())
+        } catch (e: Exception) {
+            Result.failure(e)
+        }
+    }
+
+    override suspend fun getReviewByRental(rentalId: String): Result<Review?> {
+        return try {
+            val reviews = firestoreDataSource.queryDocuments(
+                "reviews",
+                "rentalId",
+                rentalId,
+                ReviewDto::class.java
+            )
+            // There should be at most one review per rental
+            Result.success(reviews.firstOrNull()?.toDomain())
+        } catch (e: Exception) {
+            Result.failure(e)
+        }
+    }
+
+    override suspend fun deleteReview(reviewId: String): Result<Unit> {
+        return try {
+            firestoreDataSource.deleteDocument("reviews", reviewId)
+            Result.success(Unit)
         } catch (e: Exception) {
             Result.failure(e)
         }

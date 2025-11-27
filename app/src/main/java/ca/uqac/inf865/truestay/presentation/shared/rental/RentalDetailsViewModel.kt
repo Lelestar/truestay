@@ -22,6 +22,9 @@ import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import javax.inject.Inject
 
+import ca.uqac.inf865.truestay.domain.model.ReviewType
+import ca.uqac.inf865.truestay.domain.usecase.review.DeleteReviewUseCase
+
 data class RentalDetailsUiState(
     val rental: Rental? = null,
     val property: Property? = null,
@@ -32,7 +35,9 @@ data class RentalDetailsUiState(
     val entryInventory: Inventory? = null,
     val exitInventory: Inventory? = null,
     val isLoading: Boolean = false,
-    val errorRes: Int? = null
+    val isDeletingReview: Boolean = false,
+    val errorRes: Int? = null,
+    val deletionErrorMessageRes: Int? = null
 )
 
 @HiltViewModel
@@ -42,7 +47,8 @@ class RentalDetailsViewModel @Inject constructor(
     private val reviewRepository: ReviewRepository,
     private val userRepository: UserRepository,
     private val propertyRepository: PropertyRepository,
-    private val authRepository: AuthRepository
+    private val authRepository: AuthRepository,
+    private val deleteReviewUseCase: DeleteReviewUseCase
 ) : ViewModel() {
 
     private val _uiState = MutableStateFlow(RentalDetailsUiState(isLoading = true))
@@ -68,6 +74,30 @@ class RentalDetailsViewModel @Inject constructor(
                     }
                 }
         }
+    }
+
+    fun deleteReview(reviewType: ReviewType) {
+        viewModelScope.launch {
+            val reviewId = uiState.value.review?.id ?: return@launch
+            
+            _uiState.update { it.copy(isDeletingReview = true) }
+            
+            deleteReviewUseCase(reviewId, reviewType)
+                .onSuccess {
+                    // Reload review to reflect changes
+                    uiState.value.rental?.let { rental -> fetchReview(rental) }
+                    _uiState.update { it.copy(isDeletingReview = false, deletionErrorMessageRes = R.string.review_delete_success) }
+                }
+                .onFailure {
+                    _uiState.update { 
+                        it.copy(isDeletingReview = false, deletionErrorMessageRes = R.string.review_delete_error)
+                    }
+                }
+        }
+    }
+
+    fun clearDeletionErrorMessage() {
+        _uiState.update { it.copy(deletionErrorMessageRes = null) }
     }
 
     private suspend fun fetchProperty(propertyId: String) {
@@ -115,9 +145,9 @@ class RentalDetailsViewModel @Inject constructor(
     }
 
     private suspend fun fetchReview(rental: Rental) {
-        val reviewId = rental.reviewId ?: return
-        reviewRepository.getReviewById(reviewId)
+        reviewRepository.getReviewByRental(rental.id)
             .onSuccess { review ->
+                // review can be null if not found, which is valid (no review yet)
                 _uiState.update { it.copy(review = review) }
             }
     }

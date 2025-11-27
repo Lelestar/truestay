@@ -10,7 +10,6 @@ data class Rental(
     val status: RentalStatus = RentalStatus.PENDING,
     val entryInventoryId: String? = null,
     val exitInventoryId: String? = null,
-    val reviewId: String? = null,
     val createdAt: Long = 0L,
     val acceptedAt: Long? = null
 )

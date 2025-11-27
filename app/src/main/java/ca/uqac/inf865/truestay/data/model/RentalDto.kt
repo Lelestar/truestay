@@ -14,7 +14,6 @@ data class RentalDto(
     val status: String = "pending",
     val entryInventoryId: String? = null,
     val exitInventoryId: String? = null,
-    val reviewId: String? = null,
     val createdAt: Long = 0L,
     val acceptedAt: Long? = null
 )
@@ -37,7 +36,6 @@ fun RentalDto.toDomain(): Rental {
         },
         entryInventoryId = entryInventoryId,
         exitInventoryId = exitInventoryId,
-        reviewId = reviewId,
         createdAt = createdAt,
         acceptedAt = acceptedAt
     )
@@ -60,7 +58,6 @@ fun Rental.toDto(): RentalDto {
         },
         entryInventoryId = entryInventoryId,
         exitInventoryId = exitInventoryId,
-        reviewId = reviewId,
         createdAt = createdAt,
         acceptedAt = acceptedAt
     )

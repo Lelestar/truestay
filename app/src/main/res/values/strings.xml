@@ -33,6 +33,8 @@
 
     <!-- Common -->
     <string name="common_retry">R&#233;essayer</string>
+    <string name="common_delete">Supprimer</string>
+    <string name="common_edit">Modifier</string>
     <string name="image_carousel_photos_counter">Photos %1$d sur %2$d</string>
 
     <!-- Login -->
@@ -196,6 +198,8 @@
     <string name="property_details_favorite_removed">Retiré des favoris</string>
     <string name="property_details_favorite_error">Impossible de mettre à jour le favori</string>
     <string name="property_details_create_location">Mettre en location</string>
+    <string name="property_details_expand_review">Développer l\'avis</string>
+    <string name="property_details_collapse_review">Réduire l\'avis</string>
 
     <!-- Property Actions -->
     <string name="property_action_edit">Modifier</string>
@@ -286,6 +290,10 @@
     <string name="rental_contact_title">Contact</string>
     <string name="rental_contact_role_landlord">Propriétaire</string>
     <string name="rental_contact_role_tenant">Locataire</string>
+    <string name="review_delete_dialog_title">Supprimer cet avis</string>
+    <string name="review_delete_dialog_message">Cette action est définitive. Voulez-vous vraiment supprimer cet avis ?</string>
+    <string name="review_delete_dialog_confirm">Supprimer</string>
+    <string name="review_delete_dialog_cancel">Annuler</string>
 
     <!-- Profile -->
     <string name="profile_picture_choose_source_title">Photo de profil</string>
@@ -400,6 +408,9 @@
     <string name="review_form_title_property">Votre avis - Logement</string>
     <string name="review_form_title_building">Votre avis - Immeuble</string>
     <string name="review_form_title_neighborhood">Votre avis - Quartier</string>
+    <string name="review_form_card_title_property">Votre avis sur le logement</string>
+    <string name="review_form_card_title_building">Votre avis sur l\'immeuble</string>
+    <string name="review_form_card_title_neighborhood">Votre avis sur le quartier</string>
     <string name="review_form_property_general_condition">État général</string>
     <string name="review_form_property_comfort">Confort</string>
     <string name="review_form_property_compliance">Conformité annonce</string>
@@ -428,6 +439,11 @@
     <string name="review_form_disclaimer_warning">⚠️ Ne partagez aucune donnée personnelle. Les insultes et contenus inappropriés sont interdits.</string>
     <string name="review_form_submit_button">Publier l\'avis</string>
     <string name="review_form_back_button">Retour</string>
+    <string name="review_form_error_load">Erreur lors du chargement de l\'avis</string>
+    <string name="review_form_error_submit">Erreur lors de la publication de l\'avis</string>
+    <string name="review_delete_success">Avis supprimé avec succès</string>
+    <string name="review_delete_error">Erreur lors de la suppression de l\'avis</string>
+
     <!-- Room Details Screen -->
     <string name="room_details_error_loading">Impossible de charger les détails de la pièce</string>
     <string name="room_details_photos_title">Photos de la pièce</string>

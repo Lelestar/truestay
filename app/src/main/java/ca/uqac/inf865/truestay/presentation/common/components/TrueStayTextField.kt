@@ -168,7 +168,7 @@ fun TrueStayTextField(
                     // Text field content
                     Box(
                         modifier = Modifier.weight(1f),
-                        contentAlignment = Alignment.CenterStart
+                        contentAlignment = if (minLines == 1 && maxLines == 1) Alignment.CenterStart else Alignment.TopStart
                     ) {
                         // Placeholder
                         if (value.isEmpty() && placeholder != null) {

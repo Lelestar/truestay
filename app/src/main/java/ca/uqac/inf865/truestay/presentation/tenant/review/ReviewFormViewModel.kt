@@ -41,15 +41,16 @@ data class ReviewFormUiState(
 
     // Common fields
     val comment: String = "",
-    val photoUris: List<Uri> = emptyList(),
-    val uploadedPhotoUrls: List<String> = emptyList(), // Photos déjà uploadées sur le serveur
+    val photoUris: List<Uri> = emptyList(), // Local URIs of new photos to upload
+    val uploadedPhotoUrls: List<String> = emptyList(), // Already uploaded photos (for editing existing reviews)
 
     // UI State
     val isLoading: Boolean = false,
     val isSubmitting: Boolean = false,
-    val isUploadingPhoto: Boolean = false,
-    val errorMessage: String? = null,
-    val photoUploadError: String? = null
+    val loadError: String? = null, // Error while loading existing review
+    val errorMessage: String? = null, // Error while submitting review
+    val existingReviewId: String? = null, // ID of existing review (for updates)
+    val hasChanges: Boolean = false // Track if any changes have been made since loading
 )
 
 @HiltViewModel
@@ -73,13 +74,49 @@ class ReviewFormViewModel @Inject constructor(
     var uiState by mutableStateOf(ReviewFormUiState())
         private set
 
+    private var initialState = ReviewFormUiState()
+
     init {
         loadExistingReview()
     }
 
+    private fun checkChanges() {
+        val isChanged = when (reviewType) {
+            ReviewType.PROPERTY -> {
+                uiState.generalCondition != initialState.generalCondition ||
+                uiState.comfort != initialState.comfort ||
+                uiState.compliance != initialState.compliance ||
+                uiState.valueForMoney != initialState.valueForMoney ||
+                uiState.comment != initialState.comment ||
+                uiState.uploadedPhotoUrls != initialState.uploadedPhotoUrls ||
+                uiState.photoUris.isNotEmpty()
+            }
+            ReviewType.BUILDING -> {
+                uiState.maintenance != initialState.maintenance ||
+                uiState.neighborhood != initialState.neighborhood ||
+                uiState.security != initialState.security ||
+                uiState.services != initialState.services ||
+                uiState.comment != initialState.comment ||
+                uiState.uploadedPhotoUrls != initialState.uploadedPhotoUrls ||
+                uiState.photoUris.isNotEmpty()
+            }
+            ReviewType.NEIGHBORHOOD -> {
+                uiState.transport != initialState.transport ||
+                uiState.amenities != initialState.amenities ||
+                uiState.calm != initialState.calm ||
+                uiState.safety != initialState.safety ||
+                uiState.atmosphere != initialState.atmosphere ||
+                uiState.comment != initialState.comment ||
+                uiState.uploadedPhotoUrls != initialState.uploadedPhotoUrls ||
+                uiState.photoUris.isNotEmpty()
+            }
+        }
+        uiState = uiState.copy(hasChanges = isChanged)
+    }
+
     private fun loadExistingReview() {
         viewModelScope.launch {
-            uiState = uiState.copy(isLoading = true)
+            uiState = uiState.copy(isLoading = true, loadError = null)
 
             try {
                 // Get current user
@@ -109,7 +146,9 @@ class ReviewFormViewModel @Inject constructor(
                                                 compliance = propReview.compliance,
                                                 valueForMoney = propReview.valueForMoney,
                                                 comment = propReview.comment,
-                                                uploadedPhotoUrls = propReview.photos
+                                                uploadedPhotoUrls = propReview.photos,
+                                                existingReviewId = review.id,
+                                                hasChanges = false
                                             )
                                         }
                                     }
@@ -121,7 +160,9 @@ class ReviewFormViewModel @Inject constructor(
                                                 security = buildReview.security,
                                                 services = buildReview.services,
                                                 comment = buildReview.comment,
-                                                uploadedPhotoUrls = buildReview.photos
+                                                uploadedPhotoUrls = buildReview.photos,
+                                                existingReviewId = review.id,
+                                                hasChanges = false
                                             )
                                         }
                                     }
@@ -134,135 +175,154 @@ class ReviewFormViewModel @Inject constructor(
                                                 safety = neighReview.safety,
                                                 atmosphere = neighReview.atmosphere,
                                                 comment = neighReview.comment,
-                                                uploadedPhotoUrls = neighReview.photos
+                                                uploadedPhotoUrls = neighReview.photos,
+                                                existingReviewId = review.id,
+                                                hasChanges = false
                                             )
                                         }
                                     }
                                 }
+                                // Capture initial state for comparison
+                                initialState = uiState
                             }
                         }
                     }
                 }
-            } catch (e: Exception) {
-                // En cas d'erreur, on laisse le formulaire vide
-            }
-
-            uiState = uiState.copy(isLoading = false)
-        }
-    }
-
-    // Property review setters
-    fun setGeneralCondition(rating: Int) {
-        uiState = uiState.copy(generalCondition = rating)
-    }
-
-    fun setComfort(rating: Int) {
-        uiState = uiState.copy(comfort = rating)
-    }
-
-    fun setCompliance(rating: Int) {
-        uiState = uiState.copy(compliance = rating)
-    }
-
-    fun setValueForMoney(rating: Int) {
-        uiState = uiState.copy(valueForMoney = rating)
-    }
-
-    // Building review setters
-    fun setMaintenance(rating: Int) {
-        uiState = uiState.copy(maintenance = rating)
-    }
-
-    fun setNeighborhood(rating: Int) {
-        uiState = uiState.copy(neighborhood = rating)
-    }
-
-    fun setSecurity(rating: Int) {
-        uiState = uiState.copy(security = rating)
-    }
-
-    fun setServices(rating: Int) {
-        uiState = uiState.copy(services = rating)
-    }
-
-    // Neighborhood review setters
-    fun setTransport(rating: Int) {
-        uiState = uiState.copy(transport = rating)
-    }
-
-    fun setAmenities(rating: Int) {
-        uiState = uiState.copy(amenities = rating)
-    }
-
-    fun setCalm(rating: Int) {
-        uiState = uiState.copy(calm = rating)
-    }
-
-    fun setSafety(rating: Int) {
-        uiState = uiState.copy(safety = rating)
-    }
-
-    fun setAtmosphere(rating: Int) {
-        uiState = uiState.copy(atmosphere = rating)
-    }
-
-    // Common setters
-    fun setComment(comment: String) {
-        uiState = uiState.copy(comment = comment)
-    }
-
-    fun addPhoto(uri: Uri) {
-        val currentCount = uiState.uploadedPhotoUrls.size
-        val maxPhotos = 5
-
-        if (currentCount < maxPhotos) {
-            uploadPhoto(uri)
-        }
-    }
-
-    fun addPhotos(uris: List<Uri>) {
-        val currentCount = uiState.uploadedPhotoUrls.size
-        val maxPhotos = 5
-        val availableSlots = maxPhotos - currentCount
-        val photosToAdd = uris.take(availableSlots)
-
-        photosToAdd.forEach { uri ->
-            uploadPhoto(uri)
-        }
-    }
-
-    private fun uploadPhoto(uri: Uri) {
-        viewModelScope.launch {
-            uiState = uiState.copy(isUploadingPhoto = true, photoUploadError = null)
-
-            try {
-                // Upload image to storage
-                val path = "reviews/$rentalId/${System.currentTimeMillis()}"
-                val result = storageRepository.uploadImage(uri, path)
-
-                result.onSuccess { url ->
-                    val newPhotoUrls = uiState.uploadedPhotoUrls + url
-                    uiState = uiState.copy(
-                        uploadedPhotoUrls = newPhotoUrls,
-                        isUploadingPhoto = false,
-                        photoUploadError = null
-                    )
-                }.onFailure { exception ->
-                    uiState = uiState.copy(
-                        isUploadingPhoto = false,
-                        photoUploadError = exception.message
-                    )
-                }
+                uiState = uiState.copy(isLoading = false)
             } catch (e: Exception) {
                 uiState = uiState.copy(
-                    isUploadingPhoto = false,
-                    photoUploadError = e.message
+                    isLoading = false,
+                    loadError = "error_load" // Will be resolved to string in UI
                 )
             }
         }
     }
 
-    fun removePhoto(photoUrl: String) {
+    /**
+     * Retry loading the existing review after an error
+     */
+    fun retryLoadReview() {
+        loadExistingReview()
+    }
+
+    // Property review setters
+    fun setGeneralCondition(rating: Int) {
+        uiState = uiState.copy(generalCondition = rating)
+        checkChanges()
+    }
+
+    fun setComfort(rating: Int) {
+        uiState = uiState.copy(comfort = rating)
+        checkChanges()
+    }
+
+    fun setCompliance(rating: Int) {
+        uiState = uiState.copy(compliance = rating)
+        checkChanges()
+    }
+
+    fun setValueForMoney(rating: Int) {
+        uiState = uiState.copy(valueForMoney = rating)
+        checkChanges()
+    }
+
+    // Building review setters
+    fun setMaintenance(rating: Int) {
+        uiState = uiState.copy(maintenance = rating)
+        checkChanges()
+    }
+
+    fun setNeighborhood(rating: Int) {
+        uiState = uiState.copy(neighborhood = rating)
+        checkChanges()
+    }
+
+    fun setSecurity(rating: Int) {
+        uiState = uiState.copy(security = rating)
+        checkChanges()
+    }
+
+    fun setServices(rating: Int) {
+        uiState = uiState.copy(services = rating)
+        checkChanges()
+    }
+
+    // Neighborhood review setters
+    fun setTransport(rating: Int) {
+        uiState = uiState.copy(transport = rating)
+        checkChanges()
+    }
+
+    fun setAmenities(rating: Int) {
+        uiState = uiState.copy(amenities = rating)
+        checkChanges()
+    }
+
+    fun setCalm(rating: Int) {
+        uiState = uiState.copy(calm = rating)
+        checkChanges()
+    }
+
+    fun setSafety(rating: Int) {
+        uiState = uiState.copy(safety = rating)
+        checkChanges()
+    }
+
+    fun setAtmosphere(rating: Int) {
+        uiState = uiState.copy(atmosphere = rating)
+        checkChanges()
+    }
+
+    // Common setters
+    fun setComment(comment: String) {
+        uiState = uiState.copy(comment = comment)
+        checkChanges()
+    }
+
+    /**
+     * Adds a new photo URI to be uploaded later when submitting the review
+     */
+    fun addPhoto(uri: Uri) {
+        val maxPhotos = 5
+        val totalPhotos = uiState.photoUris.size + uiState.uploadedPhotoUrls.size
+
+        if (totalPhotos < maxPhotos) {
+            uiState = uiState.copy(
+                photoUris = uiState.photoUris + uri
+            )
+            checkChanges()
+        }
+    }
+
+    /**
+     * Adds multiple photo URIs to be uploaded later when submitting the review
+     */
+    fun addPhotos(uris: List<Uri>) {
+        val maxPhotos = 5
+        val totalPhotos = uiState.photoUris.size + uiState.uploadedPhotoUrls.size
+        val availableSlots = maxPhotos - totalPhotos
+        val photosToAdd = uris.take(availableSlots)
+
+        uiState = uiState.copy(
+            photoUris = uiState.photoUris + photosToAdd
+        )
+        checkChanges()
+    }
+
+    /**
+     * Removes a local photo URI (not yet uploaded)
+     */
+    fun removeLocalPhoto(uri: Uri) {
+        uiState = uiState.copy(
+            photoUris = uiState.photoUris.filter { it != uri }
+        )
+        checkChanges()
+    }
+
+    /**
+     * Removes an already uploaded photo from an existing review
+     */
+    fun removeUploadedPhoto(photoUrl: String) {
         viewModelScope.launch {
             try {
                 // Delete from storage
@@ -272,10 +332,37 @@ class ReviewFormViewModel @Inject constructor(
                 uiState = uiState.copy(
                     uploadedPhotoUrls = uiState.uploadedPhotoUrls.filter { it != photoUrl }
                 )
+                checkChanges()
             } catch (e: Exception) {
-                // Silently fail or show error
+                // Silently fail - photo will remain orphaned in storage
             }
         }
+    }
+
+    /**
+     * Uploads all pending photos to storage
+     * Returns the list of uploaded photo URLs
+     */
+    private suspend fun uploadAllPhotos(): List<String> {
+        val uploadedUrls = mutableListOf<String>()
+
+        uiState.photoUris.forEach { uri ->
+            try {
+                val path = "reviews/$rentalId/${System.currentTimeMillis()}_${uploadedUrls.size}"
+                val result = storageRepository.uploadImage(uri, path)
+
+                result.onSuccess { url ->
+                    uploadedUrls.add(url)
+                }.onFailure { exception ->
+                    throw exception
+                }
+            } catch (e: Exception) {
+                // If any upload fails, throw to rollback the submission
+                throw Exception("Failed to upload photo: ${e.message}", e)
+            }
+        }
+
+        return uploadedUrls
     }
 
     fun submitReview(onSuccess: () -> Unit) {
@@ -290,6 +377,12 @@ class ReviewFormViewModel @Inject constructor(
                 // Get rental to obtain propertyId
                 val rental = rentalRepository.getRentalById(rentalId).getOrThrow()
 
+                // Upload all pending photos first
+                val newlyUploadedUrls = uploadAllPhotos()
+
+                // Combine existing uploaded photos with newly uploaded ones
+                val allPhotoUrls = uiState.uploadedPhotoUrls + newlyUploadedUrls
+
                 // Create the appropriate review object based on type
                 val review = when (reviewType) {
                     ReviewType.PROPERTY -> {
@@ -301,9 +394,10 @@ class ReviewFormViewModel @Inject constructor(
                             overallRating = (uiState.generalCondition + uiState.comfort +
                                            uiState.compliance + uiState.valueForMoney) / 4f,
                             comment = uiState.comment,
-                            photos = uiState.uploadedPhotoUrls
+                            photos = allPhotoUrls
                         )
                         Review(
+                            id = uiState.existingReviewId ?: "",
                             rentalId = rentalId,
                             propertyId = rental.propertyId,
                             tenantId = currentUser.id,
@@ -320,9 +414,10 @@ class ReviewFormViewModel @Inject constructor(
                             overallRating = (uiState.maintenance + uiState.neighborhood +
                                            uiState.security + uiState.services) / 4f,
                             comment = uiState.comment,
-                            photos = uiState.uploadedPhotoUrls
+                            photos = allPhotoUrls
                         )
                         Review(
+                            id = uiState.existingReviewId ?: "",
                             rentalId = rentalId,
                             propertyId = rental.propertyId,
                             tenantId = currentUser.id,
@@ -340,9 +435,10 @@ class ReviewFormViewModel @Inject constructor(
                             overallRating = (uiState.transport + uiState.amenities + uiState.calm +
                                            uiState.safety + uiState.atmosphere) / 5f,
                             comment = uiState.comment,
-                            photos = uiState.uploadedPhotoUrls
+                            photos = allPhotoUrls
                         )
                         Review(
+                            id = uiState.existingReviewId ?: "",
                             rentalId = rentalId,
                             propertyId = rental.propertyId,
                             tenantId = currentUser.id,
@@ -360,7 +456,7 @@ class ReviewFormViewModel @Inject constructor(
             } catch (e: Exception) {
                 uiState = uiState.copy(
                     isSubmitting = false,
-                    errorMessage = e.message ?: "Une erreur est survenue lors de la soumission de l'avis"
+                    errorMessage = "error_submit" // Will be resolved to string in UI
                 )
             }
         }

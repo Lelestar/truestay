@@ -128,16 +128,16 @@ class RentalsViewModel @Inject constructor(
 
                         // Enrich with tenant's rating when available
                         val items = baseItems.map { item ->
-                            val reviewId = item.rental.reviewId
-                            if (reviewId.isNullOrBlank()) {
-                                item
-                            } else {
-                                val rating = reviewRepository.getReviewById(reviewId)
-                                    .getOrNull()
-                                    ?.propertyReview
-                                    ?.overallRating
-                                    ?.takeIf { it > 0f }
+                            val rating = reviewRepository.getReviewByRental(item.rental.id)
+                                .getOrNull()
+                                ?.propertyReview
+                                ?.overallRating
+                                ?.takeIf { it > 0f }
+                            
+                            if (rating != null) {
                                 item.copy(tenantRating = rating)
+                            } else {
+                                item
                             }
                         }
 
