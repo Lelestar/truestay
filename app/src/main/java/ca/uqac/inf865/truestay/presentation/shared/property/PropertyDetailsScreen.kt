@@ -27,7 +27,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.foundation.layout.WindowInsets
-import androidx.compose.foundation.layout.width
+import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableIntStateOf
@@ -76,6 +76,7 @@ import java.util.Date
 import java.util.Locale
 import androidx.core.net.toUri
 import ca.uqac.inf865.truestay.domain.model.PropertyStatus
+import ca.uqac.inf865.truestay.presentation.common.components.PhotoGrid
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -467,6 +468,7 @@ private fun PropertyDetailsContent(
                             comment = propertyReview.comment,
                             rating = propertyReview.overallRating,
                             photos = propertyReview.photos,
+                            selectedReviewFilter = selectedReviewFilter,
                             onPhotoClick = { i -> onReviewPhotoClick?.invoke(propertyReview.photos, i) }
                         )
                         if (!isLast) Spacer(modifier = Modifier.height(AppSpacing.small))
@@ -479,6 +481,7 @@ private fun PropertyDetailsContent(
                             comment = buildingReview.comment,
                             rating = buildingReview.overallRating,
                             photos = buildingReview.photos,
+                            selectedReviewFilter = selectedReviewFilter,
                             onPhotoClick = { i -> onReviewPhotoClick?.invoke(buildingReview.photos, i) }
                         )
                         if (!isLast) Spacer(modifier = Modifier.height(AppSpacing.small))
@@ -491,6 +494,7 @@ private fun PropertyDetailsContent(
                             comment = neighborhoodReview.comment,
                             rating = neighborhoodReview.overallRating,
                             photos = neighborhoodReview.photos,
+                            selectedReviewFilter = selectedReviewFilter,
                             onPhotoClick = { i -> onReviewPhotoClick?.invoke(neighborhoodReview.photos, i) }
                         )
                         if (!isLast) Spacer(modifier = Modifier.height(AppSpacing.small))
@@ -781,8 +785,12 @@ private fun UserReviewCard(
     comment: String,
     rating: Float,
     photos: List<String>,
+    selectedReviewFilter: ReviewFilterType? = null,
     onPhotoClick: ((Int) -> Unit)? = null
 ) {
+    var isExpanded by remember { mutableStateOf(false) }
+    val colors = LocalAppColors.current
+
     TrueStayCard(modifier = Modifier.padding(horizontal=AppSpacing.large)) {
         Column(
             verticalArrangement = Arrangement.spacedBy(AppSpacing.large)
@@ -839,6 +847,58 @@ private fun UserReviewCard(
 
                 // Stars
                 TrueStayRatingDisplay(rating = rating)
+
+                // Expand button
+                if (selectedReviewFilter != null) {
+                    TrueStayIcon(
+                        iconRes = if (isExpanded) TrueStayIcons.ChevronUp else TrueStayIcons.ChevronDown,
+                        contentDescriptionRes = if (isExpanded) R.string.property_details_collapse_review else R.string.property_details_expand_review,
+                        tint = colors.grayDark,
+                        modifier = Modifier
+                            .clickable { isExpanded = !isExpanded }
+                            .padding(start = AppSpacing.small)
+                    )
+                }
+            }
+
+            // Expanded details
+            AnimatedVisibility(visible = isExpanded && selectedReviewFilter != null) {
+                Column(
+                    verticalArrangement = Arrangement.spacedBy(AppSpacing.xsmall),
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .background(colors.grayLight.copy(alpha = 0.3f), shape = AppShapes.small)
+                        .padding(AppSpacing.medium)
+                ) {
+                    when (selectedReviewFilter) {
+                        ReviewFilterType.PROPERTY -> {
+                            review.propertyReview?.let {
+                                RatingRow(stringResource(R.string.review_form_property_general_condition), it.generalCondition)
+                                RatingRow(stringResource(R.string.review_form_property_comfort), it.comfort)
+                                RatingRow(stringResource(R.string.review_form_property_compliance), it.compliance)
+                                RatingRow(stringResource(R.string.review_form_property_value_for_money), it.valueForMoney)
+                            }
+                        }
+                        ReviewFilterType.BUILDING -> {
+                            review.buildingReview?.let {
+                                RatingRow(stringResource(R.string.review_form_building_maintenance), it.maintenance)
+                                RatingRow(stringResource(R.string.review_form_building_neighborhood), it.neighborhood)
+                                RatingRow(stringResource(R.string.review_form_building_security), it.security)
+                                RatingRow(stringResource(R.string.review_form_building_services), it.services)
+                            }
+                        }
+                        ReviewFilterType.NEIGHBORHOOD -> {
+                            review.neighborhoodReview?.let {
+                                RatingRow(stringResource(R.string.review_form_neighborhood_transport), it.transport)
+                                RatingRow(stringResource(R.string.review_form_neighborhood_amenities), it.amenities)
+                                RatingRow(stringResource(R.string.review_form_neighborhood_calm), it.calm)
+                                RatingRow(stringResource(R.string.review_form_neighborhood_safety), it.safety)
+                                RatingRow(stringResource(R.string.review_form_neighborhood_atmosphere), it.atmosphere)
+                            }
+                        }
+                        null -> {}
+                    }
+                }
             }
 
             // Comment
@@ -850,53 +910,34 @@ private fun UserReviewCard(
                 )
             }
 
-            // Photos (up to 3 thumbnails with optional +n overlay)
+            // Photos
             if (photos.isNotEmpty()) {
-                val maxThumbnails = 3
-                val visibleCount = minOf(maxThumbnails, photos.size)
-                val extraCount = photos.size - visibleCount
-
-                Row(
-                    horizontalArrangement = Arrangement.spacedBy(AppSpacing.small)
-                ) {
-                    for (index in 0 until visibleCount) {
-                        Box(
-                            modifier = Modifier
-                                .width(90.dp)
-                                .height(85.dp)
-                                .clip(AppShapes.medium)
-                                .clickable(enabled = onPhotoClick != null) {
-                                    onPhotoClick?.invoke(index)
-                                }
-                        ) {
-                            AsyncImage(
-                                model = photos[index],
-                                contentDescription = null,
-                                modifier = Modifier.fillMaxSize(),
-                                contentScale = ContentScale.Crop,
-                                placeholder = painterResource(R.drawable.img_placeholder),
-                                error = painterResource(R.drawable.img_placeholder)
-                            )
-
-                            if (extraCount > 0 && index == visibleCount - 1) {
-                                Box(
-                                    modifier = Modifier
-                                        .matchParentSize()
-                                        .background(LocalAppColors.current.black.copy(alpha = 0.5f)),
-                                    contentAlignment = Alignment.Center
-                                ) {
-                                    Text(
-                                        text = "+$extraCount",
-                                        style = MaterialTheme.typography.headlineSmall,
-                                        color = LocalAppColors.current.white
-                                    )
-                                }
-                            }
-                        }
-                    }
-                }
+                PhotoGrid(
+                    photos = photos,
+                    onPhotoClick = onPhotoClick ?: { _ -> /* No-op if not provided */ },
+                    onDeletePhoto = null // Read-only in this view
+                )
             }
         }
+    }
+}
+
+@Composable
+private fun RatingRow(label: String, rating: Int) {
+    Row(
+        modifier = Modifier.fillMaxWidth(),
+        horizontalArrangement = Arrangement.SpaceBetween,
+        verticalAlignment = Alignment.CenterVertically
+    ) {
+        Text(
+            text = label,
+            style = MaterialTheme.typography.bodySmall,
+            color = LocalAppColors.current.grayDark
+        )
+        TrueStayRatingDisplay(
+            rating = rating.toFloat(),
+            starSize = 14.dp
+        )
     }
 }
 

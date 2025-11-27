@@ -13,6 +13,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
@@ -88,27 +89,24 @@ fun TrueStayRatingInput(
     rating: Int,
     onRatingChange: (Int) -> Unit,
     modifier: Modifier = Modifier,
+    labelStyle: TextStyle = MaterialTheme.typography.titleMedium,
     maxStars: Int = 5,
     enabled: Boolean = true
 ) {
     val colors = LocalAppColors.current
 
-    Row(
-        modifier = modifier,
-        horizontalArrangement = Arrangement.SpaceBetween,
-        verticalAlignment = androidx.compose.ui.Alignment.CenterVertically
-    ) {
+    Column(modifier = modifier) {
         Text(
             text = label,
-            style = MaterialTheme.typography.titleMedium,
+            style = labelStyle,
             color = if (enabled) colors.black else colors.grayDark,
-            modifier = Modifier.weight(1f)
+            modifier = Modifier.padding(bottom = AppSpacing.small)
         )
 
         StarRatingBar(
             rating = rating.coerceIn(0, maxStars),
             maxStars = maxStars,
-            starSize = 20.dp,
+            starSize = 32.dp,
             starColor = if (enabled) colors.warning else colors.grayBorder,
             onStarClick = if (enabled) onRatingChange else null
         )

@@ -95,8 +95,9 @@ service cloud.firestore {
       allow update: if isTenant() &&
                        resource.data.tenantId == request.auth.uid;
 
-      // No one can delete reviews
-      allow delete: if false;
+      // Only tenants can delete their own reviews
+      allow delete: if isTenant() &&
+                       resource.data.tenantId == request.auth.uid;
     }
 
     // ==========================================

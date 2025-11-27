@@ -5,10 +5,16 @@ import android.graphics.Bitmap
 import android.graphics.BitmapFactory
 import android.graphics.Matrix
 import android.net.Uri
+import androidx.activity.compose.rememberLauncherForActivityResult
+import androidx.activity.result.PickVisualMediaRequest
+import androidx.activity.result.contract.ActivityResultContracts
+import androidx.compose.runtime.Composable
+import androidx.compose.runtime.remember
 import androidx.exifinterface.media.ExifInterface
 import java.io.File
 import java.io.FileOutputStream
 import androidx.core.graphics.scale
+import androidx.compose.ui.platform.LocalContext
 
 private const val MAX_IMAGE_WIDTH = 1920
 private const val MAX_IMAGE_HEIGHT = 1920
@@ -104,4 +110,58 @@ fun createImageFileUri(context: Context): Uri {
 private fun rotateBitmap(source: Bitmap, angle: Float): Bitmap {
     val matrix = Matrix().apply { postRotate(angle) }
     return Bitmap.createBitmap(source, 0, 0, source.width, source.height, matrix, true)
+}
+
+/**
+ * A composable function that provides a multi-photo picker launcher with automatic photo optimization.
+ *
+ * Usage example:
+ * ```
+ * val photoPickerLauncher = rememberOptimizedMultiPhotoPickerLauncher { optimizedUris ->
+ *     viewModel.uploadPhotos(optimizedUris)
+ * }
+ *
+ * Button(onClick = { photoPickerLauncher.launch(maxItems = 5) }) {
+ *     Text("Pick Photos")
+ * }
+ * ```
+ *
+ * @param onPhotosPicked Callback invoked with the list of optimized photo URIs
+ * @return PhotoPickerLauncher object with a launch() function
+ */
+@Composable
+fun rememberOptimizedMultiPhotoPickerLauncher(
+    onPhotosPicked: (List<Uri>) -> Unit
+): PhotoPickerLauncher {
+    val context = LocalContext.current
+
+    val launcher = rememberLauncherForActivityResult(
+        contract = ActivityResultContracts.PickMultipleVisualMedia(maxItems = 5)
+    ) { uris: List<Uri> ->
+        if (uris.isNotEmpty()) {
+            val optimizedUris = uris.mapNotNull { uri -> optimizePhoto(context, uri) }
+            onPhotosPicked(optimizedUris)
+        }
+    }
+
+    return remember {
+        PhotoPickerLauncher { maxItems ->
+            launcher.launch(
+                PickVisualMediaRequest(ActivityResultContracts.PickVisualMedia.ImageOnly)
+            )
+        }
+    }
+}
+
+/**
+ * Wrapper class for photo picker launcher functionality.
+ */
+class PhotoPickerLauncher(private val launchAction: (Int) -> Unit) {
+    /**
+     * Launches the photo picker to select multiple photos.
+     * @param maxItems The maximum number of photos that can be selected.
+     */
+    fun launch(maxItems: Int) {
+        launchAction(maxItems)
+    }
 }
