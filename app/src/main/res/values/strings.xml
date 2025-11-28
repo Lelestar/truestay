@@ -467,4 +467,14 @@
     <string name="room_details_expand_element">Développer l\'élément</string>
     <string name="room_details_damaged_requirement">Pour un élément dégradé, au moins un commentaire et une photo sont requis.</string>
     <string name="room_details_collapse_element">Réduire l\'élément</string>
+
+    <!-- Signature Screen -->
+    <string name="signature_date_label">Date</string>
+    <string name="signature_pad_label">Signature</string>
+    <string name="signature_pad_helper">Signez avec votre doigt ou stylet</string>
+    <string name="signature_clear_button">Effacer</string>
+    <string name="signature_disclaimer_title">Valeur légale</string>
+    <string name="signature_disclaimer_message">En signant ce document, vous certifiez que les informations contenues dans cet état des lieux sont exactes. Ce document fait foi en cas de litige.</string>
+    <string name="signature_load_error">Impossible de charger l\'écran de signature.</string>
+    <string name="signature_submit_error">Impossible d\'enregistrer la signature pour le moment.</string>
 </resources>
