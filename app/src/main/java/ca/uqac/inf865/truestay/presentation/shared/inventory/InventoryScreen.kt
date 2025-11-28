@@ -398,6 +398,8 @@ private fun InventoryContent(
                 }
             }
 
+            Spacer(modifier = Modifier.weight(1f))
+
             if (showSignButton) {
                 TrueStayButton(
                     text = stringResource(R.string.inventory_sign_button),

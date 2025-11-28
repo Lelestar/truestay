@@ -421,6 +421,9 @@ class RoomDetailsViewModel @Inject constructor(
      *
      * Status can transition in any direction (including from COMPLETED back to IN_PROGRESS)
      * if elements are modified after completion.
+     *
+     * Also updates inventory status from DRAFT to IN_PROGRESS when at least one room
+     * is no longer in _TODO status.
      */
     private fun updateRoomStatus() {
         val inventory = uiState.inventory ?: return
@@ -441,7 +444,21 @@ class RoomDetailsViewModel @Inject constructor(
                     if (r.roomId == room.roomId) updatedRoom else r
                 }
 
-                val updatedInventory = inventory.copy(rooms = updatedRooms)
+                // Check if inventory status should change from DRAFT to IN_PROGRESS
+                val inventoryStatus = when {
+                    // If inventory is DRAFT and at least one room is not _TODO, move to IN_PROGRESS
+                    inventory.status == ca.uqac.inf865.truestay.domain.model.InventoryStatus.DRAFT &&
+                    updatedRooms.any { it.status != RoomInventoryStatus.TODO } -> {
+                        ca.uqac.inf865.truestay.domain.model.InventoryStatus.IN_PROGRESS
+                    }
+                    // Keep current status otherwise
+                    else -> inventory.status
+                }
+
+                val updatedInventory = inventory.copy(
+                    rooms = updatedRooms,
+                    status = inventoryStatus
+                )
 
                 inventoryRepository.updateInventory(updatedInventory)
                     .onSuccess {

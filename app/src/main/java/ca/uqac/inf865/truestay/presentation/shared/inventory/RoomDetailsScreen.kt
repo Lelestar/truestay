@@ -233,7 +233,12 @@ private fun RoomDetailsContent(
 ) {
     val colors = LocalAppColors.current
     val isTenant = uiState.currentUserId == uiState.tenantId
-    val canAddPhotos = !isTenant && uiState.photoUrls.size < MAX_PHOTOS
+    val isLandlord = uiState.currentUserId == uiState.landlordId
+    val landlordHasSigned = uiState.inventory?.landlordSignature != null
+
+    // Read-only mode: tenant OR landlord who has already signed
+    val isReadOnly = isTenant || (isLandlord && landlordHasSigned)
+    val canAddPhotos = !isReadOnly && uiState.photoUrls.size < MAX_PHOTOS
     val focusManager = LocalFocusManager.current
 
     Column(
@@ -279,14 +284,14 @@ private fun RoomDetailsContent(
                 .padding(AppSpacing.large),
             verticalArrangement = Arrangement.spacedBy(AppSpacing.large)
         ) {
-            // Photos card - hide for tenant if no photos
-            if (!isTenant || uiState.photoUrls.isNotEmpty()) {
+            // Photos card - hide in read-only mode if no photos
+            if (!isReadOnly || uiState.photoUrls.isNotEmpty()) {
                 TrueStayCard(modifier = Modifier.fillMaxWidth()) {
                     Column(verticalArrangement = Arrangement.spacedBy(AppSpacing.large)) {
                         Column(verticalArrangement = Arrangement.spacedBy(AppSpacing.xsmall)) {
                             Text(
                                 text = stringResource(
-                                    if (isTenant) R.string.room_details_photos_title
+                                    if (isReadOnly) R.string.room_details_photos_title
                                     else R.string.room_details_photos_title_optional
                                 ),
                                 style = MaterialTheme.typography.headlineSmall,
@@ -305,7 +310,7 @@ private fun RoomDetailsContent(
                             PhotoGrid(
                                 photos = uiState.photoUrls,
                                 onPhotoClick = onPhotoClick,
-                                onDeletePhoto = if (!isTenant) onDeletePhoto else null
+                                onDeletePhoto = if (!isReadOnly) onDeletePhoto else null
                             )
                         }
 
@@ -332,7 +337,7 @@ private fun RoomDetailsContent(
                         }
 
                         // Add photo button
-                        if (!isTenant) {
+                        if (!isReadOnly) {
                             TrueStayButton(
                                 text = stringResource(R.string.room_details_add_photo),
                                 onClick = onTakePhoto,
@@ -374,7 +379,7 @@ private fun RoomDetailsContent(
                                 isExpanded = uiState.expandedElementId == element.elementId,
                                 isLastItem = index == uiState.room.elements.lastIndex,
                                 isSavingPhoto = uiState.isSavingPhoto,
-                                isTenant = isTenant,
+                                isTenant = isReadOnly,
                                 onToggle = { onToggleElement(element.elementId) },
                                 onConditionChange = { condition ->
                                     onUpdateCondition(element.elementId, condition)
