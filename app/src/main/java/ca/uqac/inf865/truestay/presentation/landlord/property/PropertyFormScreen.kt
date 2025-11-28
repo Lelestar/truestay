@@ -1,5 +1,6 @@
 package ca.uqac.inf865.truestay.presentation.landlord.property
 
+import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.layout.Arrangement
@@ -21,6 +22,7 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
 import androidx.compose.ui.platform.LocalFocusManager
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.input.ImeAction
@@ -375,42 +377,55 @@ fun PropertyFormScreen(
                 }
             }
 
-            // Avant de publier
-            TrueStayCard(
-                modifier = Modifier.fillMaxWidth()
+            // Avant de publier - Container bleu
+            androidx.compose.foundation.layout.Box(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .clip(MaterialTheme.shapes.large)
+                    .background(colors.info)
+                    .padding(AppSpacing.large)
             ) {
                 Column(
-                    verticalArrangement = Arrangement.spacedBy(AppSpacing.small)
+                    verticalArrangement = Arrangement.spacedBy(AppSpacing.medium)
                 ) {
-                    Text(
-                        text = stringResource(R.string.property_form_before_publish_title),
-                        style = MaterialTheme.typography.titleMedium,
-                        color = colors.black
-                    )
+                    // Titre avec icône
+                    Row(
+                        horizontalArrangement = Arrangement.spacedBy(AppSpacing.small),
+                        verticalAlignment = androidx.compose.ui.Alignment.CenterVertically
+                    ) {
+                        TrueStayIcon(
+                            iconRes = TrueStayIcons.ClipboardCheck,
+                            contentDescriptionRes = null,
+                            tint = colors.white,
+                            size = 24.dp
+                        )
 
-                    RequirementItem(
-                        text = stringResource(R.string.property_form_requirement_name),
-                        isFulfilled = uiState.name.isNotBlank()
+                        Text(
+                            text = stringResource(R.string.property_form_before_publish_title),
+                            style = MaterialTheme.typography.titleLarge,
+                            color = colors.white
+                        )
+                    }
+
+                    // Liste des exigences avec checkmarks
+                    RequirementItemBlue(
+                        text = stringResource(R.string.property_form_requirement_info),
+                        isFulfilled = uiState.name.isNotBlank() &&
+                                     uiState.address.isNotBlank() &&
+                                     uiState.description.isNotBlank()
                     )
-                    RequirementItem(
-                        text = stringResource(R.string.property_form_requirement_address),
-                        isFulfilled = uiState.address.isNotBlank()
-                    )
-                    RequirementItem(
-                        text = stringResource(R.string.property_form_requirement_description),
-                        isFulfilled = uiState.description.isNotBlank()
-                    )
-                    RequirementItem(
-                        text = stringResource(R.string.property_form_requirement_room),
-                        isFulfilled = uiState.rooms.isNotEmpty() && uiState.rooms.all { it.type != null }
-                    )
-                    RequirementItem(
+                    RequirementItemBlue(
                         text = stringResource(R.string.property_form_requirement_photos),
                         isFulfilled = uiState.photoUris.size >= 3
                     )
-                    RequirementItem(
-                        text = stringResource(R.string.property_form_requirement_complete),
-                        isFulfilled = uiState.monthlyRent.isNotBlank() && uiState.surface.isNotBlank()
+                    RequirementItemBlue(
+                        text = stringResource(R.string.property_form_requirement_description_quality),
+                        isFulfilled = uiState.description.length >= 50
+                    )
+                    RequirementItemBlue(
+                        text = stringResource(R.string.property_form_requirement_price),
+                        isFulfilled = uiState.monthlyRent.isNotBlank() &&
+                                     (uiState.monthlyRent.toIntOrNull() ?: 0) > 0
                     )
                 }
             }
@@ -488,3 +503,31 @@ private fun RequirementItem(
         )
     }
 }
+
+@Composable
+private fun RequirementItemBlue(
+    text: String,
+    isFulfilled: Boolean,
+    modifier: Modifier = Modifier
+) {
+    val colors = LocalAppColors.current
+
+    Row(
+        modifier = modifier,
+        horizontalArrangement = Arrangement.spacedBy(AppSpacing.small)
+    ) {
+        TrueStayIcon(
+            iconRes = TrueStayIcons.Check,
+            contentDescriptionRes = null,
+            tint = colors.white,
+            size = 20.dp
+        )
+
+        Text(
+            text = text,
+            style = MaterialTheme.typography.bodyMedium,
+            color = colors.white
+        )
+    }
+}
+

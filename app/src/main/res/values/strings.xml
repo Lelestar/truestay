@@ -500,12 +500,10 @@
     <string name="property_form_available_label">Logement disponible</string>
     <string name="property_form_available_desc">Indiquez si le logement est actuellement disponible pour une location</string>
     <string name="property_form_before_publish_title">Avant de publier</string>
-    <string name="property_form_requirement_name">Remplir le titre de l\'annonce</string>
-    <string name="property_form_requirement_address">Remplir l\'adresse complète</string>
-    <string name="property_form_requirement_description">Ajouter une description</string>
-    <string name="property_form_requirement_room">Ajouter au moins 1 pièce</string>
+    <string name="property_form_requirement_info">Vérifiez l\'exactitude des informations</string>
     <string name="property_form_requirement_photos">Ajouter au moins 3 photos de qualité</string>
-    <string name="property_form_requirement_complete">Remplir tous les champs obligatoires</string>
+    <string name="property_form_requirement_description_quality">Rédigez une description attractive</string>
+    <string name="property_form_requirement_price">Indiquez un prix compétitif</string>
     <string name="property_form_cancel">Annuler</string>
     <string name="property_form_publish">Publier</string>
     <string name="property_form_error_submit">Erreur lors de la publication du logement</string>
