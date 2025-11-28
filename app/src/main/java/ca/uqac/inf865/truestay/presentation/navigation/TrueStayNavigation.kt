@@ -28,9 +28,13 @@ fun TrueStayNavigation(
     val showBottomBar = currentDestination?.route in getMainScreenRoutes(userRole)
 
     // Determine if we should show the top bar
-    val showTopBar = currentDestination?.route !in getMainScreenRoutes(userRole)
-            && currentDestination?.route !in getAuthScreenRoutes()
-            && currentDestination?.route !in getCustomTopBarScreenRoutes()
+    val currentRoute = currentDestination?.route ?: ""
+    val hasCustomTopBar = getCustomTopBarScreenRoutes().any { route ->
+        currentRoute.startsWith(route)
+    }
+    val showTopBar = currentRoute !in getMainScreenRoutes(userRole)
+            && currentRoute !in getAuthScreenRoutes()
+            && !hasCustomTopBar
 
     Scaffold(
         topBar = {
@@ -117,7 +121,8 @@ private fun getCustomTopBarScreenRoutes(): List<String> {
         Screen.PropertyDetails.route,
         Screen.RentalDetails.route,
         Screen.Inventory.route,
-        Screen.RoomDetails.route
+        Screen.RoomDetails.route,
+        "property_form" // PropertyFormScreen has its own dynamic TopBar
     )
 }
 
@@ -145,14 +150,6 @@ private fun getScreenTitleRes(route: String): Int? {
         route.startsWith("inventory/") -> R.string.screen_title_inventory
         route.startsWith("room/") -> R.string.screen_title_room_details
         route.startsWith("signature/") -> R.string.screen_title_signature
-        // Property form (add/edit)
-        route.startsWith("property_form") -> {
-            if (route.contains("propertyId=null") || !route.contains("propertyId=")) {
-                R.string.screen_title_add_property
-            } else {
-                R.string.screen_title_edit_property
-            }
-        }
         route.startsWith("create_rental/") -> R.string.screen_title_create_rental
         route == "edit_profile" -> R.string.screen_title_edit_profile
         route == "change_email" -> R.string.screen_title_change_email
