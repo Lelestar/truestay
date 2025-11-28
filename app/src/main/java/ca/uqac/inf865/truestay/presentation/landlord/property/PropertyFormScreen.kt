@@ -58,7 +58,7 @@ fun PropertyFormScreen(
     val focusManager = LocalFocusManager.current
 
     // Multi-photo picker
-    val photoPickerLauncher = rememberOptimizedMultiPhotoPickerLauncher { uris ->
+    val photoPickerLauncher = rememberOptimizedMultiPhotoPickerLauncher(maxItems = 10) { uris ->
         viewModel.addPhotos(uris)
     }
 
@@ -297,7 +297,10 @@ fun PropertyFormScreen(
                         )
                     }
 
-                    if (uiState.photoUris.isNotEmpty()) {
+                    val totalPhotos = uiState.photoUris.size
+
+                    // Display photos
+                    if (totalPhotos > 0) {
                         PhotoGrid(
                             localUris = uiState.photoUris,
                             uploadedUrls = emptyList(),
@@ -307,11 +310,12 @@ fun PropertyFormScreen(
                         )
                     }
 
-                    val canAddMorePhotos = uiState.photoUris.size < 10
+                    // Add photos button
+                    val canAddMorePhotos = totalPhotos < 10
                     TrueStayButton(
                         text = stringResource(R.string.property_form_add_photos),
                         onClick = {
-                            photoPickerLauncher.launch(10 - uiState.photoUris.size)
+                            photoPickerLauncher.launch(10 - totalPhotos)
                         },
                         variant = ButtonVariant.SECONDARY,
                         leadingIcon = TrueStayIcons.Image,
@@ -319,9 +323,9 @@ fun PropertyFormScreen(
                         enabled = canAddMorePhotos
                     )
 
-                    if (uiState.photoUris.isNotEmpty()) {
+                    if (totalPhotos > 0) {
                         Text(
-                            text = stringResource(R.string.property_form_photo_count, uiState.photoUris.size, 10),
+                            text = stringResource(R.string.property_form_photo_count, totalPhotos, 10),
                             style = MaterialTheme.typography.bodySmall,
                             color = colors.grayDark
                         )

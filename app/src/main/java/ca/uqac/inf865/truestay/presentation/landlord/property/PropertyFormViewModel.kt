@@ -55,7 +55,11 @@ class PropertyFormViewModel @Inject constructor(
     private val authRepository: AuthRepository
 ) : ViewModel() {
 
-    var uiState by mutableStateOf(PropertyFormUiState())
+    var uiState by mutableStateOf(
+        PropertyFormUiState(
+            rooms = listOf(RoomFormData()) // Ajouter une pièce par défaut
+        )
+    )
         private set
 
     // Informations générales
@@ -122,14 +126,19 @@ class PropertyFormViewModel @Inject constructor(
 
     // Photos
     fun addPhotos(uris: List<Uri>) {
+        android.util.Log.d("PropertyFormVM", "addPhotos appelé avec ${uris.size} photos")
         val maxPhotos = 10
         val totalPhotos = uiState.photoUris.size
         val availableSlots = maxPhotos - totalPhotos
         val photosToAdd = uris.take(availableSlots)
 
+        android.util.Log.d("PropertyFormVM", "Total photos avant: $totalPhotos, à ajouter: ${photosToAdd.size}")
+
         uiState = uiState.copy(
             photoUris = uiState.photoUris + photosToAdd
         )
+
+        android.util.Log.d("PropertyFormVM", "Total photos après: ${uiState.photoUris.size}")
     }
 
     fun removePhoto(uri: Uri) {
