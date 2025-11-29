@@ -27,18 +27,18 @@ class PropertyRepositoryImpl @Inject constructor(
 
     override suspend fun getPropertyById(id: String): Result<Property> {
         return try {
-            android.util.Log.d("PropertyRepo", "getPropertyById appelé avec id=$id")
+            android.util.Log.d("PropertyRepo", "getPropertyById called with id=$id")
             val property = firestoreDataSource.getDocument("properties", id, PropertyDto::class.java)
-            android.util.Log.d("PropertyRepo", "Document récupéré: ${property?.id}, name=${property?.name}")
+            android.util.Log.d("PropertyRepo", "Document retrieved: ${property?.id}, name=${property?.name}")
             if (property == null) {
-                android.util.Log.e("PropertyRepo", "Property not found pour id=$id")
+                android.util.Log.e("PropertyRepo", "Property not found for id=$id")
                 return Result.failure(Exception("Property not found"))
             }
             val domainProperty = property.toDomain()
-            android.util.Log.d("PropertyRepo", "Property converti en domain: id=${domainProperty.id}, name=${domainProperty.name}, rooms=${domainProperty.rooms.size}, photos=${domainProperty.photos.size}")
+            android.util.Log.d("PropertyRepo", "Property converted to domain: id=${domainProperty.id}, name=${domainProperty.name}, rooms=${domainProperty.rooms.size}, photos=${domainProperty.photos.size}")
             Result.success(domainProperty)
         } catch (e: Exception) {
-            android.util.Log.e("PropertyRepo", "Exception dans getPropertyById: ${e.message}", e)
+            android.util.Log.e("PropertyRepo", "Exception in getPropertyById: ${e.message}", e)
             Result.failure(e)
         }
     }
@@ -59,17 +59,17 @@ class PropertyRepositoryImpl @Inject constructor(
 
     override suspend fun addProperty(property: Property): Result<String> {
         return try {
-            android.util.Log.d("PropertyRepo", "addProperty appelé avec id=${property.id}")
+            android.util.Log.d("PropertyRepo", "addProperty called with id=${property.id}")
             val propertyDto = property.toDto().copy(
                 createdAt = System.currentTimeMillis(),
                 updatedAt = System.currentTimeMillis()
             )
-            // Utiliser updateDocument qui fait en réalité un set() pour conserver l'ID
+            // Use updateDocument which actually does a set() to keep the ID
             firestoreDataSource.updateDocument("properties", property.id, propertyDto)
-            android.util.Log.d("PropertyRepo", "Property ajoutée avec id=${property.id}")
+            android.util.Log.d("PropertyRepo", "Property added with id=${property.id}")
             Result.success(property.id)
         } catch (e: Exception) {
-            android.util.Log.e("PropertyRepo", "Erreur addProperty: ${e.message}", e)
+            android.util.Log.e("PropertyRepo", "Error addProperty: ${e.message}", e)
             Result.failure(e)
         }
     }
