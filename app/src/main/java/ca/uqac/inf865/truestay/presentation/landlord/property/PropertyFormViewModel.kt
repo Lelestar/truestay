@@ -111,6 +111,7 @@ class PropertyFormViewModel @Inject constructor(
             geocodingRepository.getAddressById(suggestion.placeId).fold(
                 onSuccess = { address ->
                     address?.let { addr ->
+                        android.util.Log.d("PropertyFormVM", "Adresse parsée: street=${addr.street}, city=${addr.city}, postalCode=${addr.postalCode}, province=${addr.province}, country=${addr.country}, lat=${addr.latitude}, lng=${addr.longitude}")
                         uiState = uiState.copy(
                             addressQuery = suggestion.primaryText,
                             selectedAddress = addr,
@@ -119,6 +120,7 @@ class PropertyFormViewModel @Inject constructor(
                     }
                 },
                 onFailure = {
+                    android.util.Log.e("PropertyFormVM", "Erreur lors de la récupération de l'adresse: ${it.message}")
                     uiState = uiState.copy(addressSuggestions = emptyList())
                 }
             )
@@ -213,7 +215,7 @@ class PropertyFormViewModel @Inject constructor(
                uiState.surface.isNotBlank() &&
                uiState.rooms.isNotEmpty() &&
                uiState.rooms.all { it.name.isNotBlank() && it.type != null } &&
-               uiState.photoUris.size >= 3
+               uiState.photoUris.isNotEmpty()
     }
 
     /**
@@ -291,6 +293,7 @@ class PropertyFormViewModel @Inject constructor(
 
                 // Utiliser l'adresse sélectionnée (déjà complète avec tous les champs)
                 val address = uiState.selectedAddress ?: Address()
+                android.util.Log.d("PropertyFormVM", "Adresse utilisée pour la propriété: street=${address.street}, city=${address.city}, postalCode=${address.postalCode}, province=${address.province}, country=${address.country}")
 
                 // Créer l'objet Property
                 val property = Property(

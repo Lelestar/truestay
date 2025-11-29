@@ -538,7 +538,7 @@ fun PropertyFormScreen(
                              uiState.surface.isNotBlank() &&
                              uiState.rooms.isNotEmpty() &&
                              uiState.rooms.all { it.name.isNotBlank() && it.type != null } &&
-                             uiState.photoUris.size >= 3
+                             uiState.photoUris.isNotEmpty()
 
             Row(
                 modifier = Modifier.fillMaxWidth(),
