@@ -19,6 +19,7 @@ import ca.uqac.inf865.truestay.presentation.shared.property.ReviewFilterType
 import ca.uqac.inf865.truestay.presentation.shared.property.ReviewWithUser
 import kotlinx.coroutines.launch
 import java.text.SimpleDateFormat
+import java.util.Date
 import java.util.Locale
 
 
@@ -26,6 +27,11 @@ data class CreateRentalUiState(
     val property: Property? = null,
     val isLoading: Boolean = false,
     val error: String? = null,
+    val tenantEmail: String = "",
+    val startDate: String = SimpleDateFormat("dd/MM/yyyy", Locale.getDefault()).format(Date()),
+    val endDate: String = "",
+    val errorMessage: String? = null,
+    val isSubmitting: Boolean = false
 )
 
 @HiltViewModel
@@ -35,9 +41,25 @@ class CreateRentalViewModel @Inject constructor(
     private val propertyRepository: PropertyRepository,
     private val authRepository: AuthRepository
 ) : ViewModel() {
-    // TODO: Implement create rental logic
     var uiState = mutableStateOf(CreateRentalUiState())
         private set
+
+    fun updateTenantEmail(email: String) {
+        uiState.value = uiState.value.copy(tenantEmail = email)
+    }
+
+    fun updateStartDate(date: String) {
+        uiState.value = uiState.value.copy(startDate = date)
+    }
+
+    fun updateEndDate(date: String) {
+        uiState.value = uiState.value.copy(endDate = date)
+    }
+
+    fun dismissError() {
+        uiState.value = uiState.value.copy(errorMessage = null)
+    }
+
     fun loadProperty(propertyId: String) {
         viewModelScope.launch {
             // Load property
@@ -50,10 +72,6 @@ class CreateRentalViewModel @Inject constructor(
                         isLoading = false,
                         error = null
                     )
-//                    loadReviewIfExists(property.id)
-//                    if (property.landlordId.isNotBlank()) {
-//                        loadLandlord(property.landlordId)
-//                    }
                 }
                 .onFailure { error ->
                     uiState.value = uiState.value.copy(
@@ -65,73 +83,100 @@ class CreateRentalViewModel @Inject constructor(
         }
     }
 
+    /**
+     * Create a new rental with tenant email and date range
+     */
     fun createRental(
         propertyId: String,
-        tenantEmail: String,
-        startDate: String,
-        endDate: String,
-        onSuccess: () -> Unit,
-        onError: (String) -> Unit
+        onSuccess: () -> Unit
     ) {
         viewModelScope.launch {
-            uiState.value = uiState.value.copy(isLoading = true, error = null)
+            uiState.value = uiState.value.copy(isSubmitting = true, errorMessage = null)
 
-            // 1) récupérer le locataire via email
-            val tenant = userRepository.getUserByEmail(tenantEmail).getOrNull()
-            println("TENANT = $tenant")
+            // 1) Get tenant by email
+            val tenant = userRepository.getUserByEmail(uiState.value.tenantEmail).getOrNull()
 
-            if(tenant == null) {
-                onError("Aucun utilisateur trouvé avec cet email")
+            if (tenant == null) {
+                uiState.value = uiState.value.copy(
+                    isSubmitting = false,
+                    errorMessage = "TENANT_NOT_FOUND"
+                )
                 return@launch
             }
 
-            // 2) récupérer le propriétaire connecté
+            // 2) Check if tenant already has an active or pending rental
+            val existingRentals = rentalRepository.getRentalsByTenant(tenant.id).getOrNull()
+            val hasActiveRental = existingRentals?.any {
+                it.status == ca.uqac.inf865.truestay.domain.model.RentalStatus.ACTIVE ||
+                it.status == ca.uqac.inf865.truestay.domain.model.RentalStatus.PENDING
+            } ?: false
+
+            if (hasActiveRental) {
+                uiState.value = uiState.value.copy(
+                    isSubmitting = false,
+                    errorMessage = "TENANT_ALREADY_HAS_ACTIVE_RENTAL"
+                )
+                return@launch
+            }
+
+            // 3) Get current landlord
             val currentUser = authRepository.getCurrentUser().getOrNull()
-
             val landlordId = currentUser?.id
-            if(landlordId == null) {
-                onError("Impossinle d'identifier le propriétaire")
-                uiState.value = uiState.value.copy(isLoading = false)
+
+            if (landlordId == null) {
+                uiState.value = uiState.value.copy(
+                    isSubmitting = false,
+                    errorMessage = "LANDLORD_NOT_IDENTIFIED"
+                )
                 return@launch
             }
-            println("USER = $landlordId")
 
-            // 3️⃣ convertir les dates (dd/MM/yyyy → timestamp)
-            val startMillis = parseDate(startDate)
-            val endMillis = parseDate(endDate)
+            // 4) Convert dates (dd/MM/yyyy → timestamp)
+            val startMillis = parseDate(uiState.value.startDate)
+            val endMillis = parseDate(uiState.value.endDate)
 
-            // 4️⃣ construire la location
+            // 5) Build rental object
             val rental = Rental(
                 id = "",
                 propertyId = propertyId,
                 tenantId = tenant.id,
                 landlordId = landlordId,
                 startDate = startMillis,
-                endDate = endMillis
+                endDate = endMillis,
+                createdAt = System.currentTimeMillis()
             )
 
-            // 5️⃣ envoyer au repository
+            // 6) Save to repository
             rentalRepository.createRental(rental)
                 .onSuccess { docId ->
-
-                    rentalRepository.updateRentalId(docId)
+                    // Update the rental with its generated ID
                     rentalRepository.updateRental(rental.copy(id = docId))
-
-                    uiState.value = uiState.value.copy(isLoading = false)
-                    onSuccess()
+                        .onSuccess {
+                            uiState.value = uiState.value.copy(isSubmitting = false)
+                            onSuccess()
+                        }
+                        .onFailure { error ->
+                            uiState.value = uiState.value.copy(
+                                isSubmitting = false,
+                                errorMessage = "CREATE_RENTAL_ERROR|${error.message}"
+                            )
+                        }
                 }
-                .onFailure {
-                    uiState.value = uiState.value.copy(isLoading = false)
-                    onError(it.message ?: "Erreur lors de la création")
+                .onFailure { error ->
+                    uiState.value = uiState.value.copy(
+                        isSubmitting = false,
+                        errorMessage = "CREATE_RENTAL_ERROR|${error.message ?: "Unknown error"}"
+                    )
                 }
         }
     }
 
+    /**
+     * Parse date string (dd/MM/yyyy) to timestamp
+     */
     private fun parseDate(date: String): Long {
         val formatter = SimpleDateFormat("dd/MM/yyyy", Locale.getDefault())
         return formatter.parse(date)?.time ?: 0L
     }
-
-
 }
 

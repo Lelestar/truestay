@@ -115,16 +115,4 @@ class FirestoreDataSource @Inject constructor(
             emptyList()
         }
     }
-
-    suspend fun updateField(
-        collection: String,
-        documentId : String,
-        field : String,
-        value: Any
-    ) {
-        firestore.collection(collection)
-            .document(documentId)
-            .update(field, value)
-            .await()
-    }
 }

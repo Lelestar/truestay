@@ -42,6 +42,7 @@ import androidx.compose.ui.unit.dp
 import android.content.Intent
 import android.text.format.DateFormat
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.text.style.TextAlign
 import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
 import ca.uqac.inf865.truestay.R
 import ca.uqac.inf865.truestay.domain.model.Property
@@ -102,6 +103,19 @@ fun PropertyDetailsScreen(
             snackbarHostState.showSnackbar(context.getString(msgRes))
             viewModel.clearFavoriteMessage()
         }
+    }
+
+    // Refresh data when returning to this screen
+    androidx.compose.runtime.DisposableEffect(Unit) {
+        onDispose {
+            // When we come back to this screen (after creating a rental for example)
+            // we want to refresh the data
+        }
+    }
+
+    LaunchedEffect(propertyId) {
+        // Refresh when the screen becomes visible again
+        viewModel.refresh()
     }
 
     // Determine if current user is the landlord of this property
@@ -276,7 +290,8 @@ fun PropertyDetailsScreen(
                             },
                             landlordPhone = uiState.landlord?.phoneNumber,
                             isLandlord = isLandlord,
-                            onCreateRental = onCreateRental
+                            onCreateRental = onCreateRental,
+                            hasPendingRental = uiState.hasPendingRental
                         )
                     }
                 }
@@ -364,6 +379,7 @@ private fun PropertyDetailsContent(
     landlordPhone: String? = null,
     isLandlord: Boolean = false,
     onCreateRental: ((String) -> Unit)? = null,
+    hasPendingRental: Boolean = false
 ) {
     val context = LocalContext.current
 
@@ -423,12 +439,38 @@ private fun PropertyDetailsContent(
                             )
                         }
                     } else if (onCreateRental != null) {
-                        TrueStayButton(
-                            text = stringResource(R.string.property_details_create_location),
-                            onClick = { onCreateRental(property.id) },
-                            variant = ButtonVariant.PRIMARY,
-                            modifier = Modifier.fillMaxWidth()
-                        )
+                        val canCreateRental = property.isAvailable &&
+                                             property.status != PropertyStatus.PAUSED &&
+                                             !hasPendingRental
+
+                        Column(
+                            modifier = Modifier.fillMaxWidth(),
+                            verticalArrangement = Arrangement.spacedBy(AppSpacing.small)
+                        ) {
+                            TrueStayButton(
+                                text = stringResource(R.string.property_details_create_location),
+                                onClick = { onCreateRental(property.id) },
+                                variant = ButtonVariant.PRIMARY,
+                                modifier = Modifier.fillMaxWidth(),
+                                enabled = canCreateRental
+                            )
+
+                            if (!canCreateRental) {
+                                val messageRes = when {
+                                    !property.isAvailable -> R.string.property_details_create_location_unavailable
+                                    property.status == PropertyStatus.PAUSED -> R.string.property_details_create_location_paused
+                                    else -> R.string.property_details_create_location_pending
+                                }
+
+                                Text(
+                                    text = stringResource(messageRes),
+                                    style = MaterialTheme.typography.bodySmall,
+                                    color = LocalAppColors.current.grayDark,
+                                    modifier = Modifier.fillMaxWidth(),
+                                    textAlign = TextAlign.Center
+                                )
+                            }
+                        }
                     }
 
                     // Description

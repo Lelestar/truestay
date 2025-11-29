@@ -41,7 +41,8 @@ data class RentalsUiState(
     val pendingRentals : List<RentalPropertyItem> = emptyList(),
     val pastRentals: List<RentalPropertyItem> = emptyList(),
     val isLoading: Boolean = false,
-    val error: RentalsError? = null
+    val error: RentalsError? = null,
+    val snackbarMessage: String? = null
 )
 
 /**
@@ -110,6 +111,7 @@ class RentalsViewModel @Inject constructor(
                     _uiState.update {
                         it.copy(
                             currentRental = null,
+                            pendingRentals = emptyList(),
                             pastRentals = emptyList(),
                             isLoading = false,
                             error = null
@@ -163,6 +165,7 @@ class RentalsViewModel @Inject constructor(
                         _uiState.update {
                             it.copy(
                                 currentRental = null,
+                                pendingRentals = emptyList(),
                                 pastRentals = emptyList(),
                                 isLoading = false,
                                 error = RentalsError.LOAD_FAILED
@@ -174,6 +177,7 @@ class RentalsViewModel @Inject constructor(
                 _uiState.update {
                     it.copy(
                         currentRental = null,
+                        pendingRentals = emptyList(),
                         pastRentals = emptyList(),
                         isLoading = false,
                         error = RentalsError.LOAD_FAILED
@@ -184,32 +188,56 @@ class RentalsViewModel @Inject constructor(
 
 
     fun acceptRental(rentalId: String) {
-        println("Accepté")
         viewModelScope.launch {
-            rentalRepository.updateRentalStatus(
-                rentalId = rentalId,
-                newStatus = RentalStatus.ACTIVE
-            )
-                .onSuccess {
-                    refreshRentals()
+            _uiState.update { it.copy(snackbarMessage = null) }
+
+            rentalRepository.getRentalById(rentalId)
+                .onSuccess { rental ->
+                    val updatedRental = rental.copy(
+                        status = RentalStatus.ACTIVE,
+                        acceptedAt = System.currentTimeMillis()
+                    )
+                    rentalRepository.updateRental(updatedRental)
+                        .onSuccess {
+                            _uiState.update {
+                                it.copy(snackbarMessage = "RENTAL_REQUEST_ACCEPTED")
+                            }
+                            refreshRentals()
+                        }
+                        .onFailure { error ->
+                            _uiState.update {
+                                it.copy(snackbarMessage = "RENTAL_REQUEST_ACCEPT_ERROR|${error.message}")
+                            }
+                        }
                 }
-                .onFailure {
-                    println("Erreur acceptation : ${it.message}")
+                .onFailure { error ->
+                    _uiState.update {
+                        it.copy(snackbarMessage = "RENTAL_REQUEST_LOAD_ERROR|${error.message}")
+                    }
                 }
         }
     }
 
     fun declineRental(rentalId: String) {
-//        viewModelScope.launch {
-//            rentalRepository.updateRentalStatus(
-//                rentalId = rentalId,
-//                newStatus = RentalStatus.DECLINED
-//            ).onSuccess {
-//                refreshRentals()
-//            }.onFailure {
-//                println("Erreur refus : ${it.message}")
-//            }
-//        }
+        viewModelScope.launch {
+            _uiState.update { it.copy(snackbarMessage = null) }
+
+            rentalRepository.deleteRental(rentalId)
+                .onSuccess {
+                    _uiState.update {
+                        it.copy(snackbarMessage = "RENTAL_REQUEST_DECLINED")
+                    }
+                    refreshRentals()
+                }
+                .onFailure { error ->
+                    _uiState.update {
+                        it.copy(snackbarMessage = "RENTAL_REQUEST_DECLINE_ERROR|${error.message}")
+                    }
+                }
+        }
     }
 
+    fun clearSnackbarMessage() {
+        _uiState.update { it.copy(snackbarMessage = null) }
+    }
 }

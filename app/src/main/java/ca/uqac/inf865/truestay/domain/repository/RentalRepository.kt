@@ -8,10 +8,7 @@ interface RentalRepository {
     suspend fun getRentalById(id: String): Result<Rental>
     suspend fun getRentalsByTenant(tenantId: String): Result<List<Rental>>
     suspend fun getRentalsByLandlord(landlordId: String): Result<List<Rental>>
+    suspend fun getRentalsByProperty(propertyId: String): Result<List<Rental>>
     suspend fun updateRental(rental: Rental): Result<Unit>
-
-    suspend fun updateRentalId(rentalId: String): Result<Unit>
-
-    suspend fun updateRentalStatus(rentalId: String, newStatus: RentalStatus): Result<Unit>
-
+    suspend fun deleteRental(rentalId: String): Result<Unit>
 }

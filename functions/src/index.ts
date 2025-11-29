@@ -6,3 +6,4 @@ setGlobalOptions({maxInstances: 2});
 
 // Functions
 export {onRentalWrite} from "./availability";
+export {onRentalAccepted} from "./inventories";
