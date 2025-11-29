@@ -502,7 +502,7 @@ fun PropertyFormScreen(
                              uiState.monthlyRent.isNotBlank() &&
                              uiState.surface.isNotBlank() &&
                              uiState.rooms.isNotEmpty() &&
-                             uiState.rooms.all { it.type != null } &&
+                             uiState.rooms.all { it.name.isNotBlank() && it.type != null } &&
                              uiState.photoUris.size >= 3
 
             Row(
