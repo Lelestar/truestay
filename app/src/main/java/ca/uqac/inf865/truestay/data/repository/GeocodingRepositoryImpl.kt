@@ -100,6 +100,11 @@ private fun com.google.android.libraries.places.api.model.Place.toAddress(): Add
     // Extract address components
     val components = this.addressComponents?.asList() ?: emptyList()
 
+    android.util.Log.d("GeocodingRepo", "Parsing address - Total components: ${components.size}")
+    components.forEach { component ->
+        android.util.Log.d("GeocodingRepo", "Component: name=${component.name}, types=${component.types}")
+    }
+
     val streetNumber = components.firstOrNull {
         it.types.contains("street_number")
     }?.name ?: ""
@@ -124,7 +129,7 @@ private fun com.google.android.libraries.places.api.model.Place.toAddress(): Add
         it.types.contains("country")
     }?.name ?: ""
 
-    return Address(
+    val address = Address(
         street = if (streetNumber.isNotEmpty()) {
             "$streetNumber $route"
         } else {
@@ -137,4 +142,8 @@ private fun com.google.android.libraries.places.api.model.Place.toAddress(): Add
         latitude = loc.latitude,
         longitude = loc.longitude
     )
+
+    android.util.Log.d("GeocodingRepo", "Parsed address: $address")
+
+    return address
 }
