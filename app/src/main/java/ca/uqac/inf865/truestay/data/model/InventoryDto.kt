@@ -19,6 +19,7 @@ data class InventoryDto(
     val tenantSignature: SignatureDto? = null,
     val status: String = "draft",
     val pdfUrl: String? = null,
+    val pdfGenerationError: String? = null,
     val createdAt: Long = 0L,
     val completedAt: Long? = null
 )
@@ -66,6 +67,7 @@ fun InventoryDto.toDomain(): Inventory {
             else -> InventoryStatus.DRAFT
         },
         pdfUrl = pdfUrl,
+        pdfGenerationError = pdfGenerationError,
         createdAt = createdAt,
         completedAt = completedAt
     )
@@ -92,6 +94,7 @@ fun InventoryElementDto.toDomain(): InventoryElement {
         condition = when (condition) {
             "good" -> ElementCondition.GOOD
             "damaged" -> ElementCondition.DAMAGED
+            "not_applicable" -> ElementCondition.NOT_APPLICABLE
             else -> ElementCondition.TO_CHECK
         },
         comment = comment,
@@ -128,6 +131,7 @@ fun Inventory.toDto(): InventoryDto {
             InventoryStatus.CANCELLED -> "cancelled"
         },
         pdfUrl = pdfUrl,
+        pdfGenerationError = pdfGenerationError,
         createdAt = createdAt,
         completedAt = completedAt
     )

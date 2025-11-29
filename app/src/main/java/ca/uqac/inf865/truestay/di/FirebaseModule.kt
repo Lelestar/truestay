@@ -4,6 +4,7 @@ import android.util.Log
 import ca.uqac.inf865.truestay.BuildConfig
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.firestore.FirebaseFirestore
+import com.google.firebase.functions.FirebaseFunctions
 import com.google.firebase.storage.FirebaseStorage
 import dagger.Module
 import dagger.Provides
@@ -52,6 +53,19 @@ object FirebaseModule {
                 useEmulator(BuildConfig.EMULATOR_HOST, 9199)
             } else {
                 Log.d(TAG, "☁️ Using Production Firebase Storage")
+            }
+        }
+    }
+
+    @Provides
+    @Singleton
+    fun provideFirebaseFunctions(): FirebaseFunctions {
+        return FirebaseFunctions.getInstance().apply {
+            if (BuildConfig.USE_EMULATORS) {
+                Log.d(TAG, "🔧 Using Functions Emulator at ${BuildConfig.EMULATOR_HOST}:5001")
+                useEmulator(BuildConfig.EMULATOR_HOST, 5001)
+            } else {
+                Log.d(TAG, "☁️ Using Production Firebase Functions")
             }
         }
     }
