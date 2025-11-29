@@ -61,8 +61,12 @@ fun PropertyFormScreen(
 
     // Charger la propriété si on est en mode édition
     androidx.compose.runtime.LaunchedEffect(propertyId) {
+        android.util.Log.d("PropertyFormScreen", "LaunchedEffect - propertyId=$propertyId, isEditMode=${uiState.isEditMode}, isLoadingProperty=${uiState.isLoadingProperty}")
         if (propertyId != null && !uiState.isEditMode && !uiState.isLoadingProperty) {
+            android.util.Log.d("PropertyFormScreen", "Appel de viewModel.loadProperty($propertyId)")
             viewModel.loadProperty(propertyId)
+        } else {
+            android.util.Log.d("PropertyFormScreen", "loadProperty non appelé - propertyId=$propertyId, isEditMode=${uiState.isEditMode}, isLoadingProperty=${uiState.isLoadingProperty}")
         }
     }
 

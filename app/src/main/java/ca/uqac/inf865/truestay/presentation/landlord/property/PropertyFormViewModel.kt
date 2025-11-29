@@ -222,47 +222,52 @@ class PropertyFormViewModel @Inject constructor(
      * Charge les données d'une propriété existante pour l'édition
      */
     fun loadProperty(propertyId: String) {
+        android.util.Log.d("PropertyFormVM", "loadProperty appelé avec propertyId=$propertyId")
         viewModelScope.launch {
             uiState = uiState.copy(isLoadingProperty = true)
 
             try {
+                android.util.Log.d("PropertyFormVM", "Récupération de la propriété depuis le repository...")
                 propertyRepository.getPropertyById(propertyId).fold(
                     onSuccess = { property ->
-                        if (property != null) {
-                            // Convertir les rooms en RoomFormData avec leurs éléments
-                            val roomsData = property.rooms.map { room ->
-                                RoomFormData(
-                                    id = room.id,
-                                    name = room.name,
-                                    type = room.type,
-                                    elements = room.elements // Conserver les éléments existants
-                                )
-                            }
+                        android.util.Log.d("PropertyFormVM", "Propriété récupérée: ${property.id}, name=${property.name}")
 
-                            uiState = uiState.copy(
-                                propertyId = propertyId,
-                                isEditMode = true,
-                                name = property.name,
-                                addressQuery = "${property.address.street}, ${property.address.city}",
-                                selectedAddress = property.address,
-                                description = property.description,
-                                monthlyRent = property.monthlyRent.toString(),
-                                surface = property.surface.toString(),
-                                isInBuilding = property.isInBuilding,
-                                isAvailable = property.isAvailable,
-                                rooms = roomsData.ifEmpty { listOf(RoomFormData()) },
-                                existingPhotoUrls = property.photos,
-                                createdAt = property.createdAt,
-                                isLoadingProperty = false
-                            )
-                        } else {
-                            uiState = uiState.copy(
-                                isLoadingProperty = false,
-                                errorMessage = "Propriété introuvable"
+                        // Convertir les rooms en RoomFormData avec leurs éléments
+                        val roomsData = property.rooms.map { room ->
+                            android.util.Log.d("PropertyFormVM", "Room: id=${room.id}, name=${room.name}, type=${room.type}, elements=${room.elements.size}")
+                            RoomFormData(
+                                id = room.id,
+                                name = room.name,
+                                type = room.type,
+                                elements = room.elements // Conserver les éléments existants
                             )
                         }
+
+                        android.util.Log.d("PropertyFormVM", "Photos existantes: ${property.photos.size}")
+                        property.photos.forEach { photo ->
+                            android.util.Log.d("PropertyFormVM", "Photo URL: $photo")
+                        }
+
+                        uiState = uiState.copy(
+                            propertyId = propertyId,
+                            isEditMode = true,
+                            name = property.name,
+                            addressQuery = "${property.address.street}, ${property.address.city}",
+                            selectedAddress = property.address,
+                            description = property.description,
+                            monthlyRent = property.monthlyRent.toString(),
+                            surface = property.surface.toString(),
+                            isInBuilding = property.isInBuilding,
+                            isAvailable = property.isAvailable,
+                            rooms = roomsData.ifEmpty { listOf(RoomFormData()) },
+                            existingPhotoUrls = property.photos,
+                            createdAt = property.createdAt,
+                            isLoadingProperty = false
+                        )
+                        android.util.Log.d("PropertyFormVM", "État mis à jour avec succès - isEditMode=${uiState.isEditMode}")
                     },
                     onFailure = { exception ->
+                        android.util.Log.e("PropertyFormVM", "Erreur lors de la récupération: ${exception.message}", exception)
                         uiState = uiState.copy(
                             isLoadingProperty = false,
                             errorMessage = "Erreur lors du chargement: ${exception.message}"
@@ -270,6 +275,7 @@ class PropertyFormViewModel @Inject constructor(
                     }
                 )
             } catch (e: Exception) {
+                android.util.Log.e("PropertyFormVM", "Exception lors du chargement: ${e.message}", e)
                 uiState = uiState.copy(
                     isLoadingProperty = false,
                     errorMessage = "Erreur: ${e.message}"
