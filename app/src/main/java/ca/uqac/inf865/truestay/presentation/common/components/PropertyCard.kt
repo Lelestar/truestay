@@ -80,6 +80,7 @@ fun PropertyCard(
     actions: List<PropertyAction>? = null,
     startDate: Long? = null,
     endDate: Long? = null,
+    showTimeRemaining: Boolean = true,
     // Landlord actions menu
     isLandlord: Boolean = false,
     onEditClick: (() -> Unit)? = null,
@@ -91,6 +92,7 @@ fun PropertyCard(
     // Custom badge
     customBadgeText: String? = null,
     customBadgeVariant: BadgeVariant? = null,
+    showStatusBadge: Boolean = true,
 ) {
     when (variant) {
         PropertyCardVariant.COMPACT -> PropertyCardCompact(
@@ -120,10 +122,12 @@ fun PropertyCard(
             actions = actions ?: emptyList(),
             startDate = startDate,
             endDate = endDate,
+            showTimeRemaining = showTimeRemaining,
             onClick = onClick,
             tenantName = tenantName,
             customBadgeText = customBadgeText,
-            customBadgeVariant = customBadgeVariant
+            customBadgeVariant = customBadgeVariant,
+            showStatusBadge = showStatusBadge
         )
     }
 }
@@ -668,9 +672,11 @@ private fun PropertyCardInteractive(
     actions: List<PropertyAction> = emptyList(),
     startDate: Long? = null,
     endDate: Long? = null,
+    showTimeRemaining: Boolean = true,
     tenantName: String? = null,
     customBadgeText: String? = null,
-    customBadgeVariant: BadgeVariant? = null
+    customBadgeVariant: BadgeVariant? = null,
+    showStatusBadge: Boolean = true
 ) {
     TrueStayCard(
         modifier = modifier
@@ -705,13 +711,15 @@ private fun PropertyCardInteractive(
                 }
 
                 // Availability badge
-                TrueStayBadge(
-                    text = customBadgeText ?: stringResource(R.string.property_rental_in_progress),
-                    variant = customBadgeVariant ?: BadgeVariant.SUCCESS,
-                    modifier = Modifier
-                        .align(Alignment.TopStart)
-                        .padding(AppSpacing.medium)
-                )
+                if (showStatusBadge) {
+                    TrueStayBadge(
+                        text = customBadgeText ?: stringResource(R.string.property_rental_in_progress),
+                        variant = customBadgeVariant ?: BadgeVariant.SUCCESS,
+                        modifier = Modifier
+                            .align(Alignment.TopStart)
+                            .padding(AppSpacing.medium)
+                    )
+                }
 
                 // Price badge
                 TrueStayBadge(
@@ -850,58 +858,60 @@ private fun PropertyCardInteractive(
                             }
                         }
                         // Days left until end
-                        val daysLeft = endDate?.let { computeDaysLeft(it) }
-                        if (daysLeft != null) {
-                            Row(
-                                modifier = Modifier.fillMaxWidth(),
-                                horizontalArrangement = Arrangement.SpaceBetween,
-                                verticalAlignment = Alignment.CenterVertically
-                            ) {
+                        if (showTimeRemaining) {
+                            val daysLeft = endDate?.let { computeDaysLeft(it) }
+                            if (daysLeft != null) {
                                 Row(
-                                    horizontalArrangement = Arrangement.spacedBy(AppSpacing.xsmall),
+                                    modifier = Modifier.fillMaxWidth(),
+                                    horizontalArrangement = Arrangement.SpaceBetween,
                                     verticalAlignment = Alignment.CenterVertically
                                 ) {
-                                    TrueStayIcon(
-                                        iconRes = TrueStayIcons.History,
-                                        contentDescriptionRes = null,
-                                        tint = LocalAppColors.current.grayDark,
-                                        size = 16.dp
-                                    )
+                                    Row(
+                                        horizontalArrangement = Arrangement.spacedBy(AppSpacing.xsmall),
+                                        verticalAlignment = Alignment.CenterVertically
+                                    ) {
+                                        TrueStayIcon(
+                                            iconRes = TrueStayIcons.History,
+                                            contentDescriptionRes = null,
+                                            tint = LocalAppColors.current.grayDark,
+                                            size = 16.dp
+                                        )
+                                        Text(
+                                            text = stringResource(R.string.property_rental_days_left_label),
+                                            style = MaterialTheme.typography.bodyMedium,
+                                            color = LocalAppColors.current.grayDark
+                                        )
+                                    }
                                     Text(
-                                        text = stringResource(R.string.property_rental_days_left_label),
-                                        style = MaterialTheme.typography.bodyMedium,
-                                        color = LocalAppColors.current.grayDark
+                                        text = stringResource(R.string.property_rental_days_left, daysLeft.coerceAtLeast(0)),
+                                        style = MaterialTheme.typography.titleMedium,
+                                        color = LocalAppColors.current.primary
                                     )
                                 }
-                                Text(
-                                    text = stringResource(R.string.property_rental_days_left, daysLeft.coerceAtLeast(0)),
-                                    style = MaterialTheme.typography.titleMedium,
-                                    color = LocalAppColors.current.primary
+                            }
+                        }
+                        }
+                    }
+
+                    // Actions
+                    if (actions.isNotEmpty()) {
+                        Spacer(modifier = Modifier.height(AppSpacing.large))
+                        Column(
+                            verticalArrangement = Arrangement.spacedBy(AppSpacing.small)
+                        ) {
+                            actions.forEach { action ->
+                                TrueStayButton(
+                                    text = action.label,
+                                    onClick = action.onClick,
+                                    variant = action.variant,
+                                    leadingIcon = action.iconRes
                                 )
                             }
                         }
                     }
                 }
-
-                // Actions
-                if (actions.isNotEmpty()) {
-                    Spacer(modifier = Modifier.height(AppSpacing.large))
-                    Column(
-                        verticalArrangement = Arrangement.spacedBy(AppSpacing.small)
-                    ) {
-                        actions.forEach { action ->
-                            TrueStayButton(
-                                text = action.label,
-                                onClick = action.onClick,
-                                variant = action.variant,
-                                leadingIcon = action.iconRes
-                            )
-                        }
-                    }
-                }
             }
         }
-    }
 }
 
 private fun computeDaysLeft(endTimestamp: Long): Int {

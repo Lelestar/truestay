@@ -41,6 +41,9 @@ fun NavGraphBuilder.tenantNavGraph(navController: NavHostController) {
             },
             onReviewClick = { rentalId ->
                 navController.navigate(Screen.RentalDetails.createRoute(rentalId, "reviews"))
+            },
+            onPropertyClick = { propertyId ->
+                navController.navigate(Screen.PropertyDetails.createRoute(propertyId))
             }
         )
     }

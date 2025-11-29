@@ -200,6 +200,9 @@
     <string name="property_details_create_location">Mettre en location</string>
     <string name="property_details_expand_review">Développer l\'avis</string>
     <string name="property_details_collapse_review">Réduire l\'avis</string>
+    <string name="property_details_create_location_unavailable">Le logement n\'est pas disponible pour le moment</string>
+    <string name="property_details_create_location_paused">Le logement est actuellement en pause</string>
+    <string name="property_details_create_location_pending">Une demande de location est déjà en attente pour ce logement</string>
 
     <!-- Property Actions -->
     <string name="property_action_edit">Modifier</string>
@@ -237,6 +240,13 @@
     <string name="rentals_error_loading">Impossible de charger vos locations pour le moment.</string>
     <string name="rentals_action_inventory">État des lieux</string>
     <string name="rentals_action_review">Laisser un avis</string>
+    <string name="rental_request_decline">Refuser</string>
+    <string name="rental_request_accept">Accepter</string>
+    <string name="rental_request_accepted">Demande acceptée avec succès</string>
+    <string name="rental_request_declined">Demande refusée</string>
+    <string name="rental_request_accept_error">Impossible d\'accepter la demande : %1$s</string>
+    <string name="rental_request_decline_error">Impossible de refuser la demande : %1$s</string>
+    <string name="rental_request_load_error">Impossible de charger la demande : %1$s</string>
 
     <!-- Landlord Rentals -->
     <string name="landlord_rentals_subtitle">Gérez vos baux et états des lieux</string>
@@ -255,6 +265,8 @@
     <!-- Rental details -->
     <string name="rental_details_error_loading">Impossible de charger la location.</string>
     <string name="rental_status_pending">En attente</string>
+    <string name="rental_request_pending">Demande en attente</string>
+
     <string name="rental_status_active">En cours</string>
     <string name="rental_status_ended">Terminée</string>
     <string name="rental_status_cancelled">Annulée</string>
@@ -479,4 +491,22 @@
     <string name="signature_disclaimer_message">En signant ce document, vous certifiez que les informations contenues dans cet état des lieux sont exactes. Ce document fait foi en cas de litige.</string>
     <string name="signature_load_error">Impossible de charger l\'écran de signature.</string>
     <string name="signature_submit_error">Impossible d\'enregistrer la signature pour le moment.</string>
+
+    <!-- Create Rental -->
+    <string name="rental_info_title">Informations</string>
+    <string name="rental_email_label">Email du locataire</string>
+    <string name="rental_email_placeholder">Ex : sophie.martin@example.com</string>
+    <string name="rental_info_subtext">Nous informerons le locataire afin qu\'il examine et accepte la location</string>
+    <string name="rental_start_date_info">La création de location ultérieure n\'est pas encore disponible. La date de début est fixée à aujourd\'hui.</string>
+    <string name="rental_start_date_label">Date de début</string>
+    <string name="rental_end_date_label">Date de fin</string>
+    <string name="rental_date_placeholder">jj/mm/aaaa</string>
+    <string name="rental_button_create">Créer la location</string>
+    <string name="rental_guideline_title">À propos de la création de location</string>
+    <string name="rental_guideline_text1">Une fois la location créée, le locataire pourra accepter ou refuser la proposition. En cas d\'acceptation, la location apparaîtra automatiquement dans l\'écran \"Mes locations\".</string>
+    <string name="create_rental_error_tenant_not_found">Aucun utilisateur trouvé avec cet email</string>
+    <string name="create_rental_error_tenant_already_has_active_rental">Ce locataire a déjà une location active ou en attente</string>
+    <string name="create_rental_error_landlord_not_identified">Impossible d\'identifier le propriétaire</string>
+    <string name="create_rental_error">Erreur lors de la création : %1$s</string>
+    <string name="create_rental_load_error">Impossible de charger le logement</string>
 </resources>

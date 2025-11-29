@@ -33,6 +33,7 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import ca.uqac.inf865.truestay.R
 import ca.uqac.inf865.truestay.presentation.common.icons.TrueStayIcons
+import ca.uqac.inf865.truestay.presentation.theme.AppShapes
 import ca.uqac.inf865.truestay.presentation.theme.AppSpacing
 import ca.uqac.inf865.truestay.presentation.theme.LocalAppColors
 import ca.uqac.inf865.truestay.presentation.theme.TrueStayTheme
@@ -53,6 +54,7 @@ fun TrueStayTextField(
     leadingIcon: Int? = null,
     errorMessage: String? = null,
     enabled: Boolean = true,
+    readOnly: Boolean = false,
     showClearButton: Boolean = false,
     onClear: (() -> Unit)? = null,
     keyboardType: KeyboardType = if (isPassword) KeyboardType.Password else KeyboardType.Text,
@@ -61,7 +63,9 @@ fun TrueStayTextField(
     keyboardActions: KeyboardActions = KeyboardActions.Default,
     size: TextFieldSize = TextFieldSize.Default,
     minLines: Int = 1,
-    maxLines: Int = 1
+    maxLines: Int = 1,
+    trailingIcon: Int? = null,
+    onTrailingIconClick: (() -> Unit)? = null
 ) {
     var passwordVisible by remember { mutableStateOf(false) }
     val interactionSource = remember { MutableInteractionSource() }
@@ -122,6 +126,7 @@ fun TrueStayTextField(
             singleLine = minLines == 1 && maxLines == 1,
             minLines = minLines,
             maxLines = maxLines,
+            readOnly = readOnly,
             visualTransformation = if (isPassword && !passwordVisible) {
                 PasswordVisualTransformation()
             } else {
@@ -216,6 +221,20 @@ fun TrueStayTextField(
                             )
                         }
                     }
+                    if (trailingIcon != null) {
+                        IconButton(
+                            onClick = { onTrailingIconClick?.invoke() },
+                            modifier = Modifier.size(iconSize),
+                            shape = AppShapes.small
+                        ) {
+                            TrueStayIcon(
+                                iconRes = trailingIcon,
+                                tint = LocalAppColors.current.grayDark,
+                                contentDescriptionRes = null,
+                                size = iconSize
+                            )
+                        }
+                    }
                 }
             }
         )
@@ -231,6 +250,9 @@ fun TrueStayTextField(
     }
 }
 
+// ==========================================
+// Previews
+// ==========================================
 @Preview(showBackground = true)
 @Composable
 fun TrueStayTextFieldBasicPreview() {

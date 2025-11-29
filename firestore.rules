@@ -63,21 +63,23 @@ service cloud.firestore {
     // ==========================================
 
     match /rentals/{rentalId} {
-      // Only tenant and landlord can read their rentals
-      allow read: if isAuthenticated() &&
-                     (resource.data.tenantId == request.auth.uid ||
-                      resource.data.landlordId == request.auth.uid);
+      // Anyone authenticated can read rentals
+      // Needed for: tenants to see their pending rentals, landlords to check tenant availability
+      allow read: if isAuthenticated();
 
       // Only landlord can create rentals
       allow create: if isLandlord() &&
                        request.resource.data.landlordId == request.auth.uid;
 
-      // Only tenant can update rentals
+      // Landlord can update their own rentals (e.g., to set ID after creation)
+      // Tenant can update rentals (e.g., to accept/decline)
       allow update: if isAuthenticated() &&
-                       resource.data.tenantId == request.auth.uid;
+                       (resource.data.landlordId == request.auth.uid ||
+                        resource.data.tenantId == request.auth.uid);
 
-      // No one can delete rentals
-      allow delete: if false;
+      // Tenant can delete their own rentals (decline proposal)
+      allow delete: if isAuthenticated() &&
+                       resource.data.tenantId == request.auth.uid;
     }
 
     // ==========================================
