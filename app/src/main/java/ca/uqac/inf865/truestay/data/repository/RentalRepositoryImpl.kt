@@ -61,9 +61,32 @@ class RentalRepositoryImpl @Inject constructor(
         }
     }
 
+    override suspend fun getRentalsByProperty(propertyId: String): Result<List<Rental>> {
+        return try {
+            val rentals = firestoreDataSource.queryDocuments(
+                "rentals",
+                "propertyId",
+                propertyId,
+                RentalDto::class.java
+            ).map { it.toDomain() }
+            Result.success(rentals)
+        } catch (e: Exception) {
+            Result.failure(e)
+        }
+    }
+
     override suspend fun updateRental(rental: Rental): Result<Unit> {
         return try {
             firestoreDataSource.updateDocument("rentals", rental.id, rental.toDto())
+            Result.success(Unit)
+        } catch (e: Exception) {
+            Result.failure(e)
+        }
+    }
+
+    override suspend fun deleteRental(rentalId: String): Result<Unit> {
+        return try {
+            firestoreDataSource.deleteDocument("rentals", rentalId)
             Result.success(Unit)
         } catch (e: Exception) {
             Result.failure(e)

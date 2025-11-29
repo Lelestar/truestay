@@ -14,6 +14,7 @@ import ca.uqac.inf865.truestay.domain.model.User
 import ca.uqac.inf865.truestay.domain.repository.AuthRepository
 import ca.uqac.inf865.truestay.domain.repository.FavoriteRepository
 import ca.uqac.inf865.truestay.domain.repository.PropertyRepository
+import ca.uqac.inf865.truestay.domain.repository.RentalRepository
 import ca.uqac.inf865.truestay.domain.repository.ReviewRepository
 import ca.uqac.inf865.truestay.domain.repository.UserRepository
 import dagger.hilt.android.lifecycle.HiltViewModel
@@ -50,7 +51,8 @@ data class PropertyDetailsUiState(
     val selectedReviewFilter: ReviewFilterType = ReviewFilterType.PROPERTY,
     val isLoading: Boolean = false,
     val error: String? = null,
-    val favoriteMessageRes: Int? = null
+    val favoriteMessageRes: Int? = null,
+    val hasPendingRental: Boolean = false
 )
 
 
@@ -61,6 +63,7 @@ class PropertyDetailsViewModel @Inject constructor(
     private val reviewRepository: ReviewRepository,
     private val userRepository: UserRepository,
     private val authRepository: AuthRepository,
+    private val rentalRepository: RentalRepository,
     savedStateHandle: SavedStateHandle
 ) : ViewModel() {
 
@@ -77,6 +80,7 @@ class PropertyDetailsViewModel @Inject constructor(
         loadCurrentUser()
         loadPropertyDetails()
         checkIfFavorite()
+        checkPendingRental()
     }
 
     private fun loadCurrentUser() {
@@ -199,6 +203,20 @@ class PropertyDetailsViewModel @Inject constructor(
 
     fun setReviewFilter(filterType: ReviewFilterType) {
         uiState = uiState.copy(selectedReviewFilter = filterType)
+    }
+
+    private fun checkPendingRental() {
+        viewModelScope.launch {
+            rentalRepository.getRentalsByProperty(propertyId)
+                .onSuccess { rentals ->
+                    val hasPending = rentals.any {
+                        it.status == ca.uqac.inf865.truestay.domain.model.RentalStatus.PENDING
+                    }
+                    uiState = uiState.copy(hasPendingRental = hasPending)
+                }
+                .onFailure {
+                }
+        }
     }
 
     fun deleteProperty(onSuccess: () -> Unit) {

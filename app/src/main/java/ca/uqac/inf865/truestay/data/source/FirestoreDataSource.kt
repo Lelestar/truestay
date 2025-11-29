@@ -1,5 +1,6 @@
 package ca.uqac.inf865.truestay.data.source
 
+import androidx.compose.animation.core.Spring
 import com.google.firebase.firestore.FirebaseFirestore
 import kotlinx.coroutines.channels.awaitClose
 import kotlinx.coroutines.flow.Flow
