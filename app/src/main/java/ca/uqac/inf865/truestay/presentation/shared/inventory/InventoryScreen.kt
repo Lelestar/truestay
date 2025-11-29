@@ -103,7 +103,8 @@ fun InventoryScreen(
                     onRetry = { viewModel.loadInventory(inventoryId) },
                     onRoomClick = onRoomClick,
                     onViewPdf = { url -> pdfUrlToView = url },
-                    onShowSignModal = { showSignModal = true }
+                    onShowSignModal = { showSignModal = true },
+                    onRetryPdfGeneration = { viewModel.retryPdfGeneration(inventoryId) }
                 )
             }
         }
@@ -144,7 +145,8 @@ private fun InventoryScreenContent(
     onRetry: () -> Unit,
     onRoomClick: (String) -> Unit,
     onViewPdf: (String) -> Unit = {},
-    onShowSignModal: () -> Unit = {}
+    onShowSignModal: () -> Unit = {},
+    onRetryPdfGeneration: () -> Unit = {}
 ) {
     when {
         uiState.isLoading -> {
@@ -188,7 +190,8 @@ private fun InventoryScreenContent(
                 uiState = uiState,
                 onRoomClick = onRoomClick,
                 onViewPdf = onViewPdf,
-                onShowSignModal = onShowSignModal
+                onShowSignModal = onShowSignModal,
+                onRetryPdfGeneration = onRetryPdfGeneration
             )
         }
     }
@@ -199,7 +202,8 @@ private fun InventoryContent(
     uiState: InventoryUiState,
     onRoomClick: (String) -> Unit,
     onViewPdf: (String) -> Unit,
-    onShowSignModal: () -> Unit
+    onShowSignModal: () -> Unit,
+    onRetryPdfGeneration: () -> Unit
 ) {
     val inventory = uiState.inventory ?: return
     val completedRooms = inventory.rooms.count { it.status == RoomInventoryStatus.COMPLETED }
@@ -350,28 +354,77 @@ private fun InventoryContent(
                     )
 
                     val pdfUrl = inventory.pdfUrl
-                    if (pdfUrl.isNullOrBlank()) {
-                        Text(
-                            text = stringResource(R.string.inventory_document_unavailable),
-                            style = MaterialTheme.typography.bodyMedium,
-                            color = colors.grayDark
-                        )
-                    } else {
-                        Row(
-                            modifier = Modifier.fillMaxWidth(),
-                            horizontalArrangement = Arrangement.spacedBy(AppSpacing.small)
-                        ) {
-                            TrueStayButton(
-                                text = stringResource(R.string.inventory_document_view_pdf),
-                                onClick = { onViewPdf(pdfUrl) },
-                                modifier = Modifier.weight(1f)
-                            )
-                            TrueStayButton(
-                                text = stringResource(R.string.inventory_document_download),
-                                onClick = { downloadPdf(context, pdfUrl, inventory.id) },
-                                leadingIcon = TrueStayIcons.Download,
-                                variant = ButtonVariant.SECONDARY,
-                                modifier = Modifier.weight(1f)
+                    val pdfError = inventory.pdfGenerationError
+                    val isGenerating = inventory.status == InventoryStatus.SIGNED &&
+                                      pdfUrl.isNullOrBlank() &&
+                                      pdfError.isNullOrBlank()
+
+                    when {
+                        // PDF generation in progress
+                        isGenerating -> {
+                            Column(
+                                horizontalAlignment = Alignment.CenterHorizontally,
+                                verticalArrangement = Arrangement.spacedBy(AppSpacing.small),
+                                modifier = Modifier.fillMaxWidth()
+                            ) {
+                                CircularProgressIndicator(color = colors.primary)
+                                Text(
+                                    text = stringResource(R.string.inventory_document_generating),
+                                    style = MaterialTheme.typography.bodyMedium,
+                                    color = colors.grayDark,
+                                    textAlign = TextAlign.Center
+                                )
+                            }
+                        }
+
+                        // PDF generation error
+                        !pdfError.isNullOrBlank() -> {
+                            Column(
+                                horizontalAlignment = Alignment.CenterHorizontally,
+                                verticalArrangement = Arrangement.spacedBy(AppSpacing.small),
+                                modifier = Modifier.fillMaxWidth()
+                            ) {
+                                Text(
+                                    text = stringResource(R.string.inventory_document_error),
+                                    style = MaterialTheme.typography.bodyMedium,
+                                    color = colors.error,
+                                    textAlign = TextAlign.Center
+                                )
+                                TrueStayButton(
+                                    text = stringResource(R.string.common_retry),
+                                    onClick = onRetryPdfGeneration,
+                                    variant = ButtonVariant.SECONDARY
+                                )
+                            }
+                        }
+
+                        // PDF is ready
+                        !pdfUrl.isNullOrBlank() -> {
+                            Row(
+                                modifier = Modifier.fillMaxWidth(),
+                                horizontalArrangement = Arrangement.spacedBy(AppSpacing.small)
+                            ) {
+                                TrueStayButton(
+                                    text = stringResource(R.string.inventory_document_view_pdf),
+                                    onClick = { onViewPdf(pdfUrl) },
+                                    modifier = Modifier.weight(1f)
+                                )
+                                TrueStayButton(
+                                    text = stringResource(R.string.inventory_document_download),
+                                    onClick = { downloadPdf(context, pdfUrl, inventory.id) },
+                                    leadingIcon = TrueStayIcons.Download,
+                                    variant = ButtonVariant.SECONDARY,
+                                    modifier = Modifier.weight(1f)
+                                )
+                            }
+                        }
+
+                        // PDF not available (draft/in-progress status)
+                        else -> {
+                            Text(
+                                text = stringResource(R.string.inventory_document_unavailable),
+                                style = MaterialTheme.typography.bodyMedium,
+                                color = colors.grayDark
                             )
                         }
                     }
@@ -397,6 +450,8 @@ private fun InventoryContent(
                     }
                 }
             }
+
+            Spacer(modifier = Modifier.weight(1f))
 
             if (showSignButton) {
                 TrueStayButton(
@@ -765,7 +820,8 @@ private fun InventoryDraftLandlordPreview() {
             ),
             onRoomClick = {},
             onViewPdf = {},
-            onShowSignModal = {}
+            onShowSignModal = {},
+            onRetryPdfGeneration = {}
         )
     }
 }
@@ -800,7 +856,8 @@ private fun InventoryInProgressLandlordPreview() {
             ),
             onRoomClick = {},
             onViewPdf = {},
-            onShowSignModal = {}
+            onShowSignModal = {},
+            onRetryPdfGeneration = {}
         )
     }
 }
@@ -835,7 +892,8 @@ private fun InventoryReadyToSignLandlordPreview() {
             ),
             onRoomClick = {},
             onViewPdf = {},
-            onShowSignModal = {}
+            onShowSignModal = {},
+            onRetryPdfGeneration = {}
         )
     }
 }
@@ -874,7 +932,8 @@ private fun InventoryPendingSignatureTenantPreview() {
             ),
             onRoomClick = {},
             onViewPdf = {},
-            onShowSignModal = {}
+            onShowSignModal = {},
+            onRetryPdfGeneration = {}
         )
     }
 }
@@ -913,7 +972,8 @@ private fun InventoryPendingSignatureLandlordPreview() {
             ),
             onRoomClick = {},
             onViewPdf = {},
-            onShowSignModal = {}
+            onShowSignModal = {},
+            onRetryPdfGeneration = {}
         )
     }
 }
@@ -958,7 +1018,99 @@ private fun InventoryCompletedPreview() {
             ),
             onRoomClick = {},
             onViewPdf = {},
-            onShowSignModal = {}
+            onShowSignModal = {},
+            onRetryPdfGeneration = {}
+        )
+    }
+}
+
+@Preview(name = "PDF Generation In Progress", showBackground = true)
+@Composable
+private fun InventoryPdfGeneratingPreview() {
+    val sampleInventory = Inventory(
+        id = "inv7",
+        type = InventoryType.ENTRY,
+        rooms = listOf(
+            InventoryRoom(roomId = "r1", roomName = "Salon", status = RoomInventoryStatus.COMPLETED),
+            InventoryRoom(roomId = "r2", roomName = "Chambre", status = RoomInventoryStatus.COMPLETED)
+        ),
+        status = InventoryStatus.SIGNED,
+        landlordSignature = Signature(
+            userId = "landlord7",
+            signatureImageUrl = "https://example.com/landlord_sig.png",
+            signedAt = System.currentTimeMillis() - 1800000
+        ),
+        tenantSignature = Signature(
+            userId = "tenant7",
+            signatureImageUrl = "https://example.com/tenant_sig.png",
+            signedAt = System.currentTimeMillis()
+        ),
+        pdfUrl = null,
+        pdfGenerationError = null
+    )
+
+    TrueStayTheme {
+        InventoryContent(
+            uiState = InventoryUiState(
+                inventory = sampleInventory,
+                propertyName = "Appartement moderne centre-ville",
+                propertyAddress = "123 Rue Principale, Chicoutimi",
+                landlordName = "Michel Leblanc",
+                tenantName = "Julie Bergeron",
+                currentUserId = "tenant7",
+                landlordId = "landlord7",
+                tenantId = "tenant7"
+            ),
+            onRoomClick = {},
+            onViewPdf = {},
+            onShowSignModal = {},
+            onRetryPdfGeneration = {}
+        )
+    }
+}
+
+@Preview(name = "PDF Generation Error", showBackground = true)
+@Composable
+private fun InventoryPdfErrorPreview() {
+    val sampleInventory = Inventory(
+        id = "inv8",
+        type = InventoryType.EXIT,
+        rooms = listOf(
+            InventoryRoom(roomId = "r1", roomName = "Salon", status = RoomInventoryStatus.COMPLETED),
+            InventoryRoom(roomId = "r2", roomName = "Chambre", status = RoomInventoryStatus.COMPLETED),
+            InventoryRoom(roomId = "r3", roomName = "Cuisine", status = RoomInventoryStatus.COMPLETED)
+        ),
+        status = InventoryStatus.SIGNED,
+        landlordSignature = Signature(
+            userId = "landlord8",
+            signatureImageUrl = "https://example.com/landlord_sig.png",
+            signedAt = System.currentTimeMillis() - 3600000
+        ),
+        tenantSignature = Signature(
+            userId = "tenant8",
+            signatureImageUrl = "https://example.com/tenant_sig.png",
+            signedAt = System.currentTimeMillis() - 1800000
+        ),
+        pdfUrl = null,
+        pdfGenerationError = "Failed to generate PDF: Storage service unavailable"
+    )
+
+    TrueStayTheme {
+        InventoryContent(
+            uiState = InventoryUiState(
+                inventory = sampleInventory,
+                propertyName = "Condo luxueux avec vue",
+                propertyAddress = "456 Boulevard des Saguenéens, Chicoutimi",
+                landlordName = "Stéphane Côté",
+                tenantName = "Martine Dufour",
+                currentUserId = "landlord8",
+                landlordId = "landlord8",
+                tenantId = "tenant8"
+            ),
+            onRoomClick = {},
+            onViewPdf = {},
+            onShowSignModal = {},
+            onRetryPdfGeneration = {}
         )
     }
 }

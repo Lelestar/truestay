@@ -9,6 +9,7 @@ data class Inventory(
     val tenantSignature: Signature? = null,
     val status: InventoryStatus = InventoryStatus.DRAFT,
     val pdfUrl: String? = null,
+    val pdfGenerationError: String? = null,
     val createdAt: Long = 0L,
     val completedAt: Long? = null
 )
