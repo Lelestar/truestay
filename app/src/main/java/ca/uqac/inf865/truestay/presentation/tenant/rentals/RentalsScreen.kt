@@ -3,15 +3,18 @@ package ca.uqac.inf865.truestay.presentation.tenant.rentals
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
+import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
+import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.material3.CircularProgressIndicator
@@ -31,6 +34,7 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import androidx.lifecycle.viewmodel.compose.viewModel
 import ca.uqac.inf865.truestay.R
 import ca.uqac.inf865.truestay.domain.model.Address
 import ca.uqac.inf865.truestay.domain.model.Property
@@ -72,7 +76,9 @@ fun RentalsScreen(
         onRentalClick = onRentalClick,
         onInventoryClick = onInventoryClick,
         onReviewClick = onReviewClick,
-        onRetry = { viewModel.refreshRentals() }
+        onRetry = { viewModel.refreshRentals() },
+        onAccept = { id -> viewModel.acceptRental(id) },
+        onDecline = { id -> viewModel.declineRental(id) }
     )
 }
 
@@ -82,7 +88,9 @@ private fun RentalsScreenContent(
     onRentalClick: (String) -> Unit,
     onInventoryClick: (String) -> Unit,
     onReviewClick: (String) -> Unit,
-    onRetry: () -> Unit
+    onRetry: () -> Unit,
+    onAccept: (String) -> Unit,
+    onDecline: (String) -> Unit
 ) {
     Column(modifier = Modifier.fillMaxSize()) {
         // Header with title and subtitle
@@ -150,6 +158,30 @@ private fun RentalsScreenContent(
                     modifier = Modifier.fillMaxSize(),
                     contentPadding = PaddingValues(AppSpacing.large)
                 ) {
+                    // Pending rentals section
+                    if (uiState.pendingRentals.isNotEmpty()) {
+                        item {
+                            Text(
+                                text = stringResource(R.string.rental_request_pending),
+                                style = MaterialTheme.typography.headlineSmall,
+                                color = LocalAppColors.current.black,
+                                modifier = Modifier.padding(bottom = AppSpacing.small, top = AppSpacing.xsmall)
+                            )
+                        }
+
+                        items(uiState.pendingRentals) { item ->
+                            PendingRentalCard(
+                                item = item,
+                                onAccept = { rentalId -> onAccept(rentalId) },
+                                onDecline = { rentalId -> println("REFUSER $rentalId") },
+                                modifier = Modifier.fillMaxWidth()
+                            )
+                            Spacer(modifier = Modifier.height(AppSpacing.medium))
+
+                        }
+                    }
+
+
                     // Current rental section
                     item {
                         CurrentRentalSection(
@@ -159,6 +191,10 @@ private fun RentalsScreenContent(
                             onReviewClick = onReviewClick
                         )
                     }
+
+
+
+                    //
 
                     // History section
                     if (uiState.pastRentals.isNotEmpty()) {
@@ -376,201 +412,270 @@ private fun PastRentalCard(
     }
 }
 
+@Composable
+private fun PendingRentalCard(
+    item: RentalPropertyItem,
+    onAccept: (String) -> Unit,
+    onDecline: (String) -> Unit,
+    modifier: Modifier = Modifier
+) {
+    val property = item.property
+    val startText = DateUtils.formatLocalDate(item.rental.startDate)
+    val endText = DateUtils.formatLocalDate(item.rental.endDate)
+
+    TrueStayCard(
+        modifier = modifier.fillMaxWidth(),
+        padding = AppSpacing.medium
+    ) {
+        Column {
+            // Nom du logement
+            Text(
+                text = property.name,
+                style = MaterialTheme.typography.titleMedium,
+                color = LocalAppColors.current.black
+            )
+
+            Spacer(modifier = Modifier.height(AppSpacing.small))
+
+            // Adresse
+            Text(
+                text = "${property.address.street}, ${property.address.city}",
+                style = MaterialTheme.typography.bodySmall,
+                color = LocalAppColors.current.grayDark
+            )
+
+            Spacer(modifier = Modifier.height(AppSpacing.medium))
+
+            // Dates
+            Text(
+                text = "$startText → $endText",
+                style = MaterialTheme.typography.bodyMedium,
+                color = LocalAppColors.current.grayDark
+            )
+
+            Spacer(modifier = Modifier.height(AppSpacing.medium))
+
+            // Boutons Accepter / Refuser
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.SpaceBetween
+            ) {
+                TrueStayButton(
+                    text = "Refuser",
+                    variant = ButtonVariant.SECONDARY,
+                    onClick = { onDecline(item.rental.id) },
+                    modifier = Modifier.weight(1f)
+                )
+
+                Spacer(modifier = Modifier.width(AppSpacing.medium))
+
+                TrueStayButton(
+                    text = "Accepter",
+                    variant = ButtonVariant.PRIMARY,
+                    onClick = { onAccept(item.rental.id) },
+                    modifier = Modifier.weight(1f)
+                )
+            }
+        }
+    }
+}
+
+
 // ==========================================
 // Previews
 // ==========================================
-@Preview(showBackground = true)
-@Composable
-private fun RentalsScreenLoadingPreview() {
-    TrueStayTheme {
-        RentalsScreenContent(
-            uiState = RentalsUiState(isLoading = true),
-            onRentalClick = {},
-            onInventoryClick = {},
-            onReviewClick = {},
-            onRetry = {}
-        )
-    }
-}
-
-@Preview(showBackground = true)
-@Composable
-private fun RentalsScreenWithCurrentRentalPreview() {
-    val property = Property(
-        id = "1",
-        name = "Beau 3½ avec vue sur le Saguenay",
-        address = Address(
-            street = "123 Rue des Érables",
-            city = "Saguenay",
-            province = "QC",
-            postalCode = "G7H 1A1",
-            country = "Canada",
-            latitude = 48.4284,
-            longitude = -71.0656
-        ),
-        monthlyRent = 950,
-        surface = 75,
-        rooms = listOf(
-            Room(name = "Chambre principale", type = RoomType.BEDROOM),
-            Room(name = "Salon", type = RoomType.LIVING_ROOM),
-            Room(name = "Cuisine", type = RoomType.KITCHEN),
-            Room(name = "Salle de bain", type = RoomType.BATHROOM)
-        ),
-        photos = listOf("https://example.com/photo1.jpg"),
-        landlordId = "owner1",
-        ratings = PropertyRatings(
-            propertyAverageRating = 4.5f,
-            propertyReviewCount = 12,
-            buildingAverageRating = 4.3f,
-            neighborhoodAverageRating = 4.7f
-        ),
-        isAvailable = false
-    )
-
-    val rental = Rental(
-        id = "rental1",
-        propertyId = "1",
-        tenantId = "tenant1",
-        landlordId = "owner1",
-        startDate = System.currentTimeMillis(),
-        endDate = System.currentTimeMillis() + 31536000000L,
-        status = RentalStatus.ACTIVE
-    )
-
-    TrueStayTheme {
-        RentalsScreenContent(
-            uiState = RentalsUiState(
-                currentRental = RentalPropertyItem(rental, property),
-                pastRentals = emptyList(),
-                isLoading = false
-            ),
-            onRentalClick = {},
-            onInventoryClick = {},
-            onReviewClick = {},
-            onRetry = {}
-        )
-    }
-}
-
-@Preview(showBackground = true)
-@Composable
-private fun RentalsScreenWithHistoryPreview() {
-    val currentProperty = Property(
-        id = "1",
-        name = "Beau 3½ avec vue sur le Saguenay",
-        address = Address(
-            street = "123 Rue des Érables",
-            city = "Saguenay",
-            province = "QC",
-            postalCode = "G7H 1A1",
-            country = "Canada",
-            latitude = 48.4284,
-            longitude = -71.0656
-        ),
-        monthlyRent = 950,
-        surface = 75,
-        rooms = listOf(
-            Room(name = "Chambre principale", type = RoomType.BEDROOM)
-        ),
-        photos = listOf("https://example.com/photo1.jpg"),
-        landlordId = "owner1",
-        ratings = PropertyRatings(propertyAverageRating = 4.5f),
-        isAvailable = false
-    )
-
-    val pastProperty1 = Property(
-        id = "2",
-        name = "Studio moderne centre-ville",
-        address = Address(
-            street = "456 Boulevard Talbot",
-            city = "Chicoutimi",
-            province = "QC",
-            postalCode = "G7H 4B1",
-            country = "Canada",
-            latitude = 48.4284,
-            longitude = -71.0656
-        ),
-        monthlyRent = 750,
-        surface = 45,
-        rooms = listOf(
-            Room(name = "Studio", type = RoomType.LIVING_ROOM)
-        ),
-        photos = listOf("https://example.com/photo2.jpg"),
-        landlordId = "owner2",
-        ratings = PropertyRatings(propertyAverageRating = 4.2f),
-        isAvailable = true
-    )
-
-    val currentRental = Rental(
-        id = "rental1",
-        propertyId = "1",
-        tenantId = "tenant1",
-        landlordId = "owner1",
-        startDate = System.currentTimeMillis(),
-        status = RentalStatus.ACTIVE
-    )
-
-    val pastRental1 = Rental(
-        id = "rental2",
-        propertyId = "2",
-        tenantId = "tenant1",
-        landlordId = "owner2",
-        startDate = System.currentTimeMillis() - 63072000000L,
-        endDate = System.currentTimeMillis() - 31536000000L,
-        status = RentalStatus.ENDED
-    )
-
-    TrueStayTheme {
-        RentalsScreenContent(
-            uiState = RentalsUiState(
-                currentRental = RentalPropertyItem(currentRental, currentProperty),
-                pastRentals = listOf(
-                    RentalPropertyItem(pastRental1, pastProperty1)
-                ),
-                isLoading = false
-            ),
-            onRentalClick = {},
-            onInventoryClick = {},
-            onReviewClick = {},
-            onRetry = {}
-        )
-    }
-}
-
-@Preview(showBackground = true)
-@Composable
-private fun RentalsScreenEmptyPreview() {
-    TrueStayTheme {
-        RentalsScreenContent(
-            uiState = RentalsUiState(
-                currentRental = null,
-                pastRentals = emptyList(),
-                isLoading = false
-            ),
-            onRentalClick = {},
-            onInventoryClick = {},
-            onReviewClick = {},
-            onRetry = {}
-        )
-    }
-}
-
-@Preview(showBackground = true)
-@Composable
-private fun RentalsScreenErrorPreview() {
-    TrueStayTheme {
-        RentalsScreenContent(
-            uiState = RentalsUiState(
-                currentRental = null,
-                pastRentals = emptyList(),
-                isLoading = false,
-                error = RentalsError.LOAD_FAILED
-            ),
-            onRentalClick = {},
-            onInventoryClick = {},
-            onReviewClick = {},
-            onRetry = {}
-        )
-    }
-}
-
+//@Preview(showBackground = true)
+//@Composable
+//private fun RentalsScreenLoadingPreview() {
+//    TrueStayTheme {
+//        RentalsScreenContent(
+//            uiState = RentalsUiState(isLoading = true),
+//            onRentalClick = {},
+//            onInventoryClick = {},
+//            onReviewClick = {},
+//            onRetry = {}
+//        )
+//    }
+//}
+//
+//@Preview(showBackground = true)
+//@Composable
+//private fun RentalsScreenWithCurrentRentalPreview() {
+//    val property = Property(
+//        id = "1",
+//        name = "Beau 3½ avec vue sur le Saguenay",
+//        address = Address(
+//            street = "123 Rue des Érables",
+//            city = "Saguenay",
+//            province = "QC",
+//            postalCode = "G7H 1A1",
+//            country = "Canada",
+//            latitude = 48.4284,
+//            longitude = -71.0656
+//        ),
+//        monthlyRent = 950,
+//        surface = 75,
+//        rooms = listOf(
+//            Room(name = "Chambre principale", type = RoomType.BEDROOM),
+//            Room(name = "Salon", type = RoomType.LIVING_ROOM),
+//            Room(name = "Cuisine", type = RoomType.KITCHEN),
+//            Room(name = "Salle de bain", type = RoomType.BATHROOM)
+//        ),
+//        photos = listOf("https://example.com/photo1.jpg"),
+//        landlordId = "owner1",
+//        ratings = PropertyRatings(
+//            propertyAverageRating = 4.5f,
+//            propertyReviewCount = 12,
+//            buildingAverageRating = 4.3f,
+//            neighborhoodAverageRating = 4.7f
+//        ),
+//        isAvailable = false
+//    )
+//
+//    val rental = Rental(
+//        id = "rental1",
+//        propertyId = "1",
+//        tenantId = "tenant1",
+//        landlordId = "owner1",
+//        startDate = System.currentTimeMillis(),
+//        endDate = System.currentTimeMillis() + 31536000000L,
+//        status = RentalStatus.ACTIVE
+//    )
+//
+//    TrueStayTheme {
+//        RentalsScreenContent(
+//            uiState = RentalsUiState(
+//                currentRental = RentalPropertyItem(rental, property),
+//                pastRentals = emptyList(),
+//                isLoading = false
+//            ),
+//            onRentalClick = {},
+//            onInventoryClick = {},
+//            onReviewClick = {},
+//            onRetry = {}
+//        )
+//    }
+//}
+//
+//@Preview(showBackground = true)
+//@Composable
+//private fun RentalsScreenWithHistoryPreview() {
+//    val currentProperty = Property(
+//        id = "1",
+//        name = "Beau 3½ avec vue sur le Saguenay",
+//        address = Address(
+//            street = "123 Rue des Érables",
+//            city = "Saguenay",
+//            province = "QC",
+//            postalCode = "G7H 1A1",
+//            country = "Canada",
+//            latitude = 48.4284,
+//            longitude = -71.0656
+//        ),
+//        monthlyRent = 950,
+//        surface = 75,
+//        rooms = listOf(
+//            Room(name = "Chambre principale", type = RoomType.BEDROOM)
+//        ),
+//        photos = listOf("https://example.com/photo1.jpg"),
+//        landlordId = "owner1",
+//        ratings = PropertyRatings(propertyAverageRating = 4.5f),
+//        isAvailable = false
+//    )
+//
+//    val pastProperty1 = Property(
+//        id = "2",
+//        name = "Studio moderne centre-ville",
+//        address = Address(
+//            street = "456 Boulevard Talbot",
+//            city = "Chicoutimi",
+//            province = "QC",
+//            postalCode = "G7H 4B1",
+//            country = "Canada",
+//            latitude = 48.4284,
+//            longitude = -71.0656
+//        ),
+//        monthlyRent = 750,
+//        surface = 45,
+//        rooms = listOf(
+//            Room(name = "Studio", type = RoomType.LIVING_ROOM)
+//        ),
+//        photos = listOf("https://example.com/photo2.jpg"),
+//        landlordId = "owner2",
+//        ratings = PropertyRatings(propertyAverageRating = 4.2f),
+//        isAvailable = true
+//    )
+//
+//    val currentRental = Rental(
+//        id = "rental1",
+//        propertyId = "1",
+//        tenantId = "tenant1",
+//        landlordId = "owner1",
+//        startDate = System.currentTimeMillis(),
+//        status = RentalStatus.ACTIVE
+//    )
+//
+//    val pastRental1 = Rental(
+//        id = "rental2",
+//        propertyId = "2",
+//        tenantId = "tenant1",
+//        landlordId = "owner2",
+//        startDate = System.currentTimeMillis() - 63072000000L,
+//        endDate = System.currentTimeMillis() - 31536000000L,
+//        status = RentalStatus.ENDED
+//    )
+//
+//    TrueStayTheme {
+//        RentalsScreenContent(
+//            uiState = RentalsUiState(
+//                currentRental = RentalPropertyItem(currentRental, currentProperty),
+//                pastRentals = listOf(
+//                    RentalPropertyItem(pastRental1, pastProperty1)
+//                ),
+//                isLoading = false
+//            ),
+//            onRentalClick = {},
+//            onInventoryClick = {},
+//            onReviewClick = {},
+//            onRetry = {}
+//        )
+//    }
+//}
+//
+//@Preview(showBackground = true)
+//@Composable
+//private fun RentalsScreenEmptyPreview() {
+//    TrueStayTheme {
+//        RentalsScreenContent(
+//            uiState = RentalsUiState(
+//                currentRental = null,
+//                pastRentals = emptyList(),
+//                isLoading = false
+//            ),
+//            onRentalClick = {},
+//            onInventoryClick = {},
+//            onReviewClick = {},
+//            onRetry = {}
+//        )
+//    }
+//}
+//
+//@Preview(showBackground = true)
+//@Composable
+//private fun RentalsScreenErrorPreview() {
+//    TrueStayTheme {
+//        RentalsScreenContent(
+//            uiState = RentalsUiState(
+//                currentRental = null,
+//                pastRentals = emptyList(),
+//                isLoading = false,
+//                error = RentalsError.LOAD_FAILED
+//            ),
+//            onRentalClick = {},
+//            onInventoryClick = {},
+//            onReviewClick = {},
+//            onRetry = {}
+//        )
+//    }
+//}
+//

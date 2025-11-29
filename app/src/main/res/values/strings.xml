@@ -251,6 +251,8 @@
     <!-- Rental details -->
     <string name="rental_details_error_loading">Impossible de charger la location.</string>
     <string name="rental_status_pending">En attente</string>
+    <string name="rental_request_pending">Demande en attente</string>
+
     <string name="rental_status_active">En cours</string>
     <string name="rental_status_ended">Terminée</string>
     <string name="rental_status_cancelled">Annulée</string>
@@ -395,4 +397,24 @@
     <string name="inventory_sign_modal_tenant_message">Confirmez-vous avoir vérifié l\'inspection réalisée par le propriétaire avant de signer l\'état des lieux ?</string>
     <string name="inventory_sign_modal_confirm">Confirmer</string>
     <string name="inventory_sign_modal_cancel">Annuler</string>
+    <string name="rental_info_title">Informations</string>
+    <string name="rental_email_label">Email du locataire</string>
+    <string name="rental_email_placeholder">Ex : sophie.martin@example.com</string>
+
+    <string name="rental_info_subtext">
+        Nous informerons le locataire afin qu’il examine et accepte la location
+    </string>
+
+    <string name="rental_start_date_label">Date de début</string>
+    <string name="rental_end_date_label">Date de fin</string>
+    <string name="rental_date_placeholder">jj/mm/aaaa</string>
+
+    <string name="rental_button_create">Créer la location</string>
+
+    <string name="rental_guideline_title">À propos de la création de location</string>
+    <string name="rental_guideline_text1">
+        Une fois la location créee, le locataire disposera de 24 heures pour accepter ou refuser la proposition.
+        En cas d\'acceptation, la location apparaîtra automatiquement dans l\'écran
+    </string>
+    <string name="rental_guideline_mes_locations">"Mes locations"</string>
 </resources>

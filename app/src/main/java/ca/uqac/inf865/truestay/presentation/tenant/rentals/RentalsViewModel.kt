@@ -38,6 +38,7 @@ enum class RentalsError {
  */
 data class RentalsUiState(
     val currentRental: RentalPropertyItem? = null,
+    val pendingRentals : List<RentalPropertyItem> = emptyList(),
     val pastRentals: List<RentalPropertyItem> = emptyList(),
     val isLoading: Boolean = false,
     val error: RentalsError? = null
@@ -140,6 +141,7 @@ class RentalsViewModel @Inject constructor(
                                 item.copy(tenantRating = rating)
                             }
                         }
+                        val pending = items.filter { it.rental.status == RentalStatus.PENDING }
 
                         // Separate current (ACTIVE) rental from past rentals
                         val current = items.firstOrNull { it.rental.status == RentalStatus.ACTIVE }
@@ -150,6 +152,7 @@ class RentalsViewModel @Inject constructor(
                         _uiState.update {
                             it.copy(
                                 currentRental = current,
+                                pendingRentals = pending,
                                 pastRentals = past,
                                 isLoading = false,
                                 error = null
@@ -178,4 +181,35 @@ class RentalsViewModel @Inject constructor(
                 }
             }
     }
+
+
+    fun acceptRental(rentalId: String) {
+        println("Accepté")
+        viewModelScope.launch {
+            rentalRepository.updateRentalStatus(
+                rentalId = rentalId,
+                newStatus = RentalStatus.ACTIVE
+            )
+                .onSuccess {
+                    refreshRentals()
+                }
+                .onFailure {
+                    println("Erreur acceptation : ${it.message}")
+                }
+        }
+    }
+
+    fun declineRental(rentalId: String) {
+//        viewModelScope.launch {
+//            rentalRepository.updateRentalStatus(
+//                rentalId = rentalId,
+//                newStatus = RentalStatus.DECLINED
+//            ).onSuccess {
+//                refreshRentals()
+//            }.onFailure {
+//                println("Erreur refus : ${it.message}")
+//            }
+//        }
+    }
+
 }
