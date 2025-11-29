@@ -69,4 +69,34 @@ class RentalRepositoryImpl @Inject constructor(
             Result.failure(e)
         }
     }
+
+    override suspend fun updateRentalStatus(rentalId: String, newStatus: RentalStatus): Result<Unit> {
+        return try {
+            firestoreDataSource.updateField(
+                collection = "rentals",
+                documentId = rentalId,
+                field = "status",
+                value = newStatus.name
+            )
+            Result.success(Unit)
+        } catch (e: Exception) {
+            Result.failure(e)
+        }
+    }
+
+    override suspend fun updateRentalId(rentalId: String): Result<Unit> {
+        return try {
+            firestoreDataSource.updateField(
+                collection = "rentals",
+                documentId = rentalId,
+                field = "id",
+                value = rentalId
+            )
+            Result.success(Unit)
+        } catch (e: Exception) {
+            Result.failure(e)
+        }
+    }
+
+
 }

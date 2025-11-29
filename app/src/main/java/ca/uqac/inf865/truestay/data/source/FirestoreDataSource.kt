@@ -1,5 +1,6 @@
 package ca.uqac.inf865.truestay.data.source
 
+import androidx.compose.animation.core.Spring
 import com.google.firebase.firestore.FirebaseFirestore
 import kotlinx.coroutines.tasks.await
 import javax.inject.Inject
@@ -113,5 +114,17 @@ class FirestoreDataSource @Inject constructor(
         } catch (e: Exception) {
             emptyList()
         }
+    }
+
+    suspend fun updateField(
+        collection: String,
+        documentId : String,
+        field : String,
+        value: Any
+    ) {
+        firestore.collection(collection)
+            .document(documentId)
+            .update(field, value)
+            .await()
     }
 }

@@ -117,8 +117,19 @@ fun CreateRentalScreen(
 
         // 🔹 BOUTON FIXÉ EN BAS
         TrueStayButton(
-            text = "Créer la location",
-            onClick = {},
+            text = stringResource(R.string.rental_button_create),
+            onClick = {
+                viewModel.createRental(
+                    propertyId = propertyId,
+                    tenantEmail = tenantEmail.value,
+                    startDate = startDate.value,
+                    endDate = endDate.value,
+                    onSuccess = onRentalCreated,
+                    onError = { message ->
+                        println("Erreur lors de la création : $message")
+                    }
+                )
+            },
             modifier = Modifier
                 .fillMaxWidth()
                 .padding(AppSpacing.large)
@@ -197,14 +208,14 @@ fun RentalInfoCard(
 
             // Titre
             Text(
-                text = "Informations",
+                text = stringResource(R.string.rental_info_title),
                 fontWeight = FontWeight.Bold,
                 fontSize = 18.sp
             )
 
             // Label
             Text(
-                text = "Email du locataire",
+                text = stringResource(R.string.rental_email_label),
                 fontWeight = FontWeight.SemiBold
             )
 
@@ -212,13 +223,13 @@ fun RentalInfoCard(
             TrueStayTextField(
                 value = email,
                 onValueChange = onEmailChange,
-                placeholder = "Ex : sophie.martin@example.com",
+                placeholder = stringResource(R.string.rental_email_placeholder),
                 modifier = Modifier.fillMaxWidth()
             )
 
             // Texte d’aide
             Text(
-                text = "Nous informerons le locataire afin qu’il examine et accepte la location",
+                text = stringResource(R.string.rental_info_subtext),
                 fontSize = 12.sp,
                 color = LocalAppColors.current.grayDark
             )
@@ -293,7 +304,7 @@ fun ReviewGuidelinesCard() {
                 )
                 Spacer(modifier = Modifier.width(8.dp))
                 Text(
-                    text = "À propos de la création de location",
+                    text = stringResource(R.string.rental_guideline_title),
                     fontWeight = FontWeight.Bold,
                     color = LocalAppColors.current.primary,
                     fontSize = 13.sp
@@ -304,14 +315,13 @@ fun ReviewGuidelinesCard() {
             Column(verticalArrangement = Arrangement.spacedBy(2.dp)) {
                 // Texte descriptif
                 Text(
-                    text = "Une fois la location créee, le locataire disposera de 24 heures pour accepter ou refuser la proposition. " +
-                            "En cas d'acceptation, la location apparaîtra automatiquement dans l'écran ",
+                    text = stringResource(R.string.rental_guideline_text1),
                     color = LocalAppColors.current.primary,
                     fontSize = 12.sp
                 )
 
                 Text(
-                    text = "\"Mes locations\"",
+                    text = stringResource(R.string.rental_guideline_mes_locations),
                     fontSize = 13.sp,
                     color = LocalAppColors.current.primary,
                     fontWeight = FontWeight.Bold
