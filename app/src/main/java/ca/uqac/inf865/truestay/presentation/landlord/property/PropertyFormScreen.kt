@@ -11,6 +11,7 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.ExperimentalMaterial3Api
@@ -109,14 +110,48 @@ fun PropertyFormScreen(
                         imeAction = ImeAction.Next
                     )
 
-                    TrueStayTextField(
-                        value = uiState.address,
-                        onValueChange = viewModel::setAddress,
-                        label = stringResource(R.string.property_form_address_label),
-                        placeholder = stringResource(R.string.property_form_address_placeholder),
-                        modifier = Modifier.fillMaxWidth(),
-                        imeAction = ImeAction.Next
-                    )
+                    // Champ adresse avec autocomplétion
+                    androidx.compose.foundation.layout.Box(
+                        modifier = Modifier.fillMaxWidth()
+                    ) {
+                        Column {
+                            TrueStayTextField(
+                                value = uiState.addressQuery,
+                                onValueChange = viewModel::onAddressQueryChanged,
+                                label = stringResource(R.string.property_form_address_label),
+                                placeholder = stringResource(R.string.property_form_address_placeholder),
+                                modifier = Modifier.fillMaxWidth(),
+                                imeAction = ImeAction.Next
+                            )
+
+                            // Suggestions d'adresse
+                            if (uiState.addressSuggestions.isNotEmpty()) {
+                                androidx.compose.material3.Card(
+                                    modifier = Modifier
+                                        .fillMaxWidth()
+                                        .padding(top = AppSpacing.xsmall),
+                                    shape = androidx.compose.foundation.shape.RoundedCornerShape(12.dp),
+                                    elevation = androidx.compose.material3.CardDefaults.cardElevation(defaultElevation = 4.dp),
+                                    colors = androidx.compose.material3.CardDefaults.cardColors(
+                                        containerColor = colors.white
+                                    )
+                                ) {
+                                    Column(modifier = Modifier.padding(vertical = AppSpacing.xsmall)) {
+                                        uiState.addressSuggestions.forEach { suggestion ->
+                                            AddressSuggestionRow(
+                                                primary = suggestion.primaryText,
+                                                secondary = suggestion.secondaryText,
+                                                onClick = {
+                                                    viewModel.onSuggestionSelected(suggestion)
+                                                    focusManager.clearFocus()
+                                                }
+                                            )
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                    }
 
                     TrueStayTextField(
                         value = uiState.description,
@@ -497,7 +532,7 @@ fun PropertyFormScreen(
 
             // Action buttons
             val isFormValid = uiState.name.isNotBlank() &&
-                             uiState.address.isNotBlank() &&
+                             uiState.selectedAddress != null &&
                              uiState.description.isNotBlank() &&
                              uiState.monthlyRent.isNotBlank() &&
                              uiState.surface.isNotBlank() &&
@@ -531,4 +566,41 @@ fun PropertyFormScreen(
     }
 }
 
-
+@Composable
+private fun AddressSuggestionRow(
+    primary: String,
+    secondary: String?,
+    onClick: () -> Unit
+) {
+    val colors = LocalAppColors.current
+    Column(
+        modifier = Modifier
+            .fillMaxWidth()
+            .clickable(onClick = onClick)
+            .padding(horizontal = AppSpacing.medium, vertical = AppSpacing.small)
+    ) {
+        Row(verticalAlignment = androidx.compose.ui.Alignment.CenterVertically) {
+            TrueStayIcon(
+                iconRes = TrueStayIcons.MapPin,
+                contentDescriptionRes = null,
+                size = 16.dp,
+                tint = colors.primary
+            )
+            Spacer(modifier = Modifier.width(AppSpacing.small))
+            Text(
+                text = primary,
+                style = MaterialTheme.typography.bodyMedium,
+                color = colors.black
+            )
+        }
+        if (!secondary.isNullOrBlank()) {
+            Spacer(modifier = Modifier.height(2.dp))
+            Text(
+                text = secondary,
+                style = MaterialTheme.typography.bodySmall,
+                color = colors.grayDark,
+                modifier = Modifier.padding(start = 24.dp)
+            )
+        }
+    }
+}
