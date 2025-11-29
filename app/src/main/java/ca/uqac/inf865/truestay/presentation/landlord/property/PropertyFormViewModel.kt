@@ -28,7 +28,8 @@ import javax.inject.Inject
 data class RoomFormData(
     val id: String = UUID.randomUUID().toString(),
     val name: String = "",
-    val type: RoomType? = null
+    val type: RoomType? = null,
+    val elements: List<RoomElement> = emptyList() // Conserver les éléments en mode édition
 )
 
 data class PropertyFormUiState(
@@ -47,7 +48,14 @@ data class PropertyFormUiState(
     val rooms: List<RoomFormData> = emptyList(),
 
     // Photos
-    val photoUris: List<Uri> = emptyList(),
+    val photoUris: List<Uri> = emptyList(), // Nouvelles photos à uploader
+    val existingPhotoUrls: List<String> = emptyList(), // Photos déjà uploadées (mode édition)
+
+    // Mode édition
+    val propertyId: String? = null,
+    val isEditMode: Boolean = false,
+    val isLoadingProperty: Boolean = false,
+    val createdAt: Long = 0L, // Pour conserver la date de création en mode édition
 
     // UI State
     val isSubmitting: Boolean = false,
@@ -204,6 +212,72 @@ class PropertyFormViewModel @Inject constructor(
         )
     }
 
+    fun removeExistingPhoto(url: String) {
+        uiState = uiState.copy(
+            existingPhotoUrls = uiState.existingPhotoUrls.filter { it != url }
+        )
+    }
+
+    /**
+     * Charge les données d'une propriété existante pour l'édition
+     */
+    fun loadProperty(propertyId: String) {
+        viewModelScope.launch {
+            uiState = uiState.copy(isLoadingProperty = true)
+
+            try {
+                propertyRepository.getPropertyById(propertyId).fold(
+                    onSuccess = { property ->
+                        if (property != null) {
+                            // Convertir les rooms en RoomFormData avec leurs éléments
+                            val roomsData = property.rooms.map { room ->
+                                RoomFormData(
+                                    id = room.id,
+                                    name = room.name,
+                                    type = room.type,
+                                    elements = room.elements // Conserver les éléments existants
+                                )
+                            }
+
+                            uiState = uiState.copy(
+                                propertyId = propertyId,
+                                isEditMode = true,
+                                name = property.name,
+                                addressQuery = "${property.address.street}, ${property.address.city}",
+                                selectedAddress = property.address,
+                                description = property.description,
+                                monthlyRent = property.monthlyRent.toString(),
+                                surface = property.surface.toString(),
+                                isInBuilding = property.isInBuilding,
+                                isAvailable = property.isAvailable,
+                                rooms = roomsData.ifEmpty { listOf(RoomFormData()) },
+                                existingPhotoUrls = property.photos,
+                                createdAt = property.createdAt,
+                                isLoadingProperty = false
+                            )
+                        } else {
+                            uiState = uiState.copy(
+                                isLoadingProperty = false,
+                                errorMessage = "Propriété introuvable"
+                            )
+                        }
+                    },
+                    onFailure = { exception ->
+                        uiState = uiState.copy(
+                            isLoadingProperty = false,
+                            errorMessage = "Erreur lors du chargement: ${exception.message}"
+                        )
+                    }
+                )
+            } catch (e: Exception) {
+                uiState = uiState.copy(
+                    isLoadingProperty = false,
+                    errorMessage = "Erreur: ${e.message}"
+                )
+            }
+        }
+    }
+
     /**
      * Valide que le formulaire est complet
      */
@@ -214,16 +288,20 @@ class PropertyFormViewModel @Inject constructor(
                uiState.monthlyRent.isNotBlank() &&
                uiState.surface.isNotBlank() &&
                uiState.rooms.isNotEmpty() &&
-               uiState.rooms.all { it.name.isNotBlank() && it.type != null } &&
-               uiState.photoUris.isNotEmpty()
+               uiState.rooms.all { it.type != null } && // Le nom est optionnel, seul le type est obligatoire
+               (uiState.photoUris.isNotEmpty() || uiState.existingPhotoUrls.isNotEmpty())
     }
 
     /**
-     * Upload toutes les photos en attente
+     * Upload toutes les nouvelles photos et retourne la liste complète (existantes + nouvelles)
      */
     private suspend fun uploadAllPhotos(propertyId: String): List<String> {
         val uploadedUrls = mutableListOf<String>()
 
+        // Garder les photos existantes qui n'ont pas été supprimées
+        uploadedUrls.addAll(uiState.existingPhotoUrls)
+
+        // Uploader les nouvelles photos
         uiState.photoUris.forEachIndexed { index, uri ->
             try {
                 val path = "properties/$propertyId/${System.currentTimeMillis()}_$index"
@@ -243,21 +321,27 @@ class PropertyFormViewModel @Inject constructor(
     }
 
     /**
-     * Crée les Room avec les éléments par défaut basés sur le type de pièce
+     * Crée les Room avec les éléments (existants en mode édition, par défaut en mode création)
      */
     private fun createRoomsWithElements(): List<Room> {
         return uiState.rooms.mapNotNull { roomData ->
             roomData.type?.let { type ->
-                val elements = RoomTypeElementMapping.getDefaultElementsForRoomType(type).map { elementType ->
-                    RoomElement(
-                        id = UUID.randomUUID().toString(),
-                        type = elementType
-                    )
+                // En mode édition, utiliser les éléments existants
+                // En mode création, créer les éléments par défaut
+                val elements = if (uiState.isEditMode && roomData.elements.isNotEmpty()) {
+                    roomData.elements
+                } else {
+                    RoomTypeElementMapping.getDefaultElementsForRoomType(type).map { elementType ->
+                        RoomElement(
+                            id = UUID.randomUUID().toString(),
+                            type = elementType
+                        )
+                    }
                 }
 
                 Room(
-                    id = UUID.randomUUID().toString(),
-                    name = roomData.name.ifBlank { null } ?: "",
+                    id = if (uiState.isEditMode) roomData.id else UUID.randomUUID().toString(),
+                    name = roomData.name.ifBlank { type.name }, // Utiliser le nom du type si le nom est vide
                     type = type,
                     elements = elements
                 )
@@ -266,7 +350,7 @@ class PropertyFormViewModel @Inject constructor(
     }
 
     /**
-     * Soumet le formulaire et crée la propriété
+     * Soumet le formulaire et crée/modifie la propriété
      */
     fun submitProperty(onSuccess: () -> Unit) {
         if (!validateForm()) {
@@ -282,10 +366,10 @@ class PropertyFormViewModel @Inject constructor(
                 val currentUser = authRepository.getCurrentUser().getOrThrow()
                     ?: throw IllegalStateException("Utilisateur non connecté")
 
-                // Générer un ID temporaire pour la propriété
-                val propertyId = UUID.randomUUID().toString()
+                // Utiliser l'ID existant ou en générer un nouveau
+                val propertyId = uiState.propertyId ?: UUID.randomUUID().toString()
 
-                // Upload des photos
+                // Upload des photos (nouvelles + existantes)
                 val photoUrls = uploadAllPhotos(propertyId)
 
                 // Créer les pièces avec leurs éléments
@@ -309,12 +393,16 @@ class PropertyFormViewModel @Inject constructor(
                     isInBuilding = uiState.isInBuilding,
                     isAvailable = uiState.isAvailable,
                     status = PropertyStatus.PUBLISHED,
-                    createdAt = System.currentTimeMillis(),
+                    createdAt = if (uiState.isEditMode) uiState.createdAt else System.currentTimeMillis(),
                     updatedAt = System.currentTimeMillis()
                 )
 
-                // Sauvegarder dans Firestore
-                val result = propertyRepository.addProperty(property)
+                // Sauvegarder dans Firestore (add ou update)
+                val result = if (uiState.isEditMode) {
+                    propertyRepository.updateProperty(property)
+                } else {
+                    propertyRepository.addProperty(property)
+                }
 
                 result.onSuccess {
                     uiState = uiState.copy(isSubmitting = false)

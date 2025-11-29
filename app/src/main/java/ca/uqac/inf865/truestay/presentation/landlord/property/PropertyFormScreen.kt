@@ -59,16 +59,34 @@ fun PropertyFormScreen(
     val colors = LocalAppColors.current
     val focusManager = LocalFocusManager.current
 
+    // Charger la propriété si on est en mode édition
+    androidx.compose.runtime.LaunchedEffect(propertyId) {
+        if (propertyId != null && !uiState.isEditMode && !uiState.isLoadingProperty) {
+            viewModel.loadProperty(propertyId)
+        }
+    }
+
     // Multi-photo picker
     val photoPickerLauncher = rememberOptimizedMultiPhotoPickerLauncher(maxItems = 10) { uris ->
         viewModel.addPhotos(uris)
+    }
+
+    // Afficher un indicateur de chargement pendant le chargement de la propriété
+    if (uiState.isLoadingProperty) {
+        androidx.compose.foundation.layout.Box(
+            modifier = Modifier.fillMaxSize(),
+            contentAlignment = androidx.compose.ui.Alignment.Center
+        ) {
+            androidx.compose.material3.CircularProgressIndicator()
+        }
+        return
     }
 
     Scaffold(
         contentWindowInsets = WindowInsets(0.dp),
         topBar = {
             TrueStayTopAppBar(
-                titleRes = if (propertyId == null) R.string.property_form_title_add else R.string.property_form_title_edit,
+                titleRes = if (uiState.isEditMode) R.string.property_form_title_edit else R.string.property_form_title_add,
                 onNavigateBack = onBackClick,
                 windowInsets = WindowInsets(0.dp)
             )
@@ -333,15 +351,15 @@ fun PropertyFormScreen(
                         )
                     }
 
-                    val totalPhotos = uiState.photoUris.size
+                    val totalPhotos = uiState.photoUris.size + uiState.existingPhotoUrls.size
 
-                    // Display photos
+                    // Display photos (existing + new)
                     if (totalPhotos > 0) {
                         PhotoGrid(
                             localUris = uiState.photoUris,
-                            uploadedUrls = emptyList(),
+                            uploadedUrls = uiState.existingPhotoUrls,
                             onDeleteLocalPhoto = { uri -> viewModel.removePhoto(uri) },
-                            onDeleteUploadedPhoto = {},
+                            onDeleteUploadedPhoto = { url -> viewModel.removeExistingPhoto(url) },
                             onPhotoClick = {}
                         )
                     }
@@ -537,8 +555,8 @@ fun PropertyFormScreen(
                              uiState.monthlyRent.isNotBlank() &&
                              uiState.surface.isNotBlank() &&
                              uiState.rooms.isNotEmpty() &&
-                             uiState.rooms.all { it.name.isNotBlank() && it.type != null } &&
-                             uiState.photoUris.isNotEmpty()
+                             uiState.rooms.all { it.type != null } && // Le nom est optionnel, seul le type est obligatoire
+                             (uiState.photoUris.isNotEmpty() || uiState.existingPhotoUrls.isNotEmpty())
 
             Row(
                 modifier = Modifier.fillMaxWidth(),
