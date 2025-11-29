@@ -7,6 +7,7 @@ import androidx.compose.runtime.setValue
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import ca.uqac.inf865.truestay.domain.model.Address
+import ca.uqac.inf865.truestay.domain.model.AddressAutocompleteSuggestion
 import ca.uqac.inf865.truestay.domain.model.Property
 import ca.uqac.inf865.truestay.domain.model.PropertyStatus
 import ca.uqac.inf865.truestay.domain.model.Room
@@ -14,9 +15,12 @@ import ca.uqac.inf865.truestay.domain.model.RoomElement
 import ca.uqac.inf865.truestay.domain.model.RoomType
 import ca.uqac.inf865.truestay.domain.model.RoomTypeElementMapping
 import ca.uqac.inf865.truestay.domain.repository.AuthRepository
+import ca.uqac.inf865.truestay.domain.repository.GeocodingRepository
 import ca.uqac.inf865.truestay.domain.repository.PropertyRepository
 import ca.uqac.inf865.truestay.domain.repository.StorageRepository
 import dagger.hilt.android.lifecycle.HiltViewModel
+import kotlinx.coroutines.Job
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 import java.util.UUID
 import javax.inject.Inject
@@ -30,7 +34,9 @@ data class RoomFormData(
 data class PropertyFormUiState(
     // Informations générales
     val name: String = "",
-    val address: String = "",
+    val addressQuery: String = "",
+    val addressSuggestions: List<AddressAutocompleteSuggestion> = emptyList(),
+    val selectedAddress: Address? = null,
     val description: String = "",
     val monthlyRent: String = "",
     val surface: String = "",
@@ -53,7 +59,7 @@ class PropertyFormViewModel @Inject constructor(
     private val propertyRepository: PropertyRepository,
     private val storageRepository: StorageRepository,
     private val authRepository: AuthRepository,
-    private val geocodingRepository: ca.uqac.inf865.truestay.domain.repository.GeocodingRepository
+    private val geocodingRepository: GeocodingRepository
 ) : ViewModel() {
 
     var uiState by mutableStateOf(
@@ -63,14 +69,62 @@ class PropertyFormViewModel @Inject constructor(
     )
         private set
 
+    private var suggestionsJob: Job? = null
+
     // Informations générales
     fun setName(name: String) {
         uiState = uiState.copy(name = name)
     }
 
-    fun setAddress(address: String) {
-        uiState = uiState.copy(address = address)
+    // Appelé quand l'utilisateur tape dans le champ d'adresse
+    fun onAddressQueryChanged(query: String) {
+        uiState = uiState.copy(addressQuery = query)
+        fetchAddressSuggestionsDebounced(query)
     }
+
+    // Debounce pour éviter trop de requêtes API
+    private fun fetchAddressSuggestionsDebounced(query: String) {
+        suggestionsJob?.cancel()
+
+        if (query.isBlank()) {
+            uiState = uiState.copy(addressSuggestions = emptyList())
+            return
+        }
+
+        suggestionsJob = viewModelScope.launch {
+            delay(300) // Attendre 300ms après la dernière frappe
+
+            geocodingRepository.suggestAddresses(query, limit = 5).fold(
+                onSuccess = { suggestions ->
+                    uiState = uiState.copy(addressSuggestions = suggestions)
+                },
+                onFailure = {
+                    uiState = uiState.copy(addressSuggestions = emptyList())
+                }
+            )
+        }
+    }
+
+    // Appelé quand l'utilisateur clique sur une suggestion
+    fun onSuggestionSelected(suggestion: AddressAutocompleteSuggestion) {
+        viewModelScope.launch {
+            geocodingRepository.getAddressById(suggestion.placeId).fold(
+                onSuccess = { address ->
+                    address?.let { addr ->
+                        uiState = uiState.copy(
+                            addressQuery = suggestion.primaryText,
+                            selectedAddress = addr,
+                            addressSuggestions = emptyList()
+                        )
+                    }
+                },
+                onFailure = {
+                    uiState = uiState.copy(addressSuggestions = emptyList())
+                }
+            )
+        }
+    }
+
 
     fun setDescription(description: String) {
         uiState = uiState.copy(description = description)
@@ -153,12 +207,12 @@ class PropertyFormViewModel @Inject constructor(
      */
     private fun validateForm(): Boolean {
         return uiState.name.isNotBlank() &&
-               uiState.address.isNotBlank() &&
+               uiState.selectedAddress != null &&
                uiState.description.isNotBlank() &&
                uiState.monthlyRent.isNotBlank() &&
                uiState.surface.isNotBlank() &&
                uiState.rooms.isNotEmpty() &&
-               uiState.rooms.all { it.type != null } &&
+               uiState.rooms.all { it.name.isNotBlank() && it.type != null } &&
                uiState.photoUris.size >= 3
     }
 
@@ -210,48 +264,6 @@ class PropertyFormViewModel @Inject constructor(
     }
 
     /**
-     * Géocode l'adresse pour récupérer les coordonnées GPS et les détails
-     */
-    private suspend fun geocodeAddress(address: String): Address {
-        return try {
-            val result = geocodingRepository.search(address).getOrNull()
-            if (result != null) {
-                Address(
-                    street = address,
-                    city = "", // Le geocoding ne retourne pas ces détails dans LocationSuggestion
-                    postalCode = "",
-                    province = "",
-                    country = "",
-                    latitude = result.location.latitude,
-                    longitude = result.location.longitude
-                )
-            } else {
-                // Si le geocoding échoue, retourner l'adresse sans coordonnées
-                Address(
-                    street = address,
-                    city = "",
-                    postalCode = "",
-                    province = "",
-                    country = "",
-                    latitude = 0.0,
-                    longitude = 0.0
-                )
-            }
-        } catch (_: Exception) {
-            // En cas d'erreur, retourner l'adresse sans coordonnées
-            Address(
-                street = address,
-                city = "",
-                postalCode = "",
-                province = "",
-                country = "",
-                latitude = 0.0,
-                longitude = 0.0
-            )
-        }
-    }
-
-    /**
      * Soumet le formulaire et crée la propriété
      */
     fun submitProperty(onSuccess: () -> Unit) {
@@ -277,15 +289,15 @@ class PropertyFormViewModel @Inject constructor(
                 // Créer les pièces avec leurs éléments
                 val rooms = createRoomsWithElements()
 
-                // Géocoder l'adresse pour obtenir les coordonnées GPS
-                val geocodedAddress = geocodeAddress(uiState.address)
+                // Utiliser l'adresse sélectionnée (déjà complète avec tous les champs)
+                val address = uiState.selectedAddress ?: Address()
 
                 // Créer l'objet Property
                 val property = Property(
                     id = propertyId,
                     name = uiState.name,
                     description = uiState.description,
-                    address = geocodedAddress,
+                    address = address,
                     monthlyRent = uiState.monthlyRent.toIntOrNull() ?: 0,
                     surface = uiState.surface.toIntOrNull() ?: 0,
                     rooms = rooms,
