@@ -33,6 +33,7 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import ca.uqac.inf865.truestay.R
 import ca.uqac.inf865.truestay.presentation.common.icons.TrueStayIcons
+import ca.uqac.inf865.truestay.presentation.theme.AppShapes
 import ca.uqac.inf865.truestay.presentation.theme.AppSpacing
 import ca.uqac.inf865.truestay.presentation.theme.LocalAppColors
 import ca.uqac.inf865.truestay.presentation.theme.TrueStayTheme
@@ -53,6 +54,7 @@ fun TrueStayTextField(
     leadingIcon: Int? = null,
     errorMessage: String? = null,
     enabled: Boolean = true,
+    readOnly: Boolean = false,
     showClearButton: Boolean = false,
     onClear: (() -> Unit)? = null,
     keyboardType: KeyboardType = if (isPassword) KeyboardType.Password else KeyboardType.Text,
@@ -119,6 +121,7 @@ fun TrueStayTextField(
                 )
             },
             enabled = enabled,
+            readOnly = readOnly,
             singleLine = true,
             visualTransformation = if (isPassword && !passwordVisible) {
                 PasswordVisualTransformation()
@@ -217,7 +220,8 @@ fun TrueStayTextField(
                     if (trailingIcon != null) {
                         IconButton(
                             onClick = { onTrailingIconClick?.invoke() },
-                            modifier = Modifier.size(iconSize)
+                            modifier = Modifier.size(iconSize),
+                            shape = AppShapes.small
                         ) {
                             TrueStayIcon(
                                 iconRes = trailingIcon,
