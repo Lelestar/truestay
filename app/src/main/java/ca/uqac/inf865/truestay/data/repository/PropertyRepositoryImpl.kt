@@ -27,10 +27,18 @@ class PropertyRepositoryImpl @Inject constructor(
 
     override suspend fun getPropertyById(id: String): Result<Property> {
         return try {
+            android.util.Log.d("PropertyRepo", "getPropertyById appelé avec id=$id")
             val property = firestoreDataSource.getDocument("properties", id, PropertyDto::class.java)
-                ?: return Result.failure(Exception("Property not found"))
-            Result.success(property.toDomain())
+            android.util.Log.d("PropertyRepo", "Document récupéré: ${property?.id}, name=${property?.name}")
+            if (property == null) {
+                android.util.Log.e("PropertyRepo", "Property not found pour id=$id")
+                return Result.failure(Exception("Property not found"))
+            }
+            val domainProperty = property.toDomain()
+            android.util.Log.d("PropertyRepo", "Property converti en domain: id=${domainProperty.id}, name=${domainProperty.name}, rooms=${domainProperty.rooms.size}, photos=${domainProperty.photos.size}")
+            Result.success(domainProperty)
         } catch (e: Exception) {
+            android.util.Log.e("PropertyRepo", "Exception dans getPropertyById: ${e.message}", e)
             Result.failure(e)
         }
     }
@@ -51,13 +59,17 @@ class PropertyRepositoryImpl @Inject constructor(
 
     override suspend fun addProperty(property: Property): Result<String> {
         return try {
+            android.util.Log.d("PropertyRepo", "addProperty appelé avec id=${property.id}")
             val propertyDto = property.toDto().copy(
                 createdAt = System.currentTimeMillis(),
                 updatedAt = System.currentTimeMillis()
             )
-            val id = firestoreDataSource.addDocument("properties", propertyDto)
-            Result.success(id)
+            // Utiliser updateDocument qui fait en réalité un set() pour conserver l'ID
+            firestoreDataSource.updateDocument("properties", property.id, propertyDto)
+            android.util.Log.d("PropertyRepo", "Property ajoutée avec id=${property.id}")
+            Result.success(property.id)
         } catch (e: Exception) {
+            android.util.Log.e("PropertyRepo", "Erreur addProperty: ${e.message}", e)
             Result.failure(e)
         }
     }
