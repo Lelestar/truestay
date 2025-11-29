@@ -59,14 +59,14 @@ fun PropertyFormScreen(
     val colors = LocalAppColors.current
     val focusManager = LocalFocusManager.current
 
-    // Charger la propriété si on est en mode édition
+    // Load property if in edit mode
     androidx.compose.runtime.LaunchedEffect(propertyId) {
         android.util.Log.d("PropertyFormScreen", "LaunchedEffect - propertyId=$propertyId, isEditMode=${uiState.isEditMode}, isLoadingProperty=${uiState.isLoadingProperty}")
         if (propertyId != null && !uiState.isEditMode && !uiState.isLoadingProperty) {
-            android.util.Log.d("PropertyFormScreen", "Appel de viewModel.loadProperty($propertyId)")
+            android.util.Log.d("PropertyFormScreen", "Calling viewModel.loadProperty($propertyId)")
             viewModel.loadProperty(propertyId)
         } else {
-            android.util.Log.d("PropertyFormScreen", "loadProperty non appelé - propertyId=$propertyId, isEditMode=${uiState.isEditMode}, isLoadingProperty=${uiState.isLoadingProperty}")
+            android.util.Log.d("PropertyFormScreen", "loadProperty not called - propertyId=$propertyId, isEditMode=${uiState.isEditMode}, isLoadingProperty=${uiState.isLoadingProperty}")
         }
     }
 
@@ -75,7 +75,7 @@ fun PropertyFormScreen(
         viewModel.addPhotos(uris)
     }
 
-    // Afficher un indicateur de chargement pendant le chargement de la propriété
+    // Show loading indicator while loading property
     if (uiState.isLoadingProperty) {
         androidx.compose.foundation.layout.Box(
             modifier = Modifier.fillMaxSize(),
@@ -132,7 +132,7 @@ fun PropertyFormScreen(
                         imeAction = ImeAction.Next
                     )
 
-                    // Champ adresse avec autocomplétion
+                    // Address field with autocomplete
                     androidx.compose.foundation.layout.Box(
                         modifier = Modifier.fillMaxWidth()
                     ) {
@@ -146,7 +146,7 @@ fun PropertyFormScreen(
                                 imeAction = ImeAction.Next
                             )
 
-                            // Suggestions d'adresse
+                            // Address suggestions
                             if (uiState.addressSuggestions.isNotEmpty()) {
                                 androidx.compose.material3.Card(
                                     modifier = Modifier
@@ -240,7 +240,7 @@ fun PropertyFormScreen(
                 }
             }
 
-            // Pièces du logement
+            // Property rooms
             TrueStayCard(
                 modifier = Modifier.fillMaxWidth()
             ) {
@@ -262,7 +262,7 @@ fun PropertyFormScreen(
                         )
                     }
 
-                    // Liste des pièces
+                    // List of rooms
                     uiState.rooms.forEachIndexed { index, room ->
                         if (index > 0) {
                             HorizontalDivider(
@@ -391,7 +391,7 @@ fun PropertyFormScreen(
                 }
             }
 
-            // Disponibilité
+            // Availability
             TrueStayCard(
                 modifier = Modifier.fillMaxWidth()
             ) {
@@ -447,7 +447,7 @@ fun PropertyFormScreen(
                     modifier = Modifier.padding(AppSpacing.large),
                     verticalArrangement = Arrangement.spacedBy(AppSpacing.medium)
                 ) {
-                    // Titre avec icône
+                    // Title with icon
                     Row(
                         horizontalArrangement = Arrangement.spacedBy(AppSpacing.small),
                         verticalAlignment = androidx.compose.ui.Alignment.CenterVertically
@@ -466,7 +466,7 @@ fun PropertyFormScreen(
                         )
                     }
 
-                    // Liste des exigences avec checkmarks
+                    // List of requirements with checkmarks
                     Column(
                         verticalArrangement = Arrangement.spacedBy(AppSpacing.xsmall)
                     ) {
@@ -559,7 +559,7 @@ fun PropertyFormScreen(
                              uiState.monthlyRent.isNotBlank() &&
                              uiState.surface.isNotBlank() &&
                              uiState.rooms.isNotEmpty() &&
-                             uiState.rooms.all { it.type != null } && // Le nom est optionnel, seul le type est obligatoire
+                             uiState.rooms.all { it.type != null } && // Name is optional, only type is mandatory
                              (uiState.photoUris.isNotEmpty() || uiState.existingPhotoUrls.isNotEmpty())
 
             Row(

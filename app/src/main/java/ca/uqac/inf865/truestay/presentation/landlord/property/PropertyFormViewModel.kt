@@ -29,11 +29,11 @@ data class RoomFormData(
     val id: String = UUID.randomUUID().toString(),
     val name: String = "",
     val type: RoomType? = null,
-    val elements: List<RoomElement> = emptyList() // Conserver les éléments en mode édition
+    val elements: List<RoomElement> = emptyList() // Keep elements in edit mode
 )
 
 data class PropertyFormUiState(
-    // Informations générales
+    // General information
     val name: String = "",
     val addressQuery: String = "",
     val addressSuggestions: List<AddressAutocompleteSuggestion> = emptyList(),
@@ -44,18 +44,18 @@ data class PropertyFormUiState(
     val isInBuilding: Boolean = true,
     val isAvailable: Boolean = true,
 
-    // Pièces
+    // Rooms
     val rooms: List<RoomFormData> = emptyList(),
 
     // Photos
-    val photoUris: List<Uri> = emptyList(), // Nouvelles photos à uploader
-    val existingPhotoUrls: List<String> = emptyList(), // Photos déjà uploadées (mode édition)
+    val photoUris: List<Uri> = emptyList(), // New photos to upload
+    val existingPhotoUrls: List<String> = emptyList(), // Already uploaded photos (edit mode)
 
-    // Mode édition
+    // Edit mode
     val propertyId: String? = null,
     val isEditMode: Boolean = false,
     val isLoadingProperty: Boolean = false,
-    val createdAt: Long = 0L, // Pour conserver la date de création en mode édition
+    val createdAt: Long = 0L, // Keep creation date in edit mode
 
     // UI State
     val isSubmitting: Boolean = false,
@@ -72,25 +72,25 @@ class PropertyFormViewModel @Inject constructor(
 
     var uiState by mutableStateOf(
         PropertyFormUiState(
-            rooms = listOf(RoomFormData()) // Ajouter une pièce par défaut
+            rooms = listOf(RoomFormData()) // Add a default room
         )
     )
         private set
 
     private var suggestionsJob: Job? = null
 
-    // Informations générales
+    // General information
     fun setName(name: String) {
         uiState = uiState.copy(name = name)
     }
 
-    // Appelé quand l'utilisateur tape dans le champ d'adresse
+    // Called when user types in address field
     fun onAddressQueryChanged(query: String) {
         uiState = uiState.copy(addressQuery = query)
         fetchAddressSuggestionsDebounced(query)
     }
 
-    // Debounce pour éviter trop de requêtes API
+    // Debounce to avoid too many API requests
     private fun fetchAddressSuggestionsDebounced(query: String) {
         suggestionsJob?.cancel()
 
@@ -100,7 +100,7 @@ class PropertyFormViewModel @Inject constructor(
         }
 
         suggestionsJob = viewModelScope.launch {
-            delay(300) // Attendre 300ms après la dernière frappe
+            delay(300) // Wait 300ms after last keystroke
 
             geocodingRepository.suggestAddresses(query, limit = 5).fold(
                 onSuccess = { suggestions ->
@@ -113,13 +113,13 @@ class PropertyFormViewModel @Inject constructor(
         }
     }
 
-    // Appelé quand l'utilisateur clique sur une suggestion
+    // Called when user clicks on a suggestion
     fun onSuggestionSelected(suggestion: AddressAutocompleteSuggestion) {
         viewModelScope.launch {
             geocodingRepository.getAddressById(suggestion.placeId).fold(
                 onSuccess = { address ->
                     address?.let { addr ->
-                        android.util.Log.d("PropertyFormVM", "Adresse parsée: street=${addr.street}, city=${addr.city}, postalCode=${addr.postalCode}, province=${addr.province}, country=${addr.country}, lat=${addr.latitude}, lng=${addr.longitude}")
+                        android.util.Log.d("PropertyFormVM", "Parsed address: street=${addr.street}, city=${addr.city}, postalCode=${addr.postalCode}, province=${addr.province}, country=${addr.country}, lat=${addr.latitude}, lng=${addr.longitude}")
                         uiState = uiState.copy(
                             addressQuery = suggestion.primaryText,
                             selectedAddress = addr,
@@ -128,7 +128,7 @@ class PropertyFormViewModel @Inject constructor(
                     }
                 },
                 onFailure = {
-                    android.util.Log.e("PropertyFormVM", "Erreur lors de la récupération de l'adresse: ${it.message}")
+                    android.util.Log.e("PropertyFormVM", "Error retrieving address: ${it.message}")
                     uiState = uiState.copy(addressSuggestions = emptyList())
                 }
             )
@@ -141,13 +141,13 @@ class PropertyFormViewModel @Inject constructor(
     }
 
     fun setMonthlyRent(rent: String) {
-        // Ne garder que les chiffres
+        // Keep only digits
         val filtered = rent.filter { it.isDigit() }
         uiState = uiState.copy(monthlyRent = filtered)
     }
 
     fun setSurface(surface: String) {
-        // Ne garder que les chiffres
+        // Keep only digits
         val filtered = surface.filter { it.isDigit() }
         uiState = uiState.copy(surface = filtered)
     }
@@ -160,7 +160,7 @@ class PropertyFormViewModel @Inject constructor(
         uiState = uiState.copy(isAvailable = isAvailable)
     }
 
-    // Pièces
+    // Rooms
     fun addRoom() {
         uiState = uiState.copy(
             rooms = uiState.rooms + RoomFormData()
@@ -191,19 +191,19 @@ class PropertyFormViewModel @Inject constructor(
 
     // Photos
     fun addPhotos(uris: List<Uri>) {
-        android.util.Log.d("PropertyFormVM", "addPhotos appelé avec ${uris.size} photos")
+        android.util.Log.d("PropertyFormVM", "addPhotos called with ${uris.size} photos")
         val maxPhotos = 10
         val totalPhotos = uiState.photoUris.size
         val availableSlots = maxPhotos - totalPhotos
         val photosToAdd = uris.take(availableSlots)
 
-        android.util.Log.d("PropertyFormVM", "Total photos avant: $totalPhotos, à ajouter: ${photosToAdd.size}")
+        android.util.Log.d("PropertyFormVM", "Total photos before: $totalPhotos, to add: ${photosToAdd.size}")
 
         uiState = uiState.copy(
             photoUris = uiState.photoUris + photosToAdd
         )
 
-        android.util.Log.d("PropertyFormVM", "Total photos après: ${uiState.photoUris.size}")
+        android.util.Log.d("PropertyFormVM", "Total photos after: ${uiState.photoUris.size}")
     }
 
     fun removePhoto(uri: Uri) {
@@ -219,31 +219,31 @@ class PropertyFormViewModel @Inject constructor(
     }
 
     /**
-     * Charge les données d'une propriété existante pour l'édition
+     * Load existing property data for editing
      */
     fun loadProperty(propertyId: String) {
-        android.util.Log.d("PropertyFormVM", "loadProperty appelé avec propertyId=$propertyId")
+        android.util.Log.d("PropertyFormVM", "loadProperty called with propertyId=$propertyId")
         viewModelScope.launch {
             uiState = uiState.copy(isLoadingProperty = true)
 
             try {
-                android.util.Log.d("PropertyFormVM", "Récupération de la propriété depuis le repository...")
+                android.util.Log.d("PropertyFormVM", "Fetching property from repository...")
                 propertyRepository.getPropertyById(propertyId).fold(
                     onSuccess = { property ->
-                        android.util.Log.d("PropertyFormVM", "Propriété récupérée: ${property.id}, name=${property.name}")
+                        android.util.Log.d("PropertyFormVM", "Property retrieved: ${property.id}, name=${property.name}")
 
-                        // Convertir les rooms en RoomFormData avec leurs éléments
+                        // Convert rooms to RoomFormData with their elements
                         val roomsData = property.rooms.map { room ->
                             android.util.Log.d("PropertyFormVM", "Room: id=${room.id}, name=${room.name}, type=${room.type}, elements=${room.elements.size}")
                             RoomFormData(
                                 id = room.id,
                                 name = room.name,
                                 type = room.type,
-                                elements = room.elements // Conserver les éléments existants
+                                elements = room.elements // Keep existing elements
                             )
                         }
 
-                        android.util.Log.d("PropertyFormVM", "Photos existantes: ${property.photos.size}")
+                        android.util.Log.d("PropertyFormVM", "Existing photos: ${property.photos.size}")
                         property.photos.forEach { photo ->
                             android.util.Log.d("PropertyFormVM", "Photo URL: $photo")
                         }
@@ -264,28 +264,28 @@ class PropertyFormViewModel @Inject constructor(
                             createdAt = property.createdAt,
                             isLoadingProperty = false
                         )
-                        android.util.Log.d("PropertyFormVM", "État mis à jour avec succès - isEditMode=${uiState.isEditMode}")
+                        android.util.Log.d("PropertyFormVM", "State updated successfully - isEditMode=${uiState.isEditMode}")
                     },
                     onFailure = { exception ->
-                        android.util.Log.e("PropertyFormVM", "Erreur lors de la récupération: ${exception.message}", exception)
+                        android.util.Log.e("PropertyFormVM", "Error retrieving property: ${exception.message}", exception)
                         uiState = uiState.copy(
                             isLoadingProperty = false,
-                            errorMessage = "Erreur lors du chargement: ${exception.message}"
+                            errorMessage = "Error loading property: ${exception.message}"
                         )
                     }
                 )
             } catch (e: Exception) {
-                android.util.Log.e("PropertyFormVM", "Exception lors du chargement: ${e.message}", e)
+                android.util.Log.e("PropertyFormVM", "Exception while loading: ${e.message}", e)
                 uiState = uiState.copy(
                     isLoadingProperty = false,
-                    errorMessage = "Erreur: ${e.message}"
+                    errorMessage = "Error: ${e.message}"
                 )
             }
         }
     }
 
     /**
-     * Valide que le formulaire est complet
+     * Validate that the form is complete
      */
     private fun validateForm(): Boolean {
         return uiState.name.isNotBlank() &&
@@ -294,20 +294,20 @@ class PropertyFormViewModel @Inject constructor(
                uiState.monthlyRent.isNotBlank() &&
                uiState.surface.isNotBlank() &&
                uiState.rooms.isNotEmpty() &&
-               uiState.rooms.all { it.type != null } && // Le nom est optionnel, seul le type est obligatoire
+               uiState.rooms.all { it.type != null } && // Name is optional, only type is mandatory
                (uiState.photoUris.isNotEmpty() || uiState.existingPhotoUrls.isNotEmpty())
     }
 
     /**
-     * Upload toutes les nouvelles photos et retourne la liste complète (existantes + nouvelles)
+     * Upload all new photos and return complete list (existing + new)
      */
     private suspend fun uploadAllPhotos(propertyId: String): List<String> {
         val uploadedUrls = mutableListOf<String>()
 
-        // Garder les photos existantes qui n'ont pas été supprimées
+        // Keep existing photos that haven't been deleted
         uploadedUrls.addAll(uiState.existingPhotoUrls)
 
-        // Uploader les nouvelles photos
+        // Upload new photos
         uiState.photoUris.forEachIndexed { index, uri ->
             try {
                 val path = "properties/$propertyId/${System.currentTimeMillis()}_$index"
@@ -327,13 +327,13 @@ class PropertyFormViewModel @Inject constructor(
     }
 
     /**
-     * Crée les Room avec les éléments (existants en mode édition, par défaut en mode création)
+     * Create Rooms with elements (existing in edit mode, default in creation mode)
      */
     private fun createRoomsWithElements(): List<Room> {
         return uiState.rooms.mapNotNull { roomData ->
             roomData.type?.let { type ->
-                // En mode édition, utiliser les éléments existants
-                // En mode création, créer les éléments par défaut
+                // In edit mode, use existing elements
+                // In creation mode, create default elements
                 val elements = if (uiState.isEditMode && roomData.elements.isNotEmpty()) {
                     roomData.elements
                 } else {
@@ -347,7 +347,7 @@ class PropertyFormViewModel @Inject constructor(
 
                 Room(
                     id = if (uiState.isEditMode) roomData.id else UUID.randomUUID().toString(),
-                    name = roomData.name.ifBlank { type.name }, // Utiliser le nom du type si le nom est vide
+                    name = roomData.name.ifBlank { type.name }, // Use type name if name is empty
                     type = type,
                     elements = elements
                 )
@@ -356,11 +356,11 @@ class PropertyFormViewModel @Inject constructor(
     }
 
     /**
-     * Soumet le formulaire et crée/modifie la propriété
+     * Submit the form and create/update the property
      */
     fun submitProperty(onSuccess: () -> Unit) {
         if (!validateForm()) {
-            uiState = uiState.copy(errorMessage = "Veuillez remplir tous les champs obligatoires")
+            uiState = uiState.copy(errorMessage = "Please fill in all required fields")
             return
         }
 
@@ -368,24 +368,24 @@ class PropertyFormViewModel @Inject constructor(
             uiState = uiState.copy(isSubmitting = true, errorMessage = null)
 
             try {
-                // Obtenir l'utilisateur actuel
+                // Get current user
                 val currentUser = authRepository.getCurrentUser().getOrThrow()
-                    ?: throw IllegalStateException("Utilisateur non connecté")
+                    ?: throw IllegalStateException("User not logged in")
 
-                // Utiliser l'ID existant ou en générer un nouveau
+                // Use existing ID or generate a new one
                 val propertyId = uiState.propertyId ?: UUID.randomUUID().toString()
 
-                // Upload des photos (nouvelles + existantes)
+                // Upload photos (new + existing)
                 val photoUrls = uploadAllPhotos(propertyId)
 
-                // Créer les pièces avec leurs éléments
+                // Create rooms with their elements
                 val rooms = createRoomsWithElements()
 
-                // Utiliser l'adresse sélectionnée (déjà complète avec tous les champs)
+                // Use selected address (already complete with all fields)
                 val address = uiState.selectedAddress ?: Address()
-                android.util.Log.d("PropertyFormVM", "Adresse utilisée pour la propriété: street=${address.street}, city=${address.city}, postalCode=${address.postalCode}, province=${address.province}, country=${address.country}")
+                android.util.Log.d("PropertyFormVM", "Address used for property: street=${address.street}, city=${address.city}, postalCode=${address.postalCode}, province=${address.province}, country=${address.country}")
 
-                // Créer l'objet Property
+                // Create Property object
                 val property = Property(
                     id = propertyId,
                     name = uiState.name,
@@ -403,7 +403,7 @@ class PropertyFormViewModel @Inject constructor(
                     updatedAt = System.currentTimeMillis()
                 )
 
-                // Sauvegarder dans Firestore (add ou update)
+                // Save to Firestore (add or update)
                 val result = if (uiState.isEditMode) {
                     propertyRepository.updateProperty(property)
                 } else {
@@ -416,13 +416,13 @@ class PropertyFormViewModel @Inject constructor(
                 }.onFailure { exception ->
                     uiState = uiState.copy(
                         isSubmitting = false,
-                        errorMessage = "Erreur lors de la publication: ${exception.message}"
+                        errorMessage = "Error during publication: ${exception.message}"
                     )
                 }
             } catch (e: Exception) {
                 uiState = uiState.copy(
                     isSubmitting = false,
-                    errorMessage = "Erreur: ${e.message}"
+                    errorMessage = "Error: ${e.message}"
                 )
             }
         }
