@@ -7,6 +7,8 @@ import ca.uqac.inf865.truestay.data.model.toDomain
 import ca.uqac.inf865.truestay.data.source.FirestoreDataSource
 import ca.uqac.inf865.truestay.domain.model.Inventory
 import ca.uqac.inf865.truestay.domain.repository.InventoryRepository
+import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.map
 import javax.inject.Inject
 
 class InventoryRepositoryImpl @Inject constructor(
@@ -40,5 +42,10 @@ class InventoryRepositoryImpl @Inject constructor(
         } catch (e: Exception) {
             Result.failure(e)
         }
+    }
+
+    override fun observeInventory(id: String): Flow<Inventory?> {
+        return firestoreDataSource.observeDocument("inventories", id, InventoryDto::class.java)
+            .map { it?.toDomain() }
     }
 }

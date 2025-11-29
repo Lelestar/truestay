@@ -8,3 +8,9 @@ typings/
 # Node.js dependency directory
 node_modules/
 *.local
+
+# Firebase service account credentials (NEVER commit!)
+service-account.json
+
+# Test PDF outputs
+test-output-*.pdf

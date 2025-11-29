@@ -75,9 +75,12 @@ class SignInventoryUseCase @Inject constructor(
             }
 
             // 8. Update status based on signatures present
+            val bothSignaturesPresent = updatedInventory.landlordSignature != null &&
+                updatedInventory.tenantSignature != null
+
             val finalInventory = when {
                 // Both signatures are present -> mark as SIGNED
-                updatedInventory.landlordSignature != null && updatedInventory.tenantSignature != null -> {
+                bothSignaturesPresent -> {
                     updatedInventory.copy(status = InventoryStatus.SIGNED)
                 }
                 // Only one signature is present -> mark as PENDING_SIGNATURE
@@ -90,6 +93,9 @@ class SignInventoryUseCase @Inject constructor(
 
             // 9. Save
             inventoryRepository.updateInventory(finalInventory).getOrThrow()
+
+            // PDF generation is automatically triggered by Cloud Function
+            // when status changes to SIGNED with both signatures present
 
             Result.success(Unit)
         } catch (e: Exception) {

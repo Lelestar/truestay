@@ -392,6 +392,8 @@
     <string name="inventory_document_filename">EDL_%1$s.pdf</string>
     <string name="inventory_document_overlay_close">Fermer le document</string>
     <string name="inventory_document_load_error">Impossible de charger le PDF.</string>
+    <string name="inventory_document_generating">Génération du document en cours…</string>
+    <string name="inventory_document_error">Une erreur est survenue lors de la génération du document.</string>
     <string name="inventory_rooms_title">Pièces inspectées</string>
     <string name="inventory_room_status_todo">A faire</string>
     <string name="inventory_room_status_in_progress">En cours</string>
