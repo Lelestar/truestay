@@ -1,6 +1,5 @@
 package ca.uqac.inf865.truestay.presentation.landlord.property
 
-import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.layout.Arrangement
@@ -18,11 +17,11 @@ import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
+import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.draw.clip
 import androidx.compose.ui.platform.LocalFocusManager
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.input.ImeAction
@@ -378,14 +377,17 @@ fun PropertyFormScreen(
             }
 
             // Avant de publier - Container bleu
-            androidx.compose.foundation.layout.Box(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .clip(MaterialTheme.shapes.large)
-                    .background(colors.info)
-                    .padding(AppSpacing.large)
+            Surface(
+                modifier = Modifier.fillMaxWidth(),
+                shape = MaterialTheme.shapes.large,
+                color = colors.infoSurface,
+                border = androidx.compose.foundation.BorderStroke(
+                    width = 1.dp,
+                    color = colors.info
+                )
             ) {
                 Column(
+                    modifier = Modifier.padding(AppSpacing.large),
                     verticalArrangement = Arrangement.spacedBy(AppSpacing.medium)
                 ) {
                     // Titre avec icône
@@ -396,37 +398,89 @@ fun PropertyFormScreen(
                         TrueStayIcon(
                             iconRes = TrueStayIcons.ClipboardCheck,
                             contentDescriptionRes = null,
-                            tint = colors.white,
+                            tint = colors.info,
                             size = 24.dp
                         )
 
                         Text(
                             text = stringResource(R.string.property_form_before_publish_title),
-                            style = MaterialTheme.typography.titleLarge,
-                            color = colors.white
+                            style = MaterialTheme.typography.titleMedium,
+                            color = colors.info
                         )
                     }
 
                     // Liste des exigences avec checkmarks
-                    RequirementItemBlue(
-                        text = stringResource(R.string.property_form_requirement_info),
-                        isFulfilled = uiState.name.isNotBlank() &&
-                                     uiState.address.isNotBlank() &&
-                                     uiState.description.isNotBlank()
-                    )
-                    RequirementItemBlue(
-                        text = stringResource(R.string.property_form_requirement_photos),
-                        isFulfilled = uiState.photoUris.size >= 3
-                    )
-                    RequirementItemBlue(
-                        text = stringResource(R.string.property_form_requirement_description_quality),
-                        isFulfilled = uiState.description.length >= 50
-                    )
-                    RequirementItemBlue(
-                        text = stringResource(R.string.property_form_requirement_price),
-                        isFulfilled = uiState.monthlyRent.isNotBlank() &&
-                                     (uiState.monthlyRent.toIntOrNull() ?: 0) > 0
-                    )
+                    Column(
+                        verticalArrangement = Arrangement.spacedBy(AppSpacing.xsmall)
+                    ) {
+                        Row(
+                            horizontalArrangement = Arrangement.spacedBy(AppSpacing.small),
+                            verticalAlignment = androidx.compose.ui.Alignment.CenterVertically
+                        ) {
+                            TrueStayIcon(
+                                iconRes = TrueStayIcons.Check,
+                                contentDescriptionRes = null,
+                                tint = colors.info,
+                                size = 20.dp
+                            )
+                            Text(
+                                text = stringResource(R.string.property_form_requirement_info),
+                                style = MaterialTheme.typography.bodyMedium,
+                                color = colors.info
+                            )
+                        }
+
+                        Row(
+                            horizontalArrangement = Arrangement.spacedBy(AppSpacing.small),
+                            verticalAlignment = androidx.compose.ui.Alignment.CenterVertically
+                        ) {
+                            TrueStayIcon(
+                                iconRes = TrueStayIcons.Check,
+                                contentDescriptionRes = null,
+                                tint = colors.info,
+                                size = 20.dp
+                            )
+                            Text(
+                                text = stringResource(R.string.property_form_requirement_photos),
+                                style = MaterialTheme.typography.bodyMedium,
+                                color = colors.info
+                            )
+                        }
+
+                        Row(
+                            horizontalArrangement = Arrangement.spacedBy(AppSpacing.small),
+                            verticalAlignment = androidx.compose.ui.Alignment.CenterVertically
+                        ) {
+                            TrueStayIcon(
+                                iconRes = TrueStayIcons.Check,
+                                contentDescriptionRes = null,
+                                tint = colors.info,
+                                size = 20.dp
+                            )
+                            Text(
+                                text = stringResource(R.string.property_form_requirement_description_quality),
+                                style = MaterialTheme.typography.bodyMedium,
+                                color = colors.info
+                            )
+                        }
+
+                        Row(
+                            horizontalArrangement = Arrangement.spacedBy(AppSpacing.small),
+                            verticalAlignment = androidx.compose.ui.Alignment.CenterVertically
+                        ) {
+                            TrueStayIcon(
+                                iconRes = TrueStayIcons.Check,
+                                contentDescriptionRes = null,
+                                tint = colors.info,
+                                size = 20.dp
+                            )
+                            Text(
+                                text = stringResource(R.string.property_form_requirement_price),
+                                style = MaterialTheme.typography.bodyMedium,
+                                color = colors.info
+                            )
+                        }
+                    }
                 }
             }
 
@@ -477,57 +531,4 @@ fun PropertyFormScreen(
     }
 }
 
-@Composable
-private fun RequirementItem(
-    text: String,
-    isFulfilled: Boolean,
-    modifier: Modifier = Modifier
-) {
-    val colors = LocalAppColors.current
-
-    Row(
-        modifier = modifier,
-        horizontalArrangement = Arrangement.spacedBy(AppSpacing.small)
-    ) {
-        TrueStayIcon(
-            iconRes = if (isFulfilled) TrueStayIcons.Check else TrueStayIcons.Square,
-            contentDescriptionRes = null,
-            tint = if (isFulfilled) colors.success else colors.grayDark,
-            size = 16.dp
-        )
-
-        Text(
-            text = text,
-            style = MaterialTheme.typography.bodySmall,
-            color = if (isFulfilled) colors.grayDark else colors.black
-        )
-    }
-}
-
-@Composable
-private fun RequirementItemBlue(
-    text: String,
-    isFulfilled: Boolean,
-    modifier: Modifier = Modifier
-) {
-    val colors = LocalAppColors.current
-
-    Row(
-        modifier = modifier,
-        horizontalArrangement = Arrangement.spacedBy(AppSpacing.small)
-    ) {
-        TrueStayIcon(
-            iconRes = TrueStayIcons.Check,
-            contentDescriptionRes = null,
-            tint = colors.white,
-            size = 20.dp
-        )
-
-        Text(
-            text = text,
-            style = MaterialTheme.typography.bodyMedium,
-            color = colors.white
-        )
-    }
-}
 
