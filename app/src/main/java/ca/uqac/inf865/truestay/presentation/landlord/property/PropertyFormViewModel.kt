@@ -52,7 +52,8 @@ data class PropertyFormUiState(
 class PropertyFormViewModel @Inject constructor(
     private val propertyRepository: PropertyRepository,
     private val storageRepository: StorageRepository,
-    private val authRepository: AuthRepository
+    private val authRepository: AuthRepository,
+    private val geocodingRepository: ca.uqac.inf865.truestay.domain.repository.GeocodingRepository
 ) : ViewModel() {
 
     var uiState by mutableStateOf(
@@ -209,6 +210,48 @@ class PropertyFormViewModel @Inject constructor(
     }
 
     /**
+     * Géocode l'adresse pour récupérer les coordonnées GPS et les détails
+     */
+    private suspend fun geocodeAddress(address: String): Address {
+        return try {
+            val result = geocodingRepository.search(address).getOrNull()
+            if (result != null) {
+                Address(
+                    street = address,
+                    city = "", // Le geocoding ne retourne pas ces détails dans LocationSuggestion
+                    postalCode = "",
+                    province = "",
+                    country = "",
+                    latitude = result.location.latitude,
+                    longitude = result.location.longitude
+                )
+            } else {
+                // Si le geocoding échoue, retourner l'adresse sans coordonnées
+                Address(
+                    street = address,
+                    city = "",
+                    postalCode = "",
+                    province = "",
+                    country = "",
+                    latitude = 0.0,
+                    longitude = 0.0
+                )
+            }
+        } catch (_: Exception) {
+            // En cas d'erreur, retourner l'adresse sans coordonnées
+            Address(
+                street = address,
+                city = "",
+                postalCode = "",
+                province = "",
+                country = "",
+                latitude = 0.0,
+                longitude = 0.0
+            )
+        }
+    }
+
+    /**
      * Soumet le formulaire et crée la propriété
      */
     fun submitProperty(onSuccess: () -> Unit) {
@@ -234,15 +277,15 @@ class PropertyFormViewModel @Inject constructor(
                 // Créer les pièces avec leurs éléments
                 val rooms = createRoomsWithElements()
 
+                // Géocoder l'adresse pour obtenir les coordonnées GPS
+                val geocodedAddress = geocodeAddress(uiState.address)
+
                 // Créer l'objet Property
                 val property = Property(
                     id = propertyId,
                     name = uiState.name,
                     description = uiState.description,
-                    address = Address(
-                        street = uiState.address
-                        // Les autres champs d'adresse pourraient être parsés ou laissés vides
-                    ),
+                    address = geocodedAddress,
                     monthlyRent = uiState.monthlyRent.toIntOrNull() ?: 0,
                     surface = uiState.surface.toIntOrNull() ?: 0,
                     rooms = rooms,
