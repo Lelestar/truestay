@@ -1,6 +1,9 @@
 package ca.uqac.inf865.truestay.data.source
 
 import com.google.firebase.firestore.FirebaseFirestore
+import kotlinx.coroutines.channels.awaitClose
+import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.callbackFlow
 import kotlinx.coroutines.tasks.await
 import javax.inject.Inject
 import javax.inject.Singleton
@@ -113,5 +116,26 @@ class FirestoreDataSource @Inject constructor(
         } catch (e: Exception) {
             emptyList()
         }
+    }
+
+    // Real-time observation
+    fun <T> observeDocument(
+        collection: String,
+        documentId: String,
+        clazz: Class<T>
+    ): Flow<T?> = callbackFlow {
+        val listener = firestore.collection(collection)
+            .document(documentId)
+            .addSnapshotListener { snapshot, error ->
+                if (error != null) {
+                    close(error)
+                    return@addSnapshotListener
+                }
+
+                val data = snapshot?.toObject(clazz)
+                trySend(data)
+            }
+
+        awaitClose { listener.remove() }
     }
 }

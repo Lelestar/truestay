@@ -7,13 +7,14 @@ import ca.uqac.inf865.truestay.domain.repository.InventoryRepository
 import ca.uqac.inf865.truestay.domain.repository.PropertyRepository
 import ca.uqac.inf865.truestay.domain.repository.RentalRepository
 import ca.uqac.inf865.truestay.domain.repository.UserRepository
-import ca.uqac.inf865.truestay.domain.usecase.inventory.GenerateInventoryPdfUseCase
+import com.google.firebase.functions.FirebaseFunctions
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.tasks.await
 import javax.inject.Inject
 
 enum class InventoryError {
@@ -40,7 +41,7 @@ class InventoryViewModel @Inject constructor(
     private val propertyRepository: PropertyRepository,
     private val userRepository: UserRepository,
     private val authRepository: ca.uqac.inf865.truestay.domain.repository.AuthRepository,
-    private val generateInventoryPdfUseCase: GenerateInventoryPdfUseCase
+    private val functions: FirebaseFunctions
 ) : ViewModel() {
     private val _uiState = MutableStateFlow(InventoryUiState(isLoading = true))
     val uiState: StateFlow<InventoryUiState> = _uiState.asStateFlow()
@@ -49,16 +50,18 @@ class InventoryViewModel @Inject constructor(
         viewModelScope.launch {
             _uiState.update { it.copy(isLoading = true, error = null) }
 
-            inventoryRepository.getInventoryById(inventoryId)
-                .onSuccess { inventory ->
-                    fetchPropertyDetails(inventory)
-                }
-                .onFailure {
-                    _uiState.update {
-                        it.copy(
-                            isLoading = false,
-                            error = InventoryError.LOAD_FAILED
-                        )
+            // Observe inventory changes in real-time
+            inventoryRepository.observeInventory(inventoryId)
+                .collect { inventory ->
+                    if (inventory != null) {
+                        fetchPropertyDetails(inventory)
+                    } else {
+                        _uiState.update {
+                            it.copy(
+                                isLoading = false,
+                                error = InventoryError.LOAD_FAILED
+                            )
+                        }
                     }
                 }
         }
@@ -110,6 +113,24 @@ class InventoryViewModel @Inject constructor(
                 isLoading = false,
                 error = InventoryError.LOAD_FAILED
             )
+        }
+    }
+
+    fun retryPdfGeneration(inventoryId: String) {
+        viewModelScope.launch {
+            try {
+                val data = hashMapOf("inventoryId" to inventoryId)
+                functions
+                    .getHttpsCallable("generateInventoryPdf")
+                    .call(data)
+                    .await()
+
+                // Reload inventory to get updated status
+                loadInventory(inventoryId)
+            } catch (e: Exception) {
+                android.util.Log.e("InventoryViewModel", "Failed to retry PDF generation", e)
+                // Error will be visible in the UI through the inventory state
+            }
         }
     }
 }

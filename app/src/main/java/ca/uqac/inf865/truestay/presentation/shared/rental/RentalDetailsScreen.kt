@@ -1204,7 +1204,7 @@ private fun ReviewCategoryCard(
                     verticalArrangement = Arrangement.spacedBy(AppSpacing.xsmall),
                     modifier = Modifier
                         .fillMaxWidth()
-                        .background(colors.grayLight.copy(alpha = 0.3f), shape = AppShapes.small)
+                        .background(colors.graySurface, shape = AppShapes.small)
                         .padding(AppSpacing.medium)
                 ) {
                     details.forEach { (label, score) ->
