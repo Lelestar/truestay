@@ -482,6 +482,67 @@
     <string name="room_details_damaged_requirement">Pour un élément dégradé, au moins un commentaire et une photo sont requis.</string>
     <string name="room_details_collapse_element">Réduire l\'élément</string>
 
+    <!-- Property Form -->
+    <string name="property_form_title_add">Ajouter un logement</string>
+    <string name="property_form_title_edit">Modifier un logement</string>
+    <string name="property_form_info_title">Informations générales</string>
+    <string name="property_form_name_label">Titre de l\'annonce</string>
+    <string name="property_form_name_placeholder">Ex. Appartement moderne 2 pièces</string>
+    <string name="property_form_address_label">Adresse</string>
+    <string name="property_form_address_placeholder">Ex. 15 Rue de la Paix, 75001 Paris</string>
+    <string name="property_form_description_label">Description</string>
+    <string name="property_form_description_placeholder">Décrivez votre logement</string>
+    <string name="property_form_rent_label">Loyer ($/mois)</string>
+    <string name="property_form_rent_placeholder">1200</string>
+    <string name="property_form_surface_label">Surface (m²)</string>
+    <string name="property_form_surface_placeholder">50</string>
+    <string name="property_form_in_building_label">Immeuble</string>
+    <string name="property_form_in_building_desc">Mon logement se trouve dans un immeuble</string>
+    <string name="property_form_rooms_title">Pièces du logement</string>
+    <string name="property_form_rooms_subtitle">Ajoutez les différentes pièces de votre logement</string>
+    <string name="property_form_add_room">Ajouter</string>
+    <string name="property_form_room_name_label">Nom de la pièce (optionnel)</string>
+    <string name="property_form_room_name_placeholder">Ex. Chambre principale</string>
+    <string name="property_form_room_type_label">Type de pièce</string>
+    <string name="property_form_room_type_placeholder">Sélectionnez un type</string>
+    <string name="property_form_delete_room">Supprimer la pièce</string>
+    <string name="property_form_photos_title">Photos</string>
+    <string name="property_form_photos_subtitle">Ajoutez des photos de qualité pour attirer les locataires. 10 photos maximum</string>
+    <string name="property_form_add_photos">Ajouter des photos</string>
+    <string name="property_form_photo_count">%1$d sur %2$d photos</string>
+    <string name="property_form_availability_title">Disponibilité</string>
+    <string name="property_form_available_label">Logement disponible</string>
+    <string name="property_form_available_desc">Indiquez si les locataires peuvent voir cette annonce</string>
+    <string name="property_form_before_publish_title">Avant de publier</string>
+    <string name="property_form_requirement_info">Vérifiez l\'exactitude des informations</string>
+    <string name="property_form_requirement_photos">Ajouter au moins 3 photos de qualité</string>
+    <string name="property_form_requirement_description_quality">Rédigez une description attractive</string>
+    <string name="property_form_requirement_price">Indiquez un prix compétitif</string>
+    <string name="property_form_cancel">Annuler</string>
+    <string name="property_form_publish">Publier</string>
+    <string name="property_form_error_submit">Erreur lors de la publication du logement</string>
+
+    <!-- Room Types -->
+    <string name="room_type_bedroom">Chambre</string>
+    <string name="room_type_living_room">Salon</string>
+    <string name="room_type_kitchen">Cuisine</string>
+    <string name="room_type_bathroom">Salle de bain</string>
+    <string name="room_type_toilet">Toilettes</string>
+    <string name="room_type_entrance">Entrée</string>
+    <string name="room_type_hallway">Couloir</string>
+    <string name="room_type_dining_room">Salle à manger</string>
+    <string name="room_type_office">Bureau</string>
+    <string name="room_type_laundry_room">Buanderie</string>
+    <string name="room_type_storage_room">Débarras</string>
+    <string name="room_type_garage">Garage</string>
+    <string name="room_type_basement">Sous-sol</string>
+    <string name="room_type_attic">Grenier</string>
+    <string name="room_type_balcony">Balcon</string>
+    <string name="room_type_terrace">Terrasse</string>
+    <string name="room_type_garden">Jardin</string>
+    <string name="room_type_veranda">Véranda</string>
+    <string name="room_type_staircase">Escalier</string>
+    <string name="room_type_other">Autre</string>
     <!-- Signature Screen -->
     <string name="signature_date_label">Date</string>
     <string name="signature_pad_label">Signature</string>

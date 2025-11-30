@@ -35,7 +35,10 @@ fun TrueStayNavigation(
     Scaffold(
         topBar = {
             if (showTopBar) {
-                getScreenTitleRes(currentDestination?.route ?: "")?.let { titleRes ->
+                getScreenTitleRes(
+                    route = currentDestination?.route ?: "",
+                    arguments = navBackStackEntry?.arguments
+                )?.let { titleRes ->
                     TrueStayTopAppBar(
                         titleRes = titleRes,
                         onNavigateBack = { navController.navigateUp() }
@@ -137,7 +140,7 @@ private fun getStartDestination(userRole: UserRole): String {
 }
 
 @StringRes
-private fun getScreenTitleRes(route: String): Int? {
+private fun getScreenTitleRes(route: String, arguments: android.os.Bundle?): Int? {
     return when {
         route.startsWith("property/") -> R.string.screen_title_property_details
         route.startsWith("rental/") -> R.string.screen_title_rental_details
@@ -145,15 +148,18 @@ private fun getScreenTitleRes(route: String): Int? {
         route.startsWith("inventory/") -> R.string.screen_title_inventory
         route.startsWith("room/") -> R.string.screen_title_room_details
         route.startsWith("signature/") -> R.string.screen_title_signature
+        route.startsWith("create_rental/") -> R.string.screen_title_create_rental
         // Property form (add/edit)
         route.startsWith("property_form") -> {
-            if (route.contains("propertyId=null") || !route.contains("propertyId=")) {
+            // Get the actual propertyId value from arguments
+            val propertyId = arguments?.getString("propertyId")
+            val isAdd = propertyId == null || propertyId == "null"
+            if (isAdd) {
                 R.string.screen_title_add_property
             } else {
                 R.string.screen_title_edit_property
             }
         }
-        route.startsWith("create_rental/") -> R.string.screen_title_create_rental
         route == "edit_profile" -> R.string.screen_title_edit_profile
         route == "change_email" -> R.string.screen_title_change_email
         route == "change_password" -> R.string.screen_title_change_password
