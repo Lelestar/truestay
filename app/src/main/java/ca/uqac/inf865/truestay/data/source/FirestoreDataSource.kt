@@ -139,4 +139,25 @@ class FirestoreDataSource @Inject constructor(
 
         awaitClose { listener.remove() }
     }
+
+    fun <T> observeDocumentsWithQuery(
+        collection: String,
+        field: String,
+        value: Any,
+        clazz: Class<T>
+    ): Flow<List<T>> = callbackFlow {
+        val listener = firestore.collection(collection)
+            .whereEqualTo(field, value)
+            .addSnapshotListener { snapshot, error ->
+                if (error != null) {
+                    close(error)
+                    return@addSnapshotListener
+                }
+
+                val data = snapshot?.documents?.mapNotNull { it.toObject(clazz) } ?: emptyList()
+                trySend(data)
+            }
+
+        awaitClose { listener.remove() }
+    }
 }

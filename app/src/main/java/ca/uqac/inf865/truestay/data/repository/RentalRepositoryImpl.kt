@@ -7,6 +7,8 @@ import ca.uqac.inf865.truestay.data.source.FirestoreDataSource
 import ca.uqac.inf865.truestay.domain.model.Rental
 import ca.uqac.inf865.truestay.domain.model.RentalStatus
 import ca.uqac.inf865.truestay.domain.repository.RentalRepository
+import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.map
 import javax.inject.Inject
 
 class RentalRepositoryImpl @Inject constructor(
@@ -90,6 +92,17 @@ class RentalRepositoryImpl @Inject constructor(
             Result.success(Unit)
         } catch (e: Exception) {
             Result.failure(e)
+        }
+    }
+
+    override fun observeRentalsByTenant(tenantId: String): Flow<List<Rental>> {
+        return firestoreDataSource.observeDocumentsWithQuery(
+            collection = "rentals",
+            field = "tenantId",
+            value = tenantId,
+            clazz = RentalDto::class.java
+        ).map { rentalDtos ->
+            rentalDtos.map { it.toDomain() }
         }
     }
 }
