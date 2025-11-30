@@ -500,7 +500,7 @@
     <string name="property_form_photo_count">%1$d sur %2$d photos</string>
     <string name="property_form_availability_title">Disponibilité</string>
     <string name="property_form_available_label">Logement disponible</string>
-    <string name="property_form_available_desc">Indiquez si le logement est actuellement disponible pour une location</string>
+    <string name="property_form_available_desc">Indiquez si les locataires peuvent voir cette annonce</string>
     <string name="property_form_before_publish_title">Avant de publier</string>
     <string name="property_form_requirement_info">Vérifiez l\'exactitude des informations</string>
     <string name="property_form_requirement_photos">Ajouter au moins 3 photos de qualité</string>

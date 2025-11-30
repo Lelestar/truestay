@@ -1,12 +1,12 @@
 package ca.uqac.inf865.truestay.domain.model
 
 /**
- * Mapping entre les types de pièces et les éléments qu'elles contiennent par défaut
+ * Mapping between room types and the elements they contain by default
  */
 object RoomTypeElementMapping {
 
     /**
-     * Retourne la liste des types d'éléments par défaut pour un type de pièce donné
+     * Returns the list of default element types for a given room type.
      */
     fun getDefaultElementsForRoomType(roomType: RoomType): List<ElementType> {
         return when (roomType) {
