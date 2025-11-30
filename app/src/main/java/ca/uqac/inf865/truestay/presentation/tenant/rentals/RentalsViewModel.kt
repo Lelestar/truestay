@@ -63,7 +63,49 @@ class RentalsViewModel @Inject constructor(
     val uiState: StateFlow<RentalsUiState> = _uiState.asStateFlow()
 
     init {
-        refreshRentals()
+        observeRentals()
+    }
+
+    /**
+     * Observes rentals in real-time for the current user
+     */
+    private fun observeRentals() {
+        viewModelScope.launch {
+            _uiState.update { it.copy(isLoading = true, error = null) }
+
+            authRepository.getCurrentUser()
+                .onSuccess { user ->
+                    if (user == null) {
+                        _uiState.update {
+                            it.copy(
+                                isLoading = false,
+                                currentRental = null,
+                                pendingRentals = emptyList(),
+                                pastRentals = emptyList(),
+                                error = RentalsError.NOT_AUTHENTICATED
+                            )
+                        }
+                        return@onSuccess
+                    }
+
+                    // Observe rentals in real-time
+                    rentalRepository.observeRentalsByTenant(user.id)
+                        .collect { rentals ->
+                            processRentals(rentals)
+                        }
+                }
+                .onFailure {
+                    _uiState.update {
+                        it.copy(
+                            isLoading = false,
+                            currentRental = null,
+                            pendingRentals = emptyList(),
+                            pastRentals = emptyList(),
+                            error = RentalsError.LOAD_FAILED
+                        )
+                    }
+                }
+        }
     }
 
     /**
@@ -102,76 +144,83 @@ class RentalsViewModel @Inject constructor(
     }
 
     /**
+     * Processes rentals and combines them with property information
+     */
+    private suspend fun processRentals(rentals: List<Rental>) {
+        if (rentals.isEmpty()) {
+            _uiState.update {
+                it.copy(
+                    currentRental = null,
+                    pendingRentals = emptyList(),
+                    pastRentals = emptyList(),
+                    isLoading = false,
+                    error = null
+                )
+            }
+            return
+        }
+
+        propertyRepository.getProperties()
+            .onSuccess { properties ->
+                val propertyMap = properties.associateBy { it.id }
+                val baseItems = rentals.mapNotNull { rental ->
+                    propertyMap[rental.propertyId]?.let { property ->
+                        RentalPropertyItem(rental = rental, property = property)
+                    }
+                }
+
+                // Enrich with tenant's rating when available
+                val items = baseItems.map { item ->
+                    val rating = reviewRepository.getReviewByRental(item.rental.id)
+                        .getOrNull()
+                        ?.propertyReview
+                        ?.overallRating
+                        ?.takeIf { it > 0f }
+
+                    if (rating != null) {
+                        item.copy(tenantRating = rating)
+                    } else {
+                        item
+                    }
+                }
+                val pending = items.filter { it.rental.status == RentalStatus.PENDING }
+
+                // Separate current (ACTIVE) rental from past rentals
+                val current = items.firstOrNull { it.rental.status == RentalStatus.ACTIVE }
+                val past = items
+                    .filter { it.rental.status == RentalStatus.ENDED }
+                    .sortedByDescending { it.rental.endDate } // Most recent first
+
+                _uiState.update {
+                    it.copy(
+                        currentRental = current,
+                        pendingRentals = pending,
+                        pastRentals = past,
+                        isLoading = false,
+                        error = null
+                    )
+                }
+            }
+            .onFailure {
+                _uiState.update {
+                    it.copy(
+                        currentRental = null,
+                        pendingRentals = emptyList(),
+                        pastRentals = emptyList(),
+                        isLoading = false,
+                        error = RentalsError.LOAD_FAILED
+                    )
+                }
+            }
+    }
+
+    /**
      * Retrieves a user's rentals and combines them with property information
      */
     private suspend fun fetchRentalsForUser(userId: String) {
         rentalRepository.getRentalsByTenant(userId)
             .onSuccess { rentals ->
-                if (rentals.isEmpty()) {
-                    _uiState.update {
-                        it.copy(
-                            currentRental = null,
-                            pendingRentals = emptyList(),
-                            pastRentals = emptyList(),
-                            isLoading = false,
-                            error = null
-                        )
-                    }
-                    return@onSuccess
-                }
-
-                propertyRepository.getProperties()
-                    .onSuccess { properties ->
-                        val propertyMap = properties.associateBy { it.id }
-                        val baseItems = rentals.mapNotNull { rental ->
-                            propertyMap[rental.propertyId]?.let { property ->
-                                RentalPropertyItem(rental = rental, property = property)
-                            }
-                        }
-
-                        // Enrich with tenant's rating when available
-                        val items = baseItems.map { item ->
-                            val rating = reviewRepository.getReviewByRental(item.rental.id)
-                                .getOrNull()
-                                ?.propertyReview
-                                ?.overallRating
-                                ?.takeIf { it > 0f }
-                            
-                            if (rating != null) {
-                                item.copy(tenantRating = rating)
-                            } else {
-                                item
-                            }
-                        }
-                        val pending = items.filter { it.rental.status == RentalStatus.PENDING }
-
-                        // Separate current (ACTIVE) rental from past rentals
-                        val current = items.firstOrNull { it.rental.status == RentalStatus.ACTIVE }
-                        val past = items
-                            .filter { it.rental.status == RentalStatus.ENDED }
-                            .sortedByDescending { it.rental.endDate } // Most recent first
-
-                        _uiState.update {
-                            it.copy(
-                                currentRental = current,
-                                pendingRentals = pending,
-                                pastRentals = past,
-                                isLoading = false,
-                                error = null
-                            )
-                        }
-                    }
-                    .onFailure {
-                        _uiState.update {
-                            it.copy(
-                                currentRental = null,
-                                pendingRentals = emptyList(),
-                                pastRentals = emptyList(),
-                                isLoading = false,
-                                error = RentalsError.LOAD_FAILED
-                            )
-                        }
-                    }
+                processRentals(rentals)
             }
             .onFailure {
                 _uiState.update {
