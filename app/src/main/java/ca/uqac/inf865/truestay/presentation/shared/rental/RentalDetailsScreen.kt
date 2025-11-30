@@ -32,6 +32,7 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
@@ -340,6 +341,7 @@ private fun RentalDetailsContent(
                 RentalInventoriesSection(
                     entryInventory = entryInventory,
                     exitInventory = exitInventory,
+                    rentalEndDate = rental.endDate,
                     onInventoryClick = onInventoryClick
                 )
             }
@@ -874,6 +876,7 @@ private fun computeDaysBetween(startTimestamp: Long, endTimestamp: Long): Int {
 private fun RentalInventoriesSection(
     entryInventory: Inventory?,
     exitInventory: Inventory?,
+    rentalEndDate: Long,
     onInventoryClick: (String) -> Unit
 ) {
     Column(
@@ -898,10 +901,17 @@ private fun RentalInventoriesSection(
         }
 
         exitInventory?.let {
+            val isAvailable = System.currentTimeMillis() >= rentalEndDate
             InventorySummaryCard(
                 inventory = it,
                 title = stringResource(R.string.rental_inventory_exit_title),
-                onClick = { onInventoryClick(it.id) }
+                isAvailableForAccess = isAvailable,
+                availableDate = if (!isAvailable) rentalEndDate else null,
+                onClick = {
+                    if (isAvailable) {
+                        onInventoryClick(it.id)
+                    }
+                }
             )
         }
     }
@@ -911,7 +921,9 @@ private fun RentalInventoriesSection(
 fun InventorySummaryCard(
     inventory: Inventory,
     title: String,
-    onClick: () -> Unit
+    onClick: () -> Unit,
+    isAvailableForAccess: Boolean = true,
+    availableDate: Long? = null
 ) {
     val completedText = inventory.completedAt?.let { completedAt ->
         DateUtils.formatLocalDate(completedAt)?.let { date ->
@@ -919,7 +931,15 @@ fun InventorySummaryCard(
         }
     }
 
-    val subtitle = completedText ?: stringResource(R.string.rental_inventory_not_done)
+    val subtitle = when {
+        !isAvailableForAccess && availableDate != null -> {
+            DateUtils.formatLocalDate(availableDate)?.let { date ->
+                "Disponible le $date"
+            } ?: stringResource(R.string.rental_inventory_not_done)
+        }
+        completedText != null -> completedText
+        else -> stringResource(R.string.rental_inventory_not_done)
+    }
 
     val (statusText, statusVariant) = when (inventory.status) {
         InventoryStatus.DRAFT -> stringResource(R.string.rental_inventory_status_draft) to BadgeVariant.NEUTRAL
@@ -930,13 +950,20 @@ fun InventorySummaryCard(
         InventoryStatus.CANCELLED -> stringResource(R.string.rental_inventory_status_cancelled) to BadgeVariant.ERROR
     }
 
+    val cardAlpha = if (!isAvailableForAccess) 0.5f else 1f
+
     TrueStayCard(
         modifier = Modifier
             .fillMaxWidth()
-            .clickable(onClick = onClick)
+            .clickable(
+                enabled = isAvailableForAccess,
+                onClick = onClick
+            )
     ) {
         Row(
-            modifier = Modifier.fillMaxWidth()
+            modifier = Modifier
+                .fillMaxWidth()
+                .graphicsLayer { alpha = cardAlpha }
         ) {
             TrueStayIcon(
                 iconRes = TrueStayIcons.FileText,

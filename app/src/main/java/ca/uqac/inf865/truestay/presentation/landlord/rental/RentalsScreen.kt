@@ -329,12 +329,14 @@ private fun ActiveRentalCard(
             )
         }
         if (rental.exitInventoryId != null) {
+            val isAvailable = System.currentTimeMillis() >= rental.endDate
             add(
                 PropertyAction(
                     iconRes = TrueStayIcons.FileText,
                     label = stringResource(R.string.landlord_rentals_exit_inventory_button),
-                    onClick = onExitInventoryClick,
-                    variant = ButtonVariant.SECONDARY
+                    onClick = if (isAvailable) onExitInventoryClick else { {} },
+                    variant = ButtonVariant.SECONDARY,
+                    enabled = isAvailable
                 )
             )
         }
