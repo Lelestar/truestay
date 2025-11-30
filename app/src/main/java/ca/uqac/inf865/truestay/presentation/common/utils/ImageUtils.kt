@@ -78,7 +78,7 @@ fun optimizePhoto(context: Context, sourceUri: Uri): Uri? {
             resizedBitmap.recycle()
         }
 
-        // Save optimized image
+        // Save optimized image to cache
         val optimizedFile = File(context.cacheDir, "optimized_${System.currentTimeMillis()}.jpg")
         FileOutputStream(optimizedFile).use { outputStream ->
             rotatedBitmap.compress(Bitmap.CompressFormat.JPEG, JPEG_QUALITY, outputStream)
@@ -117,26 +117,28 @@ private fun rotateBitmap(source: Bitmap, angle: Float): Bitmap {
  *
  * Usage example:
  * ```
- * val photoPickerLauncher = rememberOptimizedMultiPhotoPickerLauncher { optimizedUris ->
+ * val photoPickerLauncher = rememberOptimizedMultiPhotoPickerLauncher(maxItems = 10) { optimizedUris ->
  *     viewModel.uploadPhotos(optimizedUris)
  * }
  *
- * Button(onClick = { photoPickerLauncher.launch(maxItems = 5) }) {
+ * Button(onClick = { photoPickerLauncher.launch(maxItems = 10) }) {
  *     Text("Pick Photos")
  * }
  * ```
  *
+ * @param maxItems Maximum number of photos that can be selected (default: 5)
  * @param onPhotosPicked Callback invoked with the list of optimized photo URIs
  * @return PhotoPickerLauncher object with a launch() function
  */
 @Composable
 fun rememberOptimizedMultiPhotoPickerLauncher(
+    maxItems: Int = 5,
     onPhotosPicked: (List<Uri>) -> Unit
 ): PhotoPickerLauncher {
     val context = LocalContext.current
 
     val launcher = rememberLauncherForActivityResult(
-        contract = ActivityResultContracts.PickMultipleVisualMedia(maxItems = 5)
+        contract = ActivityResultContracts.PickMultipleVisualMedia(maxItems = maxItems)
     ) { uris: List<Uri> ->
         if (uris.isNotEmpty()) {
             val optimizedUris = uris.mapNotNull { uri -> optimizePhoto(context, uri) }

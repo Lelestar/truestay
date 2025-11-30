@@ -63,7 +63,8 @@ class GeocodingDataSource @Inject constructor(
                 Place.Field.DISPLAY_NAME,
                 Place.Field.FORMATTED_ADDRESS,
                 Place.Field.LOCATION,
-                Place.Field.VIEWPORT
+                Place.Field.VIEWPORT,
+                Place.Field.ADDRESS_COMPONENTS
             )
 
             val placeRequest = FetchPlaceRequest.builder(firstPrediction.placeId, placeFields)
@@ -92,7 +93,8 @@ class GeocodingDataSource @Inject constructor(
                 Place.Field.DISPLAY_NAME,
                 Place.Field.FORMATTED_ADDRESS,
                 Place.Field.LOCATION,
-                Place.Field.VIEWPORT
+                Place.Field.VIEWPORT,
+                Place.Field.ADDRESS_COMPONENTS
             )
             val request = FetchPlaceRequest.builder(placeId, placeFields).build()
             suspendCancellableCoroutine { continuation ->

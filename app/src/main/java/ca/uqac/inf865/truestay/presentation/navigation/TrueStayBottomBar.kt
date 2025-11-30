@@ -99,7 +99,9 @@ fun TrueStayBottomBar(
                                     LocalAppColors.current.primary
                                 } else {
                                     LocalAppColors.current.grayDark
-                                }
+                                },
+                                maxLines = 1,
+                                softWrap = false
                             )
                         }
                     },

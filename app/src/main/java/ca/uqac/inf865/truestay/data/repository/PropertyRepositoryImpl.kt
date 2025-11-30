@@ -9,10 +9,12 @@ import ca.uqac.inf865.truestay.domain.model.PropertyFilters
 import ca.uqac.inf865.truestay.domain.model.PropertyStatus
 import ca.uqac.inf865.truestay.domain.model.RoomType
 import ca.uqac.inf865.truestay.domain.repository.PropertyRepository
+import ca.uqac.inf865.truestay.domain.repository.StorageRepository
 import javax.inject.Inject
 
 class PropertyRepositoryImpl @Inject constructor(
-    private val firestoreDataSource: FirestoreDataSource
+    private val firestoreDataSource: FirestoreDataSource,
+    private val storageRepository: StorageRepository
 ) : PropertyRepository {
 
     override suspend fun getProperties(): Result<List<Property>> {
@@ -27,10 +29,18 @@ class PropertyRepositoryImpl @Inject constructor(
 
     override suspend fun getPropertyById(id: String): Result<Property> {
         return try {
+            android.util.Log.d("PropertyRepo", "getPropertyById called with id=$id")
             val property = firestoreDataSource.getDocument("properties", id, PropertyDto::class.java)
-                ?: return Result.failure(Exception("Property not found"))
-            Result.success(property.toDomain())
+            android.util.Log.d("PropertyRepo", "Document retrieved: ${property?.id}, name=${property?.name}")
+            if (property == null) {
+                android.util.Log.e("PropertyRepo", "Property not found for id=$id")
+                return Result.failure(Exception("Property not found"))
+            }
+            val domainProperty = property.toDomain()
+            android.util.Log.d("PropertyRepo", "Property converted to domain: id=${domainProperty.id}, name=${domainProperty.name}, rooms=${domainProperty.rooms.size}, photos=${domainProperty.photos.size}")
+            Result.success(domainProperty)
         } catch (e: Exception) {
+            android.util.Log.e("PropertyRepo", "Exception in getPropertyById: ${e.message}", e)
             Result.failure(e)
         }
     }
@@ -51,13 +61,17 @@ class PropertyRepositoryImpl @Inject constructor(
 
     override suspend fun addProperty(property: Property): Result<String> {
         return try {
+            android.util.Log.d("PropertyRepo", "addProperty called with id=${property.id}")
             val propertyDto = property.toDto().copy(
                 createdAt = System.currentTimeMillis(),
                 updatedAt = System.currentTimeMillis()
             )
-            val id = firestoreDataSource.addDocument("properties", propertyDto)
-            Result.success(id)
+            // Use updateDocument which actually does a set() to keep the ID
+            firestoreDataSource.updateDocument("properties", property.id, propertyDto)
+            android.util.Log.d("PropertyRepo", "Property added with id=${property.id}")
+            Result.success(property.id)
         } catch (e: Exception) {
+            android.util.Log.e("PropertyRepo", "Error addProperty: ${e.message}", e)
             Result.failure(e)
         }
     }
@@ -74,6 +88,21 @@ class PropertyRepositoryImpl @Inject constructor(
 
     override suspend fun deleteProperty(propertyId: String): Result<Unit> {
         return try {
+            // First, get the property to retrieve photo URLs
+            val propertyResult = getPropertyById(propertyId)
+
+            propertyResult.onSuccess { property ->
+                // Delete all photos from storage if any exist
+                if (property.photos.isNotEmpty()) {
+                    storageRepository.deleteImages(property.photos)
+                        .onFailure { exception ->
+                            android.util.Log.e("PropertyRepo", "Error deleting photos: ${exception.message}")
+                            // Continue with property deletion even if photo deletion fails
+                        }
+                }
+            }
+
+            // Delete the property document from Firestore
             firestoreDataSource.deleteDocument("properties", propertyId)
             Result.success(Unit)
         } catch (e: Exception) {
