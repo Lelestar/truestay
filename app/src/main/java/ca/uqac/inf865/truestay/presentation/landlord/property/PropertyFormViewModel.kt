@@ -42,7 +42,7 @@ data class PropertyFormUiState(
     val monthlyRent: String = "",
     val surface: String = "",
     val isInBuilding: Boolean = true,
-    val isAvailable: Boolean = true,
+    val isPublished: Boolean = true, // Controls status: PUBLISHED if true, PAUSED if false
 
     // Rooms
     val rooms: List<RoomFormData> = emptyList(),
@@ -50,6 +50,7 @@ data class PropertyFormUiState(
     // Photos
     val photoUris: List<Uri> = emptyList(), // New photos to upload
     val existingPhotoUrls: List<String> = emptyList(), // Already uploaded photos (edit mode)
+    val deletedPhotoUrls: List<String> = emptyList(), // Photos to delete from storage
 
     // Edit mode
     val propertyId: String? = null,
@@ -59,7 +60,8 @@ data class PropertyFormUiState(
 
     // UI State
     val isSubmitting: Boolean = false,
-    val errorMessage: String? = null
+    val errorMessage: String? = null,
+    val isFormValid: Boolean = false
 )
 
 @HiltViewModel
@@ -82,6 +84,7 @@ class PropertyFormViewModel @Inject constructor(
     // General information
     fun setName(name: String) {
         uiState = uiState.copy(name = name)
+        validateForm()
     }
 
     // Called when user types in address field
@@ -125,6 +128,7 @@ class PropertyFormViewModel @Inject constructor(
                             selectedAddress = addr,
                             addressSuggestions = emptyList()
                         )
+                        validateForm()
                     }
                 },
                 onFailure = {
@@ -135,29 +139,36 @@ class PropertyFormViewModel @Inject constructor(
         }
     }
 
+    fun clearAddressSuggestions() {
+        uiState = uiState.copy(addressSuggestions = emptyList())
+    }
+
 
     fun setDescription(description: String) {
         uiState = uiState.copy(description = description)
+        validateForm()
     }
 
     fun setMonthlyRent(rent: String) {
         // Keep only digits
         val filtered = rent.filter { it.isDigit() }
         uiState = uiState.copy(monthlyRent = filtered)
+        validateForm()
     }
 
     fun setSurface(surface: String) {
         // Keep only digits
         val filtered = surface.filter { it.isDigit() }
         uiState = uiState.copy(surface = filtered)
+        validateForm()
     }
 
     fun setIsInBuilding(isInBuilding: Boolean) {
         uiState = uiState.copy(isInBuilding = isInBuilding)
     }
 
-    fun setIsAvailable(isAvailable: Boolean) {
-        uiState = uiState.copy(isAvailable = isAvailable)
+    fun setIsPublished(isPublished: Boolean) {
+        uiState = uiState.copy(isPublished = isPublished)
     }
 
     // Rooms
@@ -165,12 +176,14 @@ class PropertyFormViewModel @Inject constructor(
         uiState = uiState.copy(
             rooms = uiState.rooms + RoomFormData()
         )
+        validateForm()
     }
 
     fun removeRoom(roomId: String) {
         uiState = uiState.copy(
             rooms = uiState.rooms.filter { it.id != roomId }
         )
+        validateForm()
     }
 
     fun updateRoomName(roomId: String, name: String) {
@@ -187,6 +200,7 @@ class PropertyFormViewModel @Inject constructor(
                 if (room.id == roomId) room.copy(type = type) else room
             }
         )
+        validateForm()
     }
 
     // Photos
@@ -204,18 +218,22 @@ class PropertyFormViewModel @Inject constructor(
         )
 
         android.util.Log.d("PropertyFormVM", "Total photos after: ${uiState.photoUris.size}")
+        validateForm()
     }
 
     fun removePhoto(uri: Uri) {
         uiState = uiState.copy(
             photoUris = uiState.photoUris.filter { it != uri }
         )
+        validateForm()
     }
 
     fun removeExistingPhoto(url: String) {
         uiState = uiState.copy(
-            existingPhotoUrls = uiState.existingPhotoUrls.filter { it != url }
+            existingPhotoUrls = uiState.existingPhotoUrls.filter { it != url },
+            deletedPhotoUrls = uiState.deletedPhotoUrls + url
         )
+        validateForm()
     }
 
     /**
@@ -258,13 +276,14 @@ class PropertyFormViewModel @Inject constructor(
                             monthlyRent = property.monthlyRent.toString(),
                             surface = property.surface.toString(),
                             isInBuilding = property.isInBuilding,
-                            isAvailable = property.isAvailable,
+                            // isPublished keeps default value, not loaded from property
                             rooms = roomsData.ifEmpty { listOf(RoomFormData()) },
                             existingPhotoUrls = property.photos,
                             createdAt = property.createdAt,
                             isLoadingProperty = false
                         )
                         android.util.Log.d("PropertyFormVM", "State updated successfully - isEditMode=${uiState.isEditMode}")
+                        validateForm()
                     },
                     onFailure = { exception ->
                         android.util.Log.e("PropertyFormVM", "Error retrieving property: ${exception.message}", exception)
@@ -287,15 +306,18 @@ class PropertyFormViewModel @Inject constructor(
     /**
      * Validate that the form is complete
      */
-    private fun validateForm(): Boolean {
-        return uiState.name.isNotBlank() &&
-               uiState.selectedAddress != null &&
-               uiState.description.isNotBlank() &&
-               uiState.monthlyRent.isNotBlank() &&
-               uiState.surface.isNotBlank() &&
-               uiState.rooms.isNotEmpty() &&
-               uiState.rooms.all { it.type != null } && // Name is optional, only type is mandatory
-               (uiState.photoUris.isNotEmpty() || uiState.existingPhotoUrls.isNotEmpty())
+    private fun validateForm() {
+        val totalPhotos = uiState.photoUris.size + uiState.existingPhotoUrls.size
+        val isValid = uiState.name.isNotBlank() &&
+                      uiState.selectedAddress != null &&
+                      uiState.description.isNotBlank() &&
+                      uiState.monthlyRent.isNotBlank() &&
+                      uiState.surface.isNotBlank() &&
+                      uiState.rooms.isNotEmpty() &&
+                      uiState.rooms.all { it.type != null } && // Name is optional, only type is mandatory
+                      totalPhotos >= 3 // Minimum 3 photos required
+
+        uiState = uiState.copy(isFormValid = isValid)
     }
 
     /**
@@ -327,6 +349,34 @@ class PropertyFormViewModel @Inject constructor(
     }
 
     /**
+     * Get French name for room type
+     */
+    private fun getRoomTypeName(type: RoomType): String {
+        return when (type) {
+            RoomType.BEDROOM -> "Chambre"
+            RoomType.LIVING_ROOM -> "Salon"
+            RoomType.KITCHEN -> "Cuisine"
+            RoomType.BATHROOM -> "Salle de bain"
+            RoomType.TOILET -> "Toilettes"
+            RoomType.ENTRANCE -> "Entrée"
+            RoomType.HALLWAY -> "Couloir"
+            RoomType.DINING_ROOM -> "Salle à manger"
+            RoomType.OFFICE -> "Bureau"
+            RoomType.LAUNDRY_ROOM -> "Buanderie"
+            RoomType.STORAGE_ROOM -> "Débarras"
+            RoomType.GARAGE -> "Garage"
+            RoomType.BASEMENT -> "Sous-sol"
+            RoomType.ATTIC -> "Grenier"
+            RoomType.BALCONY -> "Balcon"
+            RoomType.TERRACE -> "Terrasse"
+            RoomType.GARDEN -> "Jardin"
+            RoomType.VERANDA -> "Véranda"
+            RoomType.STAIRCASE -> "Escalier"
+            RoomType.OTHER -> "Autre"
+        }
+    }
+
+    /**
      * Create Rooms with elements (existing in edit mode, default in creation mode)
      */
     private fun createRoomsWithElements(): List<Room> {
@@ -347,7 +397,7 @@ class PropertyFormViewModel @Inject constructor(
 
                 Room(
                     id = if (uiState.isEditMode) roomData.id else UUID.randomUUID().toString(),
-                    name = roomData.name.ifBlank { type.name }, // Use type name if name is empty
+                    name = roomData.name.ifBlank { getRoomTypeName(type) }, // Use French type name if name is empty
                     type = type,
                     elements = elements
                 )
@@ -359,7 +409,10 @@ class PropertyFormViewModel @Inject constructor(
      * Submit the form and create/update the property
      */
     fun submitProperty(onSuccess: () -> Unit) {
-        if (!validateForm()) {
+        // Validate form before submitting
+        validateForm()
+
+        if (!uiState.isFormValid) {
             uiState = uiState.copy(errorMessage = "Please fill in all required fields")
             return
         }
@@ -374,6 +427,15 @@ class PropertyFormViewModel @Inject constructor(
 
                 // Use existing ID or generate a new one
                 val propertyId = uiState.propertyId ?: UUID.randomUUID().toString()
+
+                // Delete removed photos from storage (in edit mode)
+                if (uiState.isEditMode && uiState.deletedPhotoUrls.isNotEmpty()) {
+                    storageRepository.deleteImages(uiState.deletedPhotoUrls)
+                        .onFailure { exception ->
+                            android.util.Log.e("PropertyFormVM", "Error deleting photos: ${exception.message}")
+                            // Continue anyway - deletion errors shouldn't block the update
+                        }
+                }
 
                 // Upload photos (new + existing)
                 val photoUrls = uploadAllPhotos(propertyId)
@@ -397,8 +459,8 @@ class PropertyFormViewModel @Inject constructor(
                     photos = photoUrls,
                     landlordId = currentUser.id,
                     isInBuilding = uiState.isInBuilding,
-                    isAvailable = uiState.isAvailable,
-                    status = PropertyStatus.PUBLISHED,
+                    isAvailable = true, // Keep default value
+                    status = if (uiState.isPublished) PropertyStatus.PUBLISHED else PropertyStatus.PAUSED,
                     createdAt = if (uiState.isEditMode) uiState.createdAt else System.currentTimeMillis(),
                     updatedAt = System.currentTimeMillis()
                 )

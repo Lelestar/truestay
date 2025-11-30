@@ -78,22 +78,16 @@ fun optimizePhoto(context: Context, sourceUri: Uri): Uri? {
             resizedBitmap.recycle()
         }
 
-        // Save optimized image to cache using FileProvider
+        // Save optimized image to cache
         val optimizedFile = File(context.cacheDir, "optimized_${System.currentTimeMillis()}.jpg")
         FileOutputStream(optimizedFile).use { outputStream ->
             rotatedBitmap.compress(Bitmap.CompressFormat.JPEG, JPEG_QUALITY, outputStream)
         }
         rotatedBitmap.recycle()
 
-        // Return a content:// URI via FileProvider
-        androidx.core.content.FileProvider.getUriForFile(
-            context,
-            "${context.packageName}.fileprovider",
-            optimizedFile
-        )
+        Uri.fromFile(optimizedFile)
     } catch (e: Exception) {
         e.printStackTrace()
-        android.util.Log.e("ImageUtils", "Error optimizing photo", e)
         null
     }
 }
@@ -141,14 +135,14 @@ fun rememberOptimizedMultiPhotoPickerLauncher(
     maxItems: Int = 5,
     onPhotosPicked: (List<Uri>) -> Unit
 ): PhotoPickerLauncher {
+    val context = LocalContext.current
+
     val launcher = rememberLauncherForActivityResult(
         contract = ActivityResultContracts.PickMultipleVisualMedia(maxItems = maxItems)
     ) { uris: List<Uri> ->
         if (uris.isNotEmpty()) {
-            android.util.Log.d("PhotoPicker", "Photos sélectionnées: ${uris.size}")
-            // Pour l'instant, utilisons les URIs originales qui ont déjà les permissions
-            // L'optimisation sera faite lors de l'upload
-            onPhotosPicked(uris)
+            val optimizedUris = uris.mapNotNull { uri -> optimizePhoto(context, uri) }
+            onPhotosPicked(optimizedUris)
         }
     }
 

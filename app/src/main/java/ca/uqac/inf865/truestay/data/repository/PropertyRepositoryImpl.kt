@@ -9,10 +9,12 @@ import ca.uqac.inf865.truestay.domain.model.PropertyFilters
 import ca.uqac.inf865.truestay.domain.model.PropertyStatus
 import ca.uqac.inf865.truestay.domain.model.RoomType
 import ca.uqac.inf865.truestay.domain.repository.PropertyRepository
+import ca.uqac.inf865.truestay.domain.repository.StorageRepository
 import javax.inject.Inject
 
 class PropertyRepositoryImpl @Inject constructor(
-    private val firestoreDataSource: FirestoreDataSource
+    private val firestoreDataSource: FirestoreDataSource,
+    private val storageRepository: StorageRepository
 ) : PropertyRepository {
 
     override suspend fun getProperties(): Result<List<Property>> {
@@ -86,6 +88,21 @@ class PropertyRepositoryImpl @Inject constructor(
 
     override suspend fun deleteProperty(propertyId: String): Result<Unit> {
         return try {
+            // First, get the property to retrieve photo URLs
+            val propertyResult = getPropertyById(propertyId)
+
+            propertyResult.onSuccess { property ->
+                // Delete all photos from storage if any exist
+                if (property.photos.isNotEmpty()) {
+                    storageRepository.deleteImages(property.photos)
+                        .onFailure { exception ->
+                            android.util.Log.e("PropertyRepo", "Error deleting photos: ${exception.message}")
+                            // Continue with property deletion even if photo deletion fails
+                        }
+                }
+            }
+
+            // Delete the property document from Firestore
             firestoreDataSource.deleteDocument("properties", propertyId)
             Result.success(Unit)
         } catch (e: Exception) {

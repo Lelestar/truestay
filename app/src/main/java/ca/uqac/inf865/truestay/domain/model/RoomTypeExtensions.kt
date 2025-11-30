@@ -3,7 +3,7 @@ package ca.uqac.inf865.truestay.domain.model
 import ca.uqac.inf865.truestay.R
 
 /**
- * Extensions pour RoomType
+ * Extensions for RoomType
  */
 fun RoomType.getLabelRes(): Int {
     return when (this) {

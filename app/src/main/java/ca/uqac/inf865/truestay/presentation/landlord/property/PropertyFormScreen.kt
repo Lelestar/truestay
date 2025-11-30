@@ -6,7 +6,6 @@ import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
-import androidx.compose.foundation.layout.WindowInsets
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
@@ -14,10 +13,11 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
+import androidx.compose.material3.Card
+import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
@@ -43,7 +43,7 @@ import ca.uqac.inf865.truestay.presentation.common.components.TrueStaySwitch
 import ca.uqac.inf865.truestay.presentation.common.components.TrueStayTextField
 import ca.uqac.inf865.truestay.presentation.common.icons.TrueStayIcons
 import ca.uqac.inf865.truestay.presentation.common.utils.rememberOptimizedMultiPhotoPickerLauncher
-import ca.uqac.inf865.truestay.presentation.navigation.TrueStayTopAppBar
+import ca.uqac.inf865.truestay.presentation.theme.AppShapes
 import ca.uqac.inf865.truestay.presentation.theme.AppSpacing
 import ca.uqac.inf865.truestay.presentation.theme.LocalAppColors
 
@@ -86,53 +86,44 @@ fun PropertyFormScreen(
         return
     }
 
-    Scaffold(
-        contentWindowInsets = WindowInsets(0.dp),
-        topBar = {
-            TrueStayTopAppBar(
-                titleRes = if (uiState.isEditMode) R.string.property_form_title_edit else R.string.property_form_title_add,
-                onNavigateBack = onBackClick,
-                windowInsets = WindowInsets(0.dp)
-            )
-        }
-    ) { paddingValues ->
-        Column(
-            modifier = Modifier
-                .fillMaxSize()
-                .clickable(
-                    interactionSource = remember { MutableInteractionSource() },
-                    indication = null
-                ) {
-                    focusManager.clearFocus()
-                }
-                .verticalScroll(rememberScrollState())
-                .padding(paddingValues)
-                .padding(AppSpacing.large),
-            verticalArrangement = Arrangement.spacedBy(AppSpacing.large)
-        ) {
-            // Informations générales
-            TrueStayCard(
-                modifier = Modifier.fillMaxWidth()
+    Column(
+        modifier = Modifier
+            .fillMaxSize()
+            .clickable(
+                interactionSource = remember { MutableInteractionSource() },
+                indication = null
             ) {
-                Column(
-                    verticalArrangement = Arrangement.spacedBy(AppSpacing.large)
-                ) {
-                    Text(
-                        text = stringResource(R.string.property_form_info_title),
-                        style = MaterialTheme.typography.headlineMedium,
-                        color = colors.black
-                    )
+                focusManager.clearFocus()
+                viewModel.clearAddressSuggestions()
+            }
+            .verticalScroll(rememberScrollState())
+            .padding(AppSpacing.large),
+        verticalArrangement = Arrangement.spacedBy(AppSpacing.large)
+    ) {
+        // Infos
+        TrueStayCard(
+            modifier = Modifier.fillMaxWidth()
+        ) {
+            Column(
+                verticalArrangement = Arrangement.spacedBy(AppSpacing.large)
+            ) {
+                Text(
+                    text = stringResource(R.string.property_form_info_title),
+                    style = MaterialTheme.typography.headlineSmall,
+                    color = colors.black
+                )
 
-                    TrueStayTextField(
-                        value = uiState.name,
-                        onValueChange = viewModel::setName,
-                        label = stringResource(R.string.property_form_name_label),
-                        placeholder = stringResource(R.string.property_form_name_placeholder),
-                        modifier = Modifier.fillMaxWidth(),
-                        imeAction = ImeAction.Next
-                    )
+                TrueStayTextField(
+                    value = uiState.name,
+                    onValueChange = viewModel::setName,
+                    label = stringResource(R.string.property_form_name_label),
+                    placeholder = stringResource(R.string.property_form_name_placeholder),
+                    modifier = Modifier.fillMaxWidth(),
+                    imeAction = ImeAction.Next
+                )
 
-                    // Address field with autocomplete
+                // Address field with autocomplete (readonly in edit mode)
+                if (!uiState.isEditMode) {
                     androidx.compose.foundation.layout.Box(
                         modifier = Modifier.fillMaxWidth()
                     ) {
@@ -148,13 +139,13 @@ fun PropertyFormScreen(
 
                             // Address suggestions
                             if (uiState.addressSuggestions.isNotEmpty()) {
-                                androidx.compose.material3.Card(
+                                Card(
                                     modifier = Modifier
                                         .fillMaxWidth()
                                         .padding(top = AppSpacing.xsmall),
-                                    shape = androidx.compose.foundation.shape.RoundedCornerShape(12.dp),
-                                    elevation = androidx.compose.material3.CardDefaults.cardElevation(defaultElevation = 4.dp),
-                                    colors = androidx.compose.material3.CardDefaults.cardColors(
+                                    shape = AppShapes.medium,
+                                    elevation = CardDefaults.cardElevation(defaultElevation = 4.dp),
+                                    colors = CardDefaults.cardColors(
                                         containerColor = colors.white
                                     )
                                 ) {
@@ -174,21 +165,44 @@ fun PropertyFormScreen(
                             }
                         }
                     }
-
+                } else {
+                    // Show address as readonly in edit mode
                     TrueStayTextField(
-                        value = uiState.description,
-                        onValueChange = viewModel::setDescription,
-                        label = stringResource(R.string.property_form_description_label),
-                        placeholder = stringResource(R.string.property_form_description_placeholder),
-                        minLines = 5,
-                        maxLines = 10,
+                        value = uiState.addressQuery,
+                        onValueChange = {},
+                        label = stringResource(R.string.property_form_address_label),
                         modifier = Modifier.fillMaxWidth(),
-                        imeAction = ImeAction.None
+                        enabled = false
                     )
+                }
 
+                TrueStayTextField(
+                    value = uiState.description,
+                    onValueChange = viewModel::setDescription,
+                    label = stringResource(R.string.property_form_description_label),
+                    placeholder = stringResource(R.string.property_form_description_placeholder),
+                    minLines = 5,
+                    maxLines = 10,
+                    modifier = Modifier.fillMaxWidth(),
+                    imeAction = ImeAction.None
+                )
+
+                // In edit mode: only show rent (editable), surface is readonly
+                // In create mode: both are editable
+                if (uiState.isEditMode) {
+                    TrueStayTextField(
+                        value = uiState.monthlyRent,
+                        onValueChange = viewModel::setMonthlyRent,
+                        label = stringResource(R.string.property_form_rent_label),
+                        placeholder = stringResource(R.string.property_form_rent_placeholder),
+                        keyboardType = KeyboardType.Number,
+                        modifier = Modifier.fillMaxWidth(),
+                        imeAction = ImeAction.Done
+                    )
+                } else {
                     Row(
                         modifier = Modifier.fillMaxWidth(),
-                        horizontalArrangement = Arrangement.spacedBy(AppSpacing.medium)
+                        horizontalArrangement = Arrangement.spacedBy(AppSpacing.large)
                     ) {
                         TrueStayTextField(
                             value = uiState.monthlyRent,
@@ -210,7 +224,10 @@ fun PropertyFormScreen(
                             imeAction = ImeAction.Done
                         )
                     }
+                }
 
+                // Hide "Dans un immeuble" in edit mode
+                if (!uiState.isEditMode) {
                     Row(
                         modifier = Modifier.fillMaxWidth(),
                         horizontalArrangement = Arrangement.SpaceBetween,
@@ -239,159 +256,163 @@ fun PropertyFormScreen(
                     }
                 }
             }
+        }
 
-            // Property rooms
+        // Property rooms - hide completely in edit mode
+        if (!uiState.isEditMode) {
             TrueStayCard(
-                modifier = Modifier.fillMaxWidth()
+            modifier = Modifier.fillMaxWidth()
+        ) {
+            Column(
+                verticalArrangement = Arrangement.spacedBy(AppSpacing.large)
             ) {
                 Column(
-                    verticalArrangement = Arrangement.spacedBy(AppSpacing.large)
+                    verticalArrangement = Arrangement.spacedBy(AppSpacing.xsmall)
                 ) {
-                    Column(
-                        verticalArrangement = Arrangement.spacedBy(AppSpacing.xsmall)
-                    ) {
-                        Text(
-                            text = stringResource(R.string.property_form_rooms_title),
-                            style = MaterialTheme.typography.headlineMedium,
-                            color = colors.black
-                        )
-                        Text(
-                            text = stringResource(R.string.property_form_rooms_subtitle),
-                            style = MaterialTheme.typography.bodyMedium,
-                            color = colors.grayDark
+                    Text(
+                        text = stringResource(R.string.property_form_rooms_title),
+                        style = MaterialTheme.typography.headlineSmall,
+                        color = colors.black
+                    )
+                    Text(
+                        text = stringResource(R.string.property_form_rooms_subtitle),
+                        style = MaterialTheme.typography.bodyMedium,
+                        color = colors.grayDark
+                    )
+                }
+
+                // List of rooms
+                uiState.rooms.forEachIndexed { index, room ->
+                    if (index > 0) {
+                        HorizontalDivider(
+                            color = colors.grayLight,
+                            thickness = 1.dp
                         )
                     }
 
-                    // List of rooms
-                    uiState.rooms.forEachIndexed { index, room ->
-                        if (index > 0) {
-                            HorizontalDivider(
-                                color = colors.grayLight,
-                                thickness = 1.dp
-                            )
-                        }
-
-                        Column(
-                            verticalArrangement = Arrangement.spacedBy(AppSpacing.medium)
+                    Column(
+                        verticalArrangement = Arrangement.spacedBy(AppSpacing.medium)
+                    ) {
+                        Row(
+                            modifier = Modifier.fillMaxWidth(),
+                            horizontalArrangement = Arrangement.SpaceBetween
                         ) {
-                            Row(
-                                modifier = Modifier.fillMaxWidth(),
-                                horizontalArrangement = Arrangement.SpaceBetween
-                            ) {
-                                Text(
-                                    text = "Pièce ${index + 1}",
-                                    style = MaterialTheme.typography.titleMedium,
-                                    color = colors.black
-                                )
-
-                                TrueStayIcon(
-                                    iconRes = TrueStayIcons.Trash,
-                                    contentDescriptionRes = R.string.property_form_delete_room,
-                                    tint = colors.error,
-                                    size = 20.dp,
-                                    modifier = Modifier.clickable {
-                                        viewModel.removeRoom(room.id)
-                                    }
-                                )
-                            }
-
-                            TrueStayTextField(
-                                value = room.name,
-                                onValueChange = { viewModel.updateRoomName(room.id, it) },
-                                label = stringResource(R.string.property_form_room_name_label),
-                                placeholder = stringResource(R.string.property_form_room_name_placeholder),
-                                modifier = Modifier.fillMaxWidth(),
-                                imeAction = ImeAction.Next
+                            Text(
+                                text = "Pièce ${index + 1}",
+                                style = MaterialTheme.typography.titleMedium,
+                                color = colors.black
                             )
 
-                            val roomTypes = RoomType.entries.toList()
-                            val roomTypeLabels = roomTypes.map { stringResource(it.getLabelRes()) }
-
-                            TrueStayDropdown(
-                                selectedValue = room.type?.let { stringResource(it.getLabelRes()) },
-                                options = roomTypeLabels,
-                                onOptionSelected = { selectedLabel ->
-                                    val index = roomTypeLabels.indexOf(selectedLabel)
-                                    if (index >= 0) {
-                                        viewModel.updateRoomType(room.id, roomTypes[index])
-                                    }
-                                },
-                                label = stringResource(R.string.property_form_room_type_label),
-                                placeholder = stringResource(R.string.property_form_room_type_placeholder),
-                                modifier = Modifier.fillMaxWidth()
+                            TrueStayIcon(
+                                iconRes = TrueStayIcons.Trash,
+                                contentDescriptionRes = R.string.property_form_delete_room,
+                                tint = colors.error,
+                                size = 20.dp,
+                                modifier = Modifier.clickable {
+                                    viewModel.removeRoom(room.id)
+                                }
                             )
                         }
+
+                        TrueStayTextField(
+                            value = room.name,
+                            onValueChange = { viewModel.updateRoomName(room.id, it) },
+                            label = stringResource(R.string.property_form_room_name_label),
+                            placeholder = stringResource(R.string.property_form_room_name_placeholder),
+                            modifier = Modifier.fillMaxWidth(),
+                            imeAction = ImeAction.Next
+                        )
+
+                        val roomTypes = RoomType.entries.toList()
+                        val roomTypeLabels = roomTypes.map { stringResource(it.getLabelRes()) }
+
+                        TrueStayDropdown(
+                            selectedValue = room.type?.let { stringResource(it.getLabelRes()) },
+                            options = roomTypeLabels,
+                            onOptionSelected = { selectedLabel ->
+                                val index = roomTypeLabels.indexOf(selectedLabel)
+                                if (index >= 0) {
+                                    viewModel.updateRoomType(room.id, roomTypes[index])
+                                }
+                            },
+                            label = stringResource(R.string.property_form_room_type_label),
+                            placeholder = stringResource(R.string.property_form_room_type_placeholder),
+                            modifier = Modifier.fillMaxWidth()
+                        )
                     }
-
-                    TrueStayButton(
-                        text = stringResource(R.string.property_form_add_room),
-                        onClick = viewModel::addRoom,
-                        variant = ButtonVariant.SECONDARY,
-                        leadingIcon = TrueStayIcons.Plus,
-                        modifier = Modifier.fillMaxWidth()
-                    )
                 }
-            }
 
-            // Photos
-            TrueStayCard(
-                modifier = Modifier.fillMaxWidth()
+                TrueStayButton(
+                    text = stringResource(R.string.property_form_add_room),
+                    onClick = viewModel::addRoom,
+                    variant = ButtonVariant.SECONDARY,
+                    leadingIcon = TrueStayIcons.Plus,
+                    modifier = Modifier.fillMaxWidth()
+                )
+            }
+        }
+        }
+
+        // Photos
+        TrueStayCard(
+            modifier = Modifier.fillMaxWidth()
+        ) {
+            Column(
+                verticalArrangement = Arrangement.spacedBy(AppSpacing.large)
             ) {
                 Column(
-                    verticalArrangement = Arrangement.spacedBy(AppSpacing.large)
+                    verticalArrangement = Arrangement.spacedBy(AppSpacing.xsmall)
                 ) {
-                    Column(
-                        verticalArrangement = Arrangement.spacedBy(AppSpacing.xsmall)
-                    ) {
-                        Text(
-                            text = stringResource(R.string.property_form_photos_title),
-                            style = MaterialTheme.typography.headlineMedium,
-                            color = colors.black
-                        )
-                        Text(
-                            text = stringResource(R.string.property_form_photos_subtitle),
-                            style = MaterialTheme.typography.bodyMedium,
-                            color = colors.grayDark
-                        )
-                    }
-
-                    val totalPhotos = uiState.photoUris.size + uiState.existingPhotoUrls.size
-
-                    // Display photos (existing + new)
-                    if (totalPhotos > 0) {
-                        PhotoGrid(
-                            localUris = uiState.photoUris,
-                            uploadedUrls = uiState.existingPhotoUrls,
-                            onDeleteLocalPhoto = { uri -> viewModel.removePhoto(uri) },
-                            onDeleteUploadedPhoto = { url -> viewModel.removeExistingPhoto(url) },
-                            onPhotoClick = {}
-                        )
-                    }
-
-                    // Add photos button
-                    val canAddMorePhotos = totalPhotos < 10
-                    TrueStayButton(
-                        text = stringResource(R.string.property_form_add_photos),
-                        onClick = {
-                            photoPickerLauncher.launch(10 - totalPhotos)
-                        },
-                        variant = ButtonVariant.SECONDARY,
-                        leadingIcon = TrueStayIcons.Image,
-                        modifier = Modifier.fillMaxWidth(),
-                        enabled = canAddMorePhotos
+                    Text(
+                        text = stringResource(R.string.property_form_photos_title),
+                        style = MaterialTheme.typography.headlineSmall,
+                        color = colors.black
                     )
+                    Text(
+                        text = stringResource(R.string.property_form_photos_subtitle),
+                        style = MaterialTheme.typography.bodyMedium,
+                        color = colors.grayDark
+                    )
+                }
 
-                    if (totalPhotos > 0) {
-                        Text(
-                            text = stringResource(R.string.property_form_photo_count, totalPhotos, 10),
-                            style = MaterialTheme.typography.bodySmall,
-                            color = colors.grayDark
-                        )
-                    }
+                val totalPhotos = uiState.photoUris.size + uiState.existingPhotoUrls.size
+
+                // Display photos (existing + new)
+                if (totalPhotos > 0) {
+                    PhotoGrid(
+                        localUris = uiState.photoUris,
+                        uploadedUrls = uiState.existingPhotoUrls,
+                        onDeleteLocalPhoto = { uri -> viewModel.removePhoto(uri) },
+                        onDeleteUploadedPhoto = { url -> viewModel.removeExistingPhoto(url) },
+                        onPhotoClick = {}
+                    )
+                }
+
+                // Add photos button
+                val canAddMorePhotos = totalPhotos < 10
+                TrueStayButton(
+                    text = stringResource(R.string.property_form_add_photos),
+                    onClick = {
+                        photoPickerLauncher.launch(10 - totalPhotos)
+                    },
+                    variant = ButtonVariant.SECONDARY,
+                    leadingIcon = TrueStayIcons.Image,
+                    modifier = Modifier.fillMaxWidth(),
+                    enabled = canAddMorePhotos
+                )
+
+                if (totalPhotos > 0) {
+                    Text(
+                        text = stringResource(R.string.property_form_photo_count, totalPhotos, 10),
+                        style = MaterialTheme.typography.bodySmall,
+                        color = colors.grayDark
+                    )
                 }
             }
+        }
 
-            // Availability
+        // Availability - hide in edit mode
+        if (!uiState.isEditMode) {
             TrueStayCard(
                 modifier = Modifier.fillMaxWidth()
             ) {
@@ -400,7 +421,7 @@ fun PropertyFormScreen(
                 ) {
                     Text(
                         text = stringResource(R.string.property_form_availability_title),
-                        style = MaterialTheme.typography.headlineMedium,
+                        style = MaterialTheme.typography.headlineSmall,
                         color = colors.black
                     )
 
@@ -426,164 +447,153 @@ fun PropertyFormScreen(
                         }
 
                         TrueStaySwitch(
-                            checked = uiState.isAvailable,
-                            onCheckedChange = viewModel::setIsAvailable
+                            checked = uiState.isPublished,
+                            onCheckedChange = viewModel::setIsPublished
                         )
                     }
                 }
             }
+        }
 
-            // Avant de publier - Container bleu
-            Surface(
-                modifier = Modifier.fillMaxWidth(),
-                shape = MaterialTheme.shapes.large,
-                color = colors.infoSurface,
-                border = androidx.compose.foundation.BorderStroke(
-                    width = 1.dp,
-                    color = colors.info
-                )
+        // Before publish requirements
+        Surface(
+            modifier = Modifier.fillMaxWidth(),
+            shape = MaterialTheme.shapes.large,
+            color = colors.infoSurface,
+            border = androidx.compose.foundation.BorderStroke(
+                width = 1.dp,
+                color = colors.info
+            )
+        ) {
+            Column(
+                modifier = Modifier.padding(AppSpacing.large),
+                verticalArrangement = Arrangement.spacedBy(AppSpacing.medium)
             ) {
-                Column(
-                    modifier = Modifier.padding(AppSpacing.large),
-                    verticalArrangement = Arrangement.spacedBy(AppSpacing.medium)
+                // Title with icon
+                Row(
+                    horizontalArrangement = Arrangement.spacedBy(AppSpacing.small),
+                    verticalAlignment = androidx.compose.ui.Alignment.CenterVertically
                 ) {
-                    // Title with icon
+                    TrueStayIcon(
+                        iconRes = TrueStayIcons.ClipboardCheck,
+                        contentDescriptionRes = null,
+                        tint = colors.info,
+                        size = 24.dp
+                    )
+
+                    Text(
+                        text = stringResource(R.string.property_form_before_publish_title),
+                        style = MaterialTheme.typography.titleMedium,
+                        color = colors.info
+                    )
+                }
+
+                // List of requirements with checkmarks
+                Column(
+                    verticalArrangement = Arrangement.spacedBy(AppSpacing.xsmall)
+                ) {
                     Row(
                         horizontalArrangement = Arrangement.spacedBy(AppSpacing.small),
                         verticalAlignment = androidx.compose.ui.Alignment.CenterVertically
                     ) {
                         TrueStayIcon(
-                            iconRes = TrueStayIcons.ClipboardCheck,
+                            iconRes = TrueStayIcons.Check,
                             contentDescriptionRes = null,
                             tint = colors.info,
-                            size = 24.dp
+                            size = 20.dp
                         )
-
                         Text(
-                            text = stringResource(R.string.property_form_before_publish_title),
-                            style = MaterialTheme.typography.titleMedium,
+                            text = stringResource(R.string.property_form_requirement_info),
+                            style = MaterialTheme.typography.bodyMedium,
                             color = colors.info
                         )
                     }
 
-                    // List of requirements with checkmarks
-                    Column(
-                        verticalArrangement = Arrangement.spacedBy(AppSpacing.xsmall)
+                    Row(
+                        horizontalArrangement = Arrangement.spacedBy(AppSpacing.small),
+                        verticalAlignment = androidx.compose.ui.Alignment.CenterVertically
                     ) {
-                        Row(
-                            horizontalArrangement = Arrangement.spacedBy(AppSpacing.small),
-                            verticalAlignment = androidx.compose.ui.Alignment.CenterVertically
-                        ) {
-                            TrueStayIcon(
-                                iconRes = TrueStayIcons.Check,
-                                contentDescriptionRes = null,
-                                tint = colors.info,
-                                size = 20.dp
-                            )
-                            Text(
-                                text = stringResource(R.string.property_form_requirement_info),
-                                style = MaterialTheme.typography.bodyMedium,
-                                color = colors.info
-                            )
-                        }
+                        TrueStayIcon(
+                            iconRes = TrueStayIcons.Check,
+                            contentDescriptionRes = null,
+                            tint = colors.info,
+                            size = 20.dp
+                        )
+                        Text(
+                            text = stringResource(R.string.property_form_requirement_photos),
+                            style = MaterialTheme.typography.bodyMedium,
+                            color = colors.info
+                        )
+                    }
 
-                        Row(
-                            horizontalArrangement = Arrangement.spacedBy(AppSpacing.small),
-                            verticalAlignment = androidx.compose.ui.Alignment.CenterVertically
-                        ) {
-                            TrueStayIcon(
-                                iconRes = TrueStayIcons.Check,
-                                contentDescriptionRes = null,
-                                tint = colors.info,
-                                size = 20.dp
-                            )
-                            Text(
-                                text = stringResource(R.string.property_form_requirement_photos),
-                                style = MaterialTheme.typography.bodyMedium,
-                                color = colors.info
-                            )
-                        }
+                    Row(
+                        horizontalArrangement = Arrangement.spacedBy(AppSpacing.small),
+                        verticalAlignment = androidx.compose.ui.Alignment.CenterVertically
+                    ) {
+                        TrueStayIcon(
+                            iconRes = TrueStayIcons.Check,
+                            contentDescriptionRes = null,
+                            tint = colors.info,
+                            size = 20.dp
+                        )
+                        Text(
+                            text = stringResource(R.string.property_form_requirement_description_quality),
+                            style = MaterialTheme.typography.bodyMedium,
+                            color = colors.info
+                        )
+                    }
 
-                        Row(
-                            horizontalArrangement = Arrangement.spacedBy(AppSpacing.small),
-                            verticalAlignment = androidx.compose.ui.Alignment.CenterVertically
-                        ) {
-                            TrueStayIcon(
-                                iconRes = TrueStayIcons.Check,
-                                contentDescriptionRes = null,
-                                tint = colors.info,
-                                size = 20.dp
-                            )
-                            Text(
-                                text = stringResource(R.string.property_form_requirement_description_quality),
-                                style = MaterialTheme.typography.bodyMedium,
-                                color = colors.info
-                            )
-                        }
-
-                        Row(
-                            horizontalArrangement = Arrangement.spacedBy(AppSpacing.small),
-                            verticalAlignment = androidx.compose.ui.Alignment.CenterVertically
-                        ) {
-                            TrueStayIcon(
-                                iconRes = TrueStayIcons.Check,
-                                contentDescriptionRes = null,
-                                tint = colors.info,
-                                size = 20.dp
-                            )
-                            Text(
-                                text = stringResource(R.string.property_form_requirement_price),
-                                style = MaterialTheme.typography.bodyMedium,
-                                color = colors.info
-                            )
-                        }
+                    Row(
+                        horizontalArrangement = Arrangement.spacedBy(AppSpacing.small),
+                        verticalAlignment = androidx.compose.ui.Alignment.CenterVertically
+                    ) {
+                        TrueStayIcon(
+                            iconRes = TrueStayIcons.Check,
+                            contentDescriptionRes = null,
+                            tint = colors.info,
+                            size = 20.dp
+                        )
+                        Text(
+                            text = stringResource(R.string.property_form_requirement_price),
+                            style = MaterialTheme.typography.bodyMedium,
+                            color = colors.info
+                        )
                     }
                 }
             }
+        }
 
-            // Error message
-            if (uiState.errorMessage != null) {
-                Text(
-                    text = uiState.errorMessage,
-                    style = MaterialTheme.typography.bodySmall,
-                    color = colors.error,
-                    modifier = Modifier.fillMaxWidth(),
-                    textAlign = TextAlign.Center
-                )
-            }
-
-            // Action buttons
-            val isFormValid = uiState.name.isNotBlank() &&
-                             uiState.selectedAddress != null &&
-                             uiState.description.isNotBlank() &&
-                             uiState.monthlyRent.isNotBlank() &&
-                             uiState.surface.isNotBlank() &&
-                             uiState.rooms.isNotEmpty() &&
-                             uiState.rooms.all { it.type != null } && // Name is optional, only type is mandatory
-                             (uiState.photoUris.isNotEmpty() || uiState.existingPhotoUrls.isNotEmpty())
-
-            Row(
+        // Error message
+        if (uiState.errorMessage != null) {
+            Text(
+                text = uiState.errorMessage,
+                style = MaterialTheme.typography.bodySmall,
+                color = colors.error,
                 modifier = Modifier.fillMaxWidth(),
-                horizontalArrangement = Arrangement.spacedBy(AppSpacing.medium)
-            ) {
-                TrueStayButton(
-                    text = stringResource(R.string.property_form_cancel),
-                    onClick = onBackClick,
-                    variant = ButtonVariant.SECONDARY,
-                    modifier = Modifier.weight(1f)
-                )
+                textAlign = TextAlign.Center
+            )
+        }
 
-                TrueStayButton(
-                    text = stringResource(R.string.property_form_publish),
-                    onClick = { viewModel.submitProperty(onPropertySaved) },
-                    variant = ButtonVariant.PRIMARY,
-                    modifier = Modifier.weight(1f),
-                    enabled = isFormValid && !uiState.isSubmitting,
-                    isLoading = uiState.isSubmitting
-                )
-            }
+        // Action buttons
+        Row(
+            modifier = Modifier.fillMaxWidth(),
+            horizontalArrangement = Arrangement.spacedBy(AppSpacing.medium)
+        ) {
+            TrueStayButton(
+                text = stringResource(R.string.property_form_cancel),
+                onClick = onBackClick,
+                variant = ButtonVariant.SECONDARY,
+                modifier = Modifier.weight(1f)
+            )
 
-            Spacer(modifier = Modifier.height(AppSpacing.large))
+            TrueStayButton(
+                text = stringResource(R.string.property_form_publish),
+                onClick = { viewModel.submitProperty(onPropertySaved) },
+                variant = ButtonVariant.PRIMARY,
+                modifier = Modifier.weight(1f),
+                enabled = uiState.isFormValid && !uiState.isSubmitting,
+                isLoading = uiState.isSubmitting
+            )
         }
     }
 }
