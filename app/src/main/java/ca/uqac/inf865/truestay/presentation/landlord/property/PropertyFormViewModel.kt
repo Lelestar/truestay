@@ -395,9 +395,12 @@ class PropertyFormViewModel @Inject constructor(
                     }
                 }
 
+                val roomName = roomData.name.trim().ifBlank { getRoomTypeName(type) }
+                android.util.Log.d("PropertyFormVM", "Creating room: type=$type, originalName='${roomData.name}', finalName='$roomName'")
+
                 Room(
                     id = if (uiState.isEditMode) roomData.id else UUID.randomUUID().toString(),
-                    name = roomData.name.ifBlank { getRoomTypeName(type) }, // Use French type name if name is empty
+                    name = roomName, // Use French type name if name is empty
                     type = type,
                     elements = elements
                 )

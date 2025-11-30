@@ -49,7 +49,7 @@ interface Inventory {
 }
 
 /**
- * Maps element type to French name
+ * Maps element type to French name (case-insensitive)
  * @param {string} elementType The element type enum value
  * @return {string} The French name for the element type
  */
@@ -63,7 +63,7 @@ function getElementNameInFrench(elementType: string): string {
     FURNITURE: "Meuble",
     EQUIPMENT: "Équipement",
   };
-  return mapping[elementType] || elementType;
+  return mapping[elementType.toUpperCase()] || elementType;
 }
 
 /**

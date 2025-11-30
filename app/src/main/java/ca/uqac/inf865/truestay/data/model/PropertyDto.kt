@@ -206,6 +206,7 @@ fun PropertyRatings.toDto(): PropertyRatingsDto {
 fun Room.toDto(): RoomDto {
     return RoomDto(
         id = id,
+        name = name,
         type = when (type) {
             RoomType.BEDROOM -> "bedroom"
             RoomType.LIVING_ROOM -> "living_room"
