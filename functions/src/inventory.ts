@@ -844,7 +844,7 @@ async function generatePdfForInventory(
   if (inventory.type === "exit") {
     console.log(
       `Exit inventory completed, updating rental ${inventory.rentalId} ` +
-      `status to ENDED`
+      "status to ENDED"
     );
 
     const rentalRef = db.collection("rentals").doc(inventory.rentalId);
@@ -860,7 +860,7 @@ async function generatePdfForInventory(
     } else {
       console.log(
         `Rental ${inventory.rentalId} status is ${rentalData.status}, ` +
-        `not updating to ENDED`
+        "not updating to ENDED"
       );
     }
   }
