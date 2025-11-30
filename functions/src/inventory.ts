@@ -840,6 +840,31 @@ async function generatePdfForInventory(
     completedAt: Date.now(),
   });
 
+  // If this is an EXIT inventory, update rental status from ACTIVE to ENDED
+  if (inventory.type === "exit") {
+    console.log(
+      `Exit inventory completed, updating rental ${inventory.rentalId} ` +
+      `status to ENDED`
+    );
+
+    const rentalRef = db.collection("rentals").doc(inventory.rentalId);
+    const rentalData = rental;
+
+    // Only update if rental is currently ACTIVE
+    if (rentalData.status === "active") {
+      await rentalRef.update({
+        status: "ended",
+        updatedAt: Date.now(),
+      });
+      console.log(`Rental ${inventory.rentalId} status updated to ENDED`);
+    } else {
+      console.log(
+        `Rental ${inventory.rentalId} status is ${rentalData.status}, ` +
+        `not updating to ENDED`
+      );
+    }
+  }
+
   return pdfUrl;
 }
 

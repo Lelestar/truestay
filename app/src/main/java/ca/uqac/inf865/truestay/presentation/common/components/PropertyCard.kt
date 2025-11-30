@@ -63,7 +63,8 @@ data class PropertyAction(
     val iconRes: Int?,
     val label: String,
     val onClick: () -> Unit,
-    val variant: ButtonVariant = ButtonVariant.SECONDARY
+    val variant: ButtonVariant = ButtonVariant.SECONDARY,
+    val enabled: Boolean = true
 )
 
 @Composable
@@ -904,7 +905,9 @@ private fun PropertyCardInteractive(
                                     text = action.label,
                                     onClick = action.onClick,
                                     variant = action.variant,
-                                    leadingIcon = action.iconRes
+                                    leadingIcon = action.iconRes,
+                                    enabled = action.enabled,
+                                    iconTint = if (action.enabled) null else LocalAppColors.current.white
                                 )
                             }
                         }
