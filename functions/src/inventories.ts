@@ -23,10 +23,12 @@ interface InventoryRoom {
   roomName: string;
   elements: InventoryElement[];
   status: string; // TODO
+  photoUrls: string[];
 }
 
 interface InventoryElement {
   elementId: string;
+  elementName: string;
   condition: string; // TO_CHECK
   comment: string;
   photoUrls: string[];
@@ -41,8 +43,27 @@ interface Inventory {
   tenantSignature: null;
   status: string; // DRAFT
   pdfUrl: null;
+  pdfGenerationError: null;
   createdAt: number;
   completedAt: null;
+}
+
+/**
+ * Maps element type to French name
+ * @param {string} elementType The element type enum value
+ * @return {string} The French name for the element type
+ */
+function getElementNameInFrench(elementType: string): string {
+  const mapping: {[key: string]: string} = {
+    FLOOR: "Sol",
+    WALL: "Mur",
+    CEILING: "Plafond",
+    WINDOW: "Fenêtre",
+    DOOR: "Porte",
+    FURNITURE: "Meuble",
+    EQUIPMENT: "Équipement",
+  };
+  return mapping[elementType] || elementType;
 }
 
 /**
@@ -91,11 +112,13 @@ export const onRentalAccepted = onDocumentUpdated(
         roomName: room.name,
         elements: room.elements.map((element) => ({
           elementId: element.id,
+          elementName: getElementNameInFrench(element.type),
           condition: "TO_CHECK",
           comment: "",
           photoUrls: [],
         })),
         status: "TODO",
+        photoUrls: [],
       }));
 
       const now = Date.now();
@@ -110,6 +133,7 @@ export const onRentalAccepted = onDocumentUpdated(
         tenantSignature: null,
         status: "DRAFT",
         pdfUrl: null,
+        pdfGenerationError: null,
         createdAt: now,
         completedAt: null,
       };
@@ -124,6 +148,7 @@ export const onRentalAccepted = onDocumentUpdated(
         tenantSignature: null,
         status: "DRAFT",
         pdfUrl: null,
+        pdfGenerationError: null,
         createdAt: now,
         completedAt: null,
       };
@@ -141,12 +166,11 @@ export const onRentalAccepted = onDocumentUpdated(
       await exitRef.update({id: exitRef.id});
       console.log(`Created exit inventory: ${exitRef.id}`);
 
-      // Update the rental with inventory IDs and acceptedAt timestamp
+      // Update the rental with inventory IDs
       const rentalRef = db.collection("rentals").doc(rentalId);
       await rentalRef.update({
         entryInventoryId: entryRef.id,
         exitInventoryId: exitRef.id,
-        acceptedAt: now,
       });
       console.log(`Updated rental ${rentalId} with inventory IDs`);
 
