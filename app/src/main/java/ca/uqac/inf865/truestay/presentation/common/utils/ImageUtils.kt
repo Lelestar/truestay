@@ -41,14 +41,18 @@ fun optimizePhoto(context: Context, sourceUri: Uri): Uri? {
 
         if (originalBitmap == null) return null
 
-        // Get EXIF orientation
-        val exif = context.contentResolver.openInputStream(sourceUri)?.use { stream ->
-            ExifInterface(stream)
-        }
-        val orientation = exif?.getAttributeInt(
-            ExifInterface.TAG_ORIENTATION,
+        // Get EXIF orientation - wrap in try-catch as this can fail for some URIs
+        val orientation = try {
+            val exif = context.contentResolver.openInputStream(sourceUri)?.use { stream ->
+                ExifInterface(stream)
+            }
+            exif?.getAttributeInt(
+                ExifInterface.TAG_ORIENTATION,
+                ExifInterface.ORIENTATION_NORMAL
+            ) ?: ExifInterface.ORIENTATION_NORMAL
+        } catch (e: Exception) {
             ExifInterface.ORIENTATION_NORMAL
-        ) ?: ExifInterface.ORIENTATION_NORMAL
+        }
 
         // Calculate new dimensions maintaining aspect ratio
         val width = originalBitmap.width
@@ -64,26 +68,40 @@ fun optimizePhoto(context: Context, sourceUri: Uri): Uri? {
 
         // Resize bitmap
         val resizedBitmap = originalBitmap.scale(newWidth, newHeight)
-        originalBitmap.recycle()
 
-        // Rotate if needed based on EXIF
-        val rotatedBitmap = when (orientation) {
-            ExifInterface.ORIENTATION_ROTATE_90 -> rotateBitmap(resizedBitmap, 90f)
-            ExifInterface.ORIENTATION_ROTATE_180 -> rotateBitmap(resizedBitmap, 180f)
-            ExifInterface.ORIENTATION_ROTATE_270 -> rotateBitmap(resizedBitmap, 270f)
-            else -> resizedBitmap
+        // Only recycle original if it's different from resized
+        if (resizedBitmap != originalBitmap) {
+            originalBitmap.recycle()
         }
 
-        if (rotatedBitmap != resizedBitmap) {
-            resizedBitmap.recycle()
+        // Rotate if needed based on EXIF
+        val finalBitmap = when (orientation) {
+            ExifInterface.ORIENTATION_ROTATE_90 -> {
+                val rotated = rotateBitmap(resizedBitmap, 90f)
+                if (rotated != resizedBitmap) resizedBitmap.recycle()
+                rotated
+            }
+            ExifInterface.ORIENTATION_ROTATE_180 -> {
+                val rotated = rotateBitmap(resizedBitmap, 180f)
+                if (rotated != resizedBitmap) resizedBitmap.recycle()
+                rotated
+            }
+            ExifInterface.ORIENTATION_ROTATE_270 -> {
+                val rotated = rotateBitmap(resizedBitmap, 270f)
+                if (rotated != resizedBitmap) resizedBitmap.recycle()
+                rotated
+            }
+            else -> resizedBitmap
         }
 
         // Save optimized image to cache
         val optimizedFile = File(context.cacheDir, "optimized_${System.currentTimeMillis()}.jpg")
         FileOutputStream(optimizedFile).use { outputStream ->
-            rotatedBitmap.compress(Bitmap.CompressFormat.JPEG, JPEG_QUALITY, outputStream)
+            finalBitmap.compress(Bitmap.CompressFormat.JPEG, JPEG_QUALITY, outputStream)
         }
-        rotatedBitmap.recycle()
+
+        // Recycle the final bitmap after compression
+        finalBitmap.recycle()
 
         Uri.fromFile(optimizedFile)
     } catch (e: Exception) {
